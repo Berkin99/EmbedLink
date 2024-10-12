@@ -27,53 +27,46 @@
  *
  */
 
-#include "gpio.h"
-#include "system.h"
+#ifndef ESTIMATOR_H_
+#define ESTIMATOR_H_
 
-GPIO_TypeDef* ports[] = {
-	GPIOA,
-	GPIOB,
-	GPIOC,
-	GPIOD,
-	GPIOE,
-	GPIOF,
-};
+#include <stdint.h>
+#include "kinematics.h"
+#include "navigation.h"
 
-uint16_t pins[] = {
-	GPIO_PIN_0,
-	GPIO_PIN_1,
-	GPIO_PIN_2,
-	GPIO_PIN_3,
-	GPIO_PIN_4,
-	GPIO_PIN_5,
-	GPIO_PIN_6,
-	GPIO_PIN_7,
-	GPIO_PIN_8,
-	GPIO_PIN_9,
-	GPIO_PIN_10,
-	GPIO_PIN_11,
-	GPIO_PIN_12,
-	GPIO_PIN_13,
-	GPIO_PIN_14,
-	GPIO_PIN_15,
-};
+#define ESTIMATOR_INITIALIZE_TIMEOUT_MS    10000
+#define ESTIMATOR_STABILIZE_MS			   2000
 
-#define HAL_GPIO(pin) ports [(pin >> 8)]
-#define HAL_PIN(pin)  pins[(0xFF & pin)]
+/* ESTIMATOR TYPE */
+#define ESTIMATOR_KALMAN
+//#define ESTIMATOR_COMPLEMENTARY
 
-void pinMode (pin_t pin, uint8_t mode){
-	/* Empty */
-	//HAL_GPIO_Init(GPIOx, GPIO_Init);
-}
+#define RATE_1000_HZ 1000
+#define RATE_500_HZ  500
+#define RATE_250_HZ  250
+#define RATE_100_HZ  100
+#define RATE_50_HZ   50
+#define RATE_25_HZ   25
 
-void pinWrite (pin_t pin, uint8_t state){
-	HAL_GPIO_WritePin(HAL_GPIO(pin), HAL_PIN(pin), state);
-}
+#define ESTIMATOR_FREQ_HZ RATE_1000_HZ
+#define RATE_DO_EXECUTE(RATE_HZ, TICK) ((TICK % (ESTIMATOR_FREQ_HZ / RATE_HZ)) == 0)
 
-void pinToggle(pin_t pin){
-	HAL_GPIO_TogglePin(HAL_GPIO(pin), HAL_PIN(pin));
-}
+typedef struct{
+	char*   name;
+	int8_t  (*init)(void);
+	int8_t  (*test)(void);
+	int8_t  (*isReady)(void);
+	const state_t* (*state)(void);
+}estimator_t;
 
-int8_t pinRead (pin_t pin){
-	return HAL_GPIO_ReadPin(HAL_GPIO(pin), HAL_PIN(pin));
-}
+void estimatorInit (void);
+void estimatorTest (void);
+int8_t estimatorIsReady(void);
+
+void estimatorStabilize(state_t* pState, uint32_t tim);
+void estimatorUpdate(state_t* pState, uint8_t* pChecklist);
+
+int8_t estimatorEnqueue(const measurement_t* pMeasurement, int8_t isISR);
+int8_t estimatorDequeue(measurement_t* pMeasurement, uint32_t portDelay);
+
+#endif /* ESTIMATOR_H_ */

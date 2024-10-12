@@ -74,7 +74,7 @@ static UBaseType_t 	NAME##_priority = PRIORITY;
 #define taskCreateStatic(NAME, FUNCTION, PARAMETERS) \
 xTaskCreateStatic((FUNCTION), #NAME, NAME##_stackDepth, (PARAMETERS), (NAME##_priority), NAME ##_stackBuffer, & NAME##_taskBuffer)
 
-#define queueDefineStatic(NAME, LENGTH, ITEM_SIZE)\
+#define queueAllocateStatic(NAME, LENGTH, ITEM_SIZE)\
 static const int 	 NAME##_length = (LENGTH); \
 static const int 	 NAME##_itemSize = (ITEM_SIZE); \
 static uint8_t 		 NAME##_storage[(LENGTH) * (ITEM_SIZE)]; \
@@ -196,6 +196,10 @@ static inline void taskResume(task_t task) {
 
 static inline void taskStartScheduler(void){
 	vTaskStartScheduler();
+}
+
+static inline uint32_t taskGetTickCount(void){
+	return xTaskGetTickCount();
 }
 
 #endif /* RTOS_H_ */

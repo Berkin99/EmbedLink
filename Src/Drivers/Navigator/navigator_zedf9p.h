@@ -27,53 +27,22 @@
  *
  */
 
-#include "gpio.h"
-#include "system.h"
 
-GPIO_TypeDef* ports[] = {
-	GPIOA,
-	GPIOB,
-	GPIOC,
-	GPIOD,
-	GPIOE,
-	GPIOF,
-};
+#ifndef NAVIGATOR_ZEDF9P_H_
+#define NAVIGATOR_ZEDF9P_H_
 
-uint16_t pins[] = {
-	GPIO_PIN_0,
-	GPIO_PIN_1,
-	GPIO_PIN_2,
-	GPIO_PIN_3,
-	GPIO_PIN_4,
-	GPIO_PIN_5,
-	GPIO_PIN_6,
-	GPIO_PIN_7,
-	GPIO_PIN_8,
-	GPIO_PIN_9,
-	GPIO_PIN_10,
-	GPIO_PIN_11,
-	GPIO_PIN_12,
-	GPIO_PIN_13,
-	GPIO_PIN_14,
-	GPIO_PIN_15,
-};
+#include <stdint.h>
+#include "navigator.h"
 
-#define HAL_GPIO(pin) ports [(pin >> 8)]
-#define HAL_PIN(pin)  pins[(0xFF & pin)]
+#define navigatorNameZEDF9P    "ZEDF9P"
+#define navigatorFreqZEDF9P    (5)    /*Hz*/
 
-void pinMode (pin_t pin, uint8_t mode){
-	/* Empty */
-	//HAL_GPIO_Init(GPIOx, GPIO_Init);
-}
+int8_t navigatorInitZEDF9P(void);
+int8_t navigatorTestZEDF9P(void);
+void   navigatorCalibrateZEDF9P(vec_t Correction);
+int8_t navigatorIsCalibratedZEDF9P(void);
+int8_t navigatorAcquireZEDF9P(navigation_t* plist, uint8_t n);
+int8_t navigatorIsReadyZEDF9P(void);
+void   navigatorWaitDataReadyZEDF9P(void);
 
-void pinWrite (pin_t pin, uint8_t state){
-	HAL_GPIO_WritePin(HAL_GPIO(pin), HAL_PIN(pin), state);
-}
-
-void pinToggle(pin_t pin){
-	HAL_GPIO_TogglePin(HAL_GPIO(pin), HAL_PIN(pin));
-}
-
-int8_t pinRead (pin_t pin){
-	return HAL_GPIO_ReadPin(HAL_GPIO(pin), HAL_PIN(pin));
-}
+#endif /* NAVIGATOR_ZEDF9P_H_ */

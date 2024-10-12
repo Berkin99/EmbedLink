@@ -27,53 +27,22 @@
  *
  */
 
-#include "gpio.h"
-#include "system.h"
+#ifndef SENSOR_BMI088_H_
+#define SENSOR_BMI088_H_
 
-GPIO_TypeDef* ports[] = {
-	GPIOA,
-	GPIOB,
-	GPIOC,
-	GPIOD,
-	GPIOE,
-	GPIOF,
-};
+#include <stdint.h>
+#include <stdbool.h>
+#include "sensor.h"
 
-uint16_t pins[] = {
-	GPIO_PIN_0,
-	GPIO_PIN_1,
-	GPIO_PIN_2,
-	GPIO_PIN_3,
-	GPIO_PIN_4,
-	GPIO_PIN_5,
-	GPIO_PIN_6,
-	GPIO_PIN_7,
-	GPIO_PIN_8,
-	GPIO_PIN_9,
-	GPIO_PIN_10,
-	GPIO_PIN_11,
-	GPIO_PIN_12,
-	GPIO_PIN_13,
-	GPIO_PIN_14,
-	GPIO_PIN_15,
-};
+#define sensorNameBMI088 	"BMI088"
+#define sensorFreqBMI088 	(1000)		/* Hz */
 
-#define HAL_GPIO(pin) ports [(pin >> 8)]
-#define HAL_PIN(pin)  pins[(0xFF & pin)]
+int8_t	sensorInitBMI088(void);
+int8_t	sensorTestBMI088(void);
+void	sensorCalibrateBMI088(void);
+int8_t	sensorIsCalibratedBMI088(void);
+int8_t	sensorAcquireBMI088(measurement_t* plist, uint8_t n);
+int8_t	sensorIsReadyBMI088(void);
+void	sensorWaitDataReadyBMI088(void);
 
-void pinMode (pin_t pin, uint8_t mode){
-	/* Empty */
-	//HAL_GPIO_Init(GPIOx, GPIO_Init);
-}
-
-void pinWrite (pin_t pin, uint8_t state){
-	HAL_GPIO_WritePin(HAL_GPIO(pin), HAL_PIN(pin), state);
-}
-
-void pinToggle(pin_t pin){
-	HAL_GPIO_TogglePin(HAL_GPIO(pin), HAL_PIN(pin));
-}
-
-int8_t pinRead (pin_t pin){
-	return HAL_GPIO_ReadPin(HAL_GPIO(pin), HAL_PIN(pin));
-}
+#endif /* SENSOR_BMI088_H_ */

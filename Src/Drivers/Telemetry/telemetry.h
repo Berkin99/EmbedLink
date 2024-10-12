@@ -27,53 +27,38 @@
  *
  */
 
-#include "gpio.h"
+#ifndef TELEMETRY_H_
+#define TELEMETRY_H_
+
+#include <stdint.h>
 #include "system.h"
 
-GPIO_TypeDef* ports[] = {
-	GPIOA,
-	GPIOB,
-	GPIOC,
-	GPIOD,
-	GPIOE,
-	GPIOF,
-};
+typedef enum{
+	TRX_EMPTY,
+	TRX_RECEIVER,
+	TRX_TRANSMITTER,
+	TRX_TRANSCEIVER
+}TRX_Type_e;
 
-uint16_t pins[] = {
-	GPIO_PIN_0,
-	GPIO_PIN_1,
-	GPIO_PIN_2,
-	GPIO_PIN_3,
-	GPIO_PIN_4,
-	GPIO_PIN_5,
-	GPIO_PIN_6,
-	GPIO_PIN_7,
-	GPIO_PIN_8,
-	GPIO_PIN_9,
-	GPIO_PIN_10,
-	GPIO_PIN_11,
-	GPIO_PIN_12,
-	GPIO_PIN_13,
-	GPIO_PIN_14,
-	GPIO_PIN_15,
-};
+typedef struct{
+	const char* Name;
+	TRX_Type_e  Type;
+	int8_t      (*Init)(void);
+	int8_t      (*Test)(void);
+	void 	    (*Config)(void);
+	int8_t      (*Receive)(uint8_t* pRxBuffer);
+	int8_t      (*Transmit)(const uint8_t* pTxData, uint8_t Length);
+    int8_t      (*IsReady)(void);
+	void        (*WaitDataReady)(void);
+}TRX_Handle_t;
 
-#define HAL_GPIO(pin) ports [(pin >> 8)]
-#define HAL_PIN(pin)  pins[(0xFF & pin)]
+void   telemetryInit(void);
+void   telemetryTest(void);
+int8_t telemetryIsReady(uint8_t index);
+void   telemetryWaitDataReady(uint8_t index);
+int8_t telemetryGetIndex(char* name);
+int8_t telemetryGetSize(void);
+int8_t telemetryReceive (uint8_t index, uint8_t* pRxBuffer);
+int8_t telemetryTransmit(uint8_t index, const uint8_t* pTxData, uint8_t Length);
 
-void pinMode (pin_t pin, uint8_t mode){
-	/* Empty */
-	//HAL_GPIO_Init(GPIOx, GPIO_Init);
-}
-
-void pinWrite (pin_t pin, uint8_t state){
-	HAL_GPIO_WritePin(HAL_GPIO(pin), HAL_PIN(pin), state);
-}
-
-void pinToggle(pin_t pin){
-	HAL_GPIO_TogglePin(HAL_GPIO(pin), HAL_PIN(pin));
-}
-
-int8_t pinRead (pin_t pin){
-	return HAL_GPIO_ReadPin(HAL_GPIO(pin), HAL_PIN(pin));
-}
+#endif /* TELEMETRY_H_ */

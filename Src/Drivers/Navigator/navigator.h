@@ -27,53 +27,29 @@
  *
  */
 
-#include "gpio.h"
-#include "system.h"
+#ifndef NAVIGATOR_H_
+#define NAVIGATOR_H_
 
-GPIO_TypeDef* ports[] = {
-	GPIOA,
-	GPIOB,
-	GPIOC,
-	GPIOD,
-	GPIOE,
-	GPIOF,
-};
+#include <stdint.h>
+#include "math3d.h"
+#include "navigation.h"
 
-uint16_t pins[] = {
-	GPIO_PIN_0,
-	GPIO_PIN_1,
-	GPIO_PIN_2,
-	GPIO_PIN_3,
-	GPIO_PIN_4,
-	GPIO_PIN_5,
-	GPIO_PIN_6,
-	GPIO_PIN_7,
-	GPIO_PIN_8,
-	GPIO_PIN_9,
-	GPIO_PIN_10,
-	GPIO_PIN_11,
-	GPIO_PIN_12,
-	GPIO_PIN_13,
-	GPIO_PIN_14,
-	GPIO_PIN_15,
-};
+typedef struct {
+    const char* Name;
+    int8_t      Type;
+    int8_t      (*Init)(void);
+    int8_t      (*Test)(void);
+    void        (*Calibrate)(vec_t Correction);
+    int8_t      (*Acquire)(navigation_t* plist, uint8_t n);
+    int8_t      (*IsReady)(void);
+    void        (*WaitDataReady)(void);
+}NAV_Handle_t;
 
-#define HAL_GPIO(pin) ports [(pin >> 8)]
-#define HAL_PIN(pin)  pins[(0xFF & pin)]
+void   navigatorInit(void);
+void   navigatorTest(void);
+int8_t navigatorIsReady(void);
+int8_t navigatorGetIndex(char* name);
+int8_t navigatorGetSize(void);
+int8_t navigatorAcquire(uint8_t index, navigation_t* plist, uint8_t n);
 
-void pinMode (pin_t pin, uint8_t mode){
-	/* Empty */
-	//HAL_GPIO_Init(GPIOx, GPIO_Init);
-}
-
-void pinWrite (pin_t pin, uint8_t state){
-	HAL_GPIO_WritePin(HAL_GPIO(pin), HAL_PIN(pin), state);
-}
-
-void pinToggle(pin_t pin){
-	HAL_GPIO_TogglePin(HAL_GPIO(pin), HAL_PIN(pin));
-}
-
-int8_t pinRead (pin_t pin){
-	return HAL_GPIO_ReadPin(HAL_GPIO(pin), HAL_PIN(pin));
-}
+#endif /* NAVIGATOR_H_ */

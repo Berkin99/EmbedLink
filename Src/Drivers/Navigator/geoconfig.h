@@ -27,53 +27,16 @@
  *
  */
 
-#include "gpio.h"
-#include "system.h"
+#ifndef GEOCONFIG_H_
+#define GEOCONFIG_H_
 
-GPIO_TypeDef* ports[] = {
-	GPIOA,
-	GPIOB,
-	GPIOC,
-	GPIOD,
-	GPIOE,
-	GPIOF,
-};
+#define GRAVITY 			 	9.81f
+#define CONST_SEA_PRESSURE 		1013.4f          /* Location based */
+#define CONST_PF 				0.1902630958f    /* (1/5.25588f) Pressure factor */
+#define CONST_PF2 				44330.0f
+#define FIX_TEMP 				25.0f            /* Fixed Temperature */
+#define MAGNETIC_DECLINATION 	(6.18f)          /* Magnetic north and Geographic north difference, Location based */
+#define EARTH_EQX_R 			6371000          /* Equator radius in meters */
+#define EARTH_POLAR_R 			6357000          /* Polar radius in meters*/
 
-uint16_t pins[] = {
-	GPIO_PIN_0,
-	GPIO_PIN_1,
-	GPIO_PIN_2,
-	GPIO_PIN_3,
-	GPIO_PIN_4,
-	GPIO_PIN_5,
-	GPIO_PIN_6,
-	GPIO_PIN_7,
-	GPIO_PIN_8,
-	GPIO_PIN_9,
-	GPIO_PIN_10,
-	GPIO_PIN_11,
-	GPIO_PIN_12,
-	GPIO_PIN_13,
-	GPIO_PIN_14,
-	GPIO_PIN_15,
-};
-
-#define HAL_GPIO(pin) ports [(pin >> 8)]
-#define HAL_PIN(pin)  pins[(0xFF & pin)]
-
-void pinMode (pin_t pin, uint8_t mode){
-	/* Empty */
-	//HAL_GPIO_Init(GPIOx, GPIO_Init);
-}
-
-void pinWrite (pin_t pin, uint8_t state){
-	HAL_GPIO_WritePin(HAL_GPIO(pin), HAL_PIN(pin), state);
-}
-
-void pinToggle(pin_t pin){
-	HAL_GPIO_TogglePin(HAL_GPIO(pin), HAL_PIN(pin));
-}
-
-int8_t pinRead (pin_t pin){
-	return HAL_GPIO_ReadPin(HAL_GPIO(pin), HAL_PIN(pin));
-}
+#endif /* GEOCONFIG_H_ */

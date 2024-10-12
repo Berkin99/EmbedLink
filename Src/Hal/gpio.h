@@ -145,6 +145,7 @@ typedef uint16_t pin_t;
 
 void   pinMode  (pin_t pin, uint8_t mode);
 void   pinWrite (pin_t pin, uint8_t state);
+void   pinToggle(pin_t pin);
 int8_t pinRead  (pin_t pin);
 
 #endif /* GPIO_H_ */

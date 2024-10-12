@@ -87,5 +87,5 @@ void pwmWrite (pwm_t* pwm, float us){
 }
 
 float pwmRead (pwm_t* pwm){
-	return (float) * pwm->reg * (pwm->usPerReg);
+	return (float) *(pwm->reg) * (pwm->usPerReg);
 }

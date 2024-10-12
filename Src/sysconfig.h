@@ -36,28 +36,28 @@
 #define SYSTIME                htim2
 
 /// SYSDEBUG ////////////////////////////////////////////////
-#define SYSDEBUG               uart2
+#define SERIAL_UART            uart2
 #define SYSLED1                LED3
 #define SYSLED2                LED4
 
 /// LED /////////////////////////////////////////////////////
-#define LED1_PIN               PC1
-#define LED2_PIN               PC2
-#define LED3_PIN               PC3
-#define LED4_PIN               PC4
+#define LED1_PIN               PE11
+#define LED2_PIN               PE10
+#define LED3_PIN               PD3
+#define LED4_PIN               PD4
 
 /// I2C /////////////////////////////////////////////////////
 //#define BMP388_I2C             i2c2
-//#define BNO055_I2C             i2c2
+#define BNO055_I2C             i2c2
 //#define E24AA_I2C              i2c2
 //#define HMC5883L_I2C           i2c1
 //#define MPU6050_I2C            i2c1
 //#define MS5611_I2C             i2c1
 
 /// SPI /////////////////////////////////////////////////////
-//#define BMI088_SPI             spi1
-//#define BMI088_GYR_CS          PB2
-//#define BMI088_ACC_CS          PB1
+#define BMI088_SPI             spi1
+#define BMI088_ACC_CS          PC4
+#define BMI088_GYR_CS          PC5
 //#define RF24_SPI               spi1
 //#define RF24_CE                PE5
 //#define RF24_CS                PE6
@@ -99,7 +99,6 @@
 //#define NC_ID                 'X'
 
 /// RTOS ////////////////////////////////////////////////////
-
 #define SYSTEM_TASK_PRI         (2)
 #define LEDSEQ_TASK_PRI         (2)
 #define NC_TASK_PRI		        (3)
@@ -111,10 +110,10 @@
 
 #define SYSTEM_TASK_STACK       (2 * RTOS_MIN_STACK)
 #define LEDSEQ_TASK_STACK       (1 * RTOS_MIN_STACK)
-#define NC_TASK_STACK	        (4 * RTOS_MIN_STACK)
+#define NC_TASK_STACK	        (2 * RTOS_MIN_STACK)
 #define SENS_TASK_STACK         (4 * RTOS_MIN_STACK)
-#define NAV_TASK_STACK          (4 * RTOS_MIN_STACK)
-#define TRX_TASK_STACK          (4 * RTOS_MIN_STACK)
+#define NAV_TASK_STACK          (2 * RTOS_MIN_STACK)
+#define TRX_TASK_STACK          (2 * RTOS_MIN_STACK)
 #define ESTIMATOR_TASK_STACK    (4 * RTOS_MIN_STACK)
 #define CONTROL_TASK_STACK      (4 * RTOS_MIN_STACK)
 

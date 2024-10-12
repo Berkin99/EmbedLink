@@ -25,12 +25,10 @@
 
 #ifdef BNO055_I2C
 
-#include "FreeRTOS.h"
-#include "semphr.h"
-#include "static_mem.h"
+#include "rtos.h"
 #include "sensor_bno055.h"
 #include "bno055.h"
-#include "serial.h"
+#include "uart.h"
 #include "i2c.h"
 #include "geoconfig.h"
 #include "filter.h"
@@ -69,19 +67,19 @@ static uint32_t idptr;
 static uint8_t  isInit;
 static uint8_t  isReady;
 
-STATIC_MEM_TASK_ALLOC(BNO055, SENS_TASK_STACK, SENS_TASK_PRI);
+taskAllocateStatic(BNO055, SENS_TASK_STACK, SENS_TASK_PRI);
 void sensorTaskBNO055(void* argv);
 
 int8_t sensorInitBNO055(void){
 
-	if(isInit) return SYS_E_OVERWRITE;
+	if(isInit) return E_OVERWRITE;
 
     bno055.bus_write  = BNO055_I2C_bus_write;
     bno055.bus_read   = BNO055_I2C_bus_read;
     bno055.delay_msec = BNO055_delay_msek;
     bno055.dev_addr   = BNO055_I2C_ADDR1;
 
-    if (bno055_init(&bno055) != BNO055_SUCCESS) return SYS_E_CONF_FAIL;
+    if (bno055_init(&bno055) != BNO055_SUCCESS) return E_CONF_FAIL;
 
     /* set the power mode as NORMAL*/
     bno055_set_power_mode     (BNO055_POWER_MODE_NORMAL);
@@ -89,16 +87,16 @@ int8_t sensorInitBNO055(void){
     bno055_set_mag_operation_mode(BNO055_MAG_OPERATION_MODE_HIGH_ACCURACY);
     bno055_set_operation_mode (BNO055_OPERATION_MODE_MAGONLY);
 
-    STATIC_MEM_TASK_CREATE(BNO055, sensorTaskBNO055, NULL);
+    taskCreateStatic(BNO055, sensorTaskBNO055, NULL);
     isInit = 1;
 
-    return SYS_OK;
+    return OK;
 }
 
 int8_t sensorTestBNO055(void){
 	struct bno055_mag_t tmp;
-	if(bno055_read_mag_xyz(&tmp) == BNO055_SUCCESS) return SYS_OK;
-	return SYS_E_COMM_FAIL;
+	if(bno055_read_mag_xyz(&tmp) == BNO055_SUCCESS) return OK;
+	return E_COMM_FAIL;
 }
 
 void sensorTaskBNO055(void* argv){
@@ -130,7 +128,7 @@ void sensorTaskBNO055(void* argv){
     	magRot   = vzero();
     	serialPrint("[!] BNO055 is not calibrated\n");
     	isReady = 1;
-    	delay(portMAX_DELAY);
+    	delay(RTOS_MAX_DELAY);
     }
 
 	TickType_t xLastWakeTime = xTaskGetTickCount();
@@ -189,8 +187,8 @@ void sensorCalibrateBNO055(void){
 }
 
 int8_t sensorIsCalibratedBNO055(void){
-	if(idptr == (uint32_t)SYS_ID(sensorNameBNO055))return SYS_TRUE;
-	return SYS_FALSE;
+	if(idptr == (uint32_t)SYS_ID(sensorNameBNO055))return TRUE;
+	return FALSE;
 }
 
 int8_t sensorAcquireBNO055(measurement_t* plist, uint8_t n){

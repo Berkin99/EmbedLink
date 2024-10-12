@@ -69,7 +69,7 @@ void estimatorTaskKF(void* argv);
 taskAllocateStatic(ESTIMATOR_KF, ESTIMATOR_TASK_STACK, ESTIMATOR_TASK_PRI);
 
 int8_t estimatorInitKF (void){
-	if(isInit) return SYS_E_OVERWRITE;
+	if(isInit) return E_OVERWRITE;
 	taskCreateStatic(ESTIMATOR_KF, estimatorTaskKF, NULL);
 	isInit = 1;
 	while(!isReady) delay(1);
@@ -101,7 +101,7 @@ void estimatorTaskKF(void* argv){
 	}
 }
 
-void _estimatorUpdateKF(estimatorTick_t tick){
+void _estimatorUpdateKF(uint32_t tick){
     /* Estimator responsable from kinematics update */
     estimatorUpdate      (&state, checklist);
 	kinematicsStateUpdate(&state, checklist);

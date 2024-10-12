@@ -30,8 +30,12 @@
 #include "rtos.h"
 #include "sysconfig.h"
 #include "sysdebug.h"
+
+#ifdef   BMI088_SPI
+
 #include "systime.h"
 #include "uart.h"
+#include "gpio.h"
 #include "sensor_bmi088.h"
 #include "spi.h"
 #include "bmi08.h"
@@ -45,8 +49,6 @@
 #include "mem.h"
 #include "memory.h"
 #include "nrx.h"
-
-#ifdef  BMI088_SPI
 
 /* BMI088 Definitions */
 
@@ -387,8 +389,6 @@ void bmi08DelayUs(uint32_t period, void *intf_ptr){
     delayUs(period);
 }
 
-#endif /* BMI088_SPI */
-
 NRX_GROUP_START(bmical)
 NRX_ADD(NRX_FLOAT,  accScale.x, &accScale.x)
 NRX_ADD(NRX_FLOAT,  accScale.y, &accScale.y)
@@ -407,3 +407,5 @@ MEM_ADD(MEM_FLOAT,  accRot.x,  &accRot.x)
 MEM_ADD(MEM_FLOAT,  accRot.y,  &accRot.y)
 MEM_ADD(MEM_FLOAT,  accRot.z,  &accRot.z)
 MEM_GROUP_STOP (BMI088)
+
+#endif /* BMI088_SPI */

@@ -75,7 +75,7 @@ void estimatorInit (void){
 	if(isDefined == 0) return;
 	estimator = estimators[0]; /* Changable estimator for various estimators performance test */
 
-	qmeasure = queueCreateStatic(qmeasue);
+	qmeasure = queueCreateStatic(qmeasure);
 	qready = 1;
 
 	uint32_t i = 0;

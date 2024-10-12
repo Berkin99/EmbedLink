@@ -39,7 +39,7 @@
 #ifdef SYSTIME
 
 uint32_t millis(void){
-	return SYSTIME.Instance->CNT/1000;
+	return SYSTIME.Instance->CNT / 1000;
 }
 
 uint32_t micros(void){

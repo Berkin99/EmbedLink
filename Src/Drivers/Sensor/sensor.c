@@ -112,7 +112,6 @@ int8_t sensorGetSize(void){
 	return sensLen;
 }
 
-
 const char*  sensorName(uint8_t index){
 	if(index >= sensLen) return NULL;
 	return sensList[index].Name;

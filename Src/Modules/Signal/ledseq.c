@@ -92,13 +92,14 @@ void ledseqTask(void* argv){
 
 int8_t ledseqRun(uint8_t led, int8_t priority, const int16_t* seq){
 	int8_t status = mutexTake(ledseqs[led].mutex, 0);
+	ledSet(led, 1);
 	if(status == RTOS_OK){
 		ledseqs[led].priority = priority;
 		ledseqs[led].seq = seq;
 		ledseqs[led].seqstart = seq;
 		return OK;
 	}
-	return ERROR;
+	return E_ERROR;
 }
 
 void ledseqStop(uint8_t led){

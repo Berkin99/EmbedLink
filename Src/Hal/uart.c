@@ -31,6 +31,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include "system.h"
+#include "sysconfig.h"
 #include "uart.h"
 #include "rtos.h"
 
@@ -126,16 +127,16 @@ int8_t uartPrint(uart_t* uart, const char* format, ...) {
 }
 
 #ifdef SERIAL_UART
-void serialPrint (char* format, ...){
+void serialPrint (const char* format, ...){
 	va_list args;
 	char buffer[128];
-	int len;
+	uint16_t len;
 
 	va_start(args, format);
-	length = vsnprintf(buffer, sizeof(buffer), format, args);
+	len = vsnprintf(buffer, sizeof(buffer), format, args);
 	va_end(args);
 
-	uartWrite(SERIAL_UART, buffer, len);
+	uartWrite(&SERIAL_UART, (uint8_t*)buffer, len);
 }
 #endif
 

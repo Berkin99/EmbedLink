@@ -36,6 +36,14 @@
 #include "uart.h"
 #include "adc.h"
 #include "pwm.h"
+#include "led.h"
+#include "ledseq.h"
+#include "sensor.h"
+#include "navigator.h"
+#include "telemetry.h"
+#include "memory.h"
+#include "estimator.h"
+
 //#include "usb.h"
 
 static uint8_t sysInit;
@@ -65,44 +73,41 @@ void systemLaunch(void){
 
 void systemTask(void* argv){
 
-//    serialPrint("[>] System Start\n");
-//
-//    ledseqContext_t start_seq  = {LED4, 5, seq_fastblinkloop};
-//    ledseqContext_t system_seq = {LED3, 5, seq_heartbeat};
-//
-//    ledseqInit();
-//    ledseqRun (&start_seq);
-//
-//    delay(1000);
-//
-//    /* Memory First */
+    serialPrint("[>] System Start\n");
+
+    ledseqInit();
+    ledseqRun(LED1, 1, SEQ_PROCESS_L);
+
+    delay(1000);
+
+    /* Memory First */
 //    memoryInit();
 //    memoryTest();
 //    memoryDownload();
-//
+
 //    ncInit();
-//    quadInit();
-//
-//    sensorInit();
-//    telemetryInit();
-//    navigatorInit();
-//    estimatorInit();
-//
-//    sensorTest();
-//    telemetryTest();
-//    navigatorTest();
-//    estimatorTest();
-//
-//    /* System Ready Signal */
-//    ledseqStop (&start_seq);
-//    ledseqRun  (&system_seq);
-//
-//    sysInit = 2;
-//
-//    serialPrint("[>] System Ready\n \n");
-//    while(1){
-//    	delay(1000);
-//    }
+
+    sensorInit();
+    telemetryInit();
+    navigatorInit();
+    estimatorInit();
+
+    sensorTest();
+    telemetryTest();
+    navigatorTest();
+    estimatorTest();
+
+    /* System Ready Signal */
+    ledseqStop (LED1);
+    ledseqRun  (LED2, 1, SEQ_HEARTBEAT);
+
+    sysInit = 2;
+    int i = 0;
+    serialPrint("[>] System Ready\n \n");
+    while(1){
+    	delay(1000);
+    	serialPrint("%d\n", ++i);
+    }
 }
 
 void systemWaitReady(void){

@@ -1,23 +1,30 @@
-/**
- *    __  __ ____ _  __ ____ ___ __  __
- *    \ \/ // __// |/ //  _// _ |\ \/ /
- *     \  // _/ /    /_/ / / __ | \  /
- *     /_//___//_/|_//___//_/ |_| /_/
+/*
+ *       ______          __             ____    _       __
+ *      / ____/___ ___  / /_  ___  ____/ / /   (_)___  / /__
+ *     / __/ / __ `__ \/ __ \/ _ \/ __  / /   / / __ \/ //_/
+ *    / /___/ / / / / / /_/ /  __/ /_/ / /___/ / / / / ,<
+ *   /_____/_/ /_/ /_/_.___/\___/\__,_/_____/_/_/ /_/_/|_|
  *
- *         Yeniay System Firmware
+ *  EmbedLink Firmware
+ *  Copyright (c) 2024 Yeniay RD, All rights reserved.
+ *  _________________________________________________________
  *
- *       Copyright (C) 2024 Yeniay
+ *  EmbedLink Firmware is free software: you can redistribute
+ *  it and/or  modify it under  the  terms of the  GNU Lesser
+ *  General Public License as  published by the Free Software
+ *  Foundation,  either version 3 of the License, or (at your
+ *  option) any later version.
  *
- * This  program  is  free software:   you
- * can  redistribute it  and/or  modify it
- * under  the  terms of  the  GNU  General
- * Public  License as  published  by   the
- * Free Software Foundation, in version 3.
+ *  EmbedLink  Firmware is  distributed  in the  hope that it
+ *  will be useful, but  WITHOUT  ANY  WARRANTY; without even
+ *  the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ *  PARTICULAR PURPOSE.  See  the GNU  Lesser  General Public
+ *  License for more details.
  *
- * You  should  have  received  a  copy of
- * the  GNU  General  Public License along
- * with this program. If not, see
- * <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU Lesser General
+ *  Public License along with EmbedLink Firmware. If not, see
+ *  <http://www.gnu.org/licenses/>.
+ *
  */
 
 #include "sysconfig.h"
@@ -36,8 +43,7 @@
 /* BMP3.h Variables */
 static struct bmp3_dev device;
 static struct bmp3_data data;
-
-static uint8_t  dev_addr = BMP3_ADDR_I2C_PRIM;
+static uint8_t dev_addr = BMP3_ADDR_I2C_PRIM;
 
 int8_t _sensorReadBMP388(uint8_t reg_addr, uint8_t *read_data, uint32_t len, void *intf_ptr);
 int8_t _sensorWriteBMP388(uint8_t reg_addr, uint8_t *write_data, uint32_t len, void *intf_ptr);
@@ -51,24 +57,21 @@ int8_t _sensorErrorConvertBMP388(int8_t err);
 
 static float barMean;
 static float barVariance;
-
 static measurement_t mbar;
 static measurement_t mtmp;
-
 static uint32_t idptr;
 static uint8_t  isReady;
 static uint8_t  isInit;
-
 static uint8_t newbar;
 static uint8_t newtmp;
 static int8_t  status;
 
-STATIC_MEM_TASK_ALLOC(BMP388, SENS_TASK_STACK, SENS_TASK_PRI);
-void   sensorTaskBMP388(void* argv);
+taskAllocateStatic(BMP388, SENS_TASK_STACK, SENS_TASK_PRI);
+void sensorTaskBMP388(void* argv);
 
 int8_t sensorInitBMP388(void){
 
-    if(isInit == 1) return SYS_E_OVERWRITE;
+    if(isInit == 1) return E_OVERWRITE;
 
     struct bmp3_settings settings;
     uint16_t settings_sel;
@@ -104,9 +107,9 @@ int8_t sensorInitBMP388(void){
     status = bmp3_set_op_mode(&settings, &device);
     if(result != BMP3_OK) return _sensorErrorConvertBMP388(result);
 
-    STATIC_MEM_TASK_CREATE(BMP388, sensorTaskBMP388, NULL);
+    taskCreateStatic(BMP388, sensorTaskBMP388, NULL);
     isInit = 1;
-    return SYS_OK;
+    return OK;
 }
 
 int8_t sensorTestBMP388(void){
@@ -140,8 +143,8 @@ void sensorTaskBMP388(void* argv){
             mbar.pressure.value    = (float) data.pressure / 100.0f;
             mtmp.temperature.value = (float) data.temperature;
 
-            estimatorEnqueue(&mbar, SYS_FALSE);
-            estimatorEnqueue(&mtmp, SYS_FALSE);
+            estimatorEnqueue(&mbar, FALSE);
+            estimatorEnqueue(&mtmp, FALSE);
 
             newbar = 1;
             newtmp = 1;
@@ -184,8 +187,8 @@ void sensorCalibrateBMP388(void){
 }
 
 int8_t sensorIsCalibratedBMP388(void){
-	if(idptr == (uint32_t)SYS_ID(sensorNameBMP388))return SYS_TRUE;
-	return SYS_FALSE;
+	if(idptr == (uint32_t)SYS_ID(sensorNameBMP388))return TRUE;
+	return FALSE;
 }
 
 int8_t sensorAcquireBMP388(measurement_t* plist, uint8_t n){
@@ -227,32 +230,32 @@ int8_t _sensorWriteBMP388(uint8_t reg_addr, uint8_t *write_data, uint32_t len, v
     uint8_t status;
     status = i2cMemWrite(&BMP388_I2C, BMP3_ADDR_I2C_PRIM, reg_addr, write_data, len);
 
-    if(status == HAL_ERROR) return BMP3_E_COMM_FAIL;    /* BMP ERROR */
+    if(status != HAL_OK) return BMP3_E_COMM_FAIL;    /* BMP ERROR */
     return 0;    /* BMP3_OK */
 }
 
 void _sensorDelayUsBMP388(uint32_t period, void *intf_ptr){
-    delayMicroseconds(period);
+    delayUs(period);
 }
 
 int8_t _sensorErrorConvertBMP388(int8_t err){
     switch (err) {
-        case BMP3_OK:                  return SYS_OK;
-        case BMP3_E_NULL_PTR:          return SYS_E_NULL_PTR;
-        case BMP3_E_INVALID_ODR_OSR_SETTINGS: return SYS_E_CONF_FAIL;
-        case BMP3_E_CMD_EXEC_FAILED:   return SYS_E_COMM_FAIL;
-        case BMP3_E_CONFIGURATION_ERR: return SYS_E_CONF_FAIL;
-        case BMP3_E_INVALID_LEN:       return SYS_E_OVERFLOW;
-        case BMP3_E_DEV_NOT_FOUND:     return SYS_E_NOT_FOUND;
+        case BMP3_OK:                  return OK;
+        case BMP3_E_NULL_PTR:          return E_NULL_PTR;
+        case BMP3_E_INVALID_ODR_OSR_SETTINGS: return E_CONF_FAIL;
+        case BMP3_E_CMD_EXEC_FAILED:   return E_COMM_FAIL;
+        case BMP3_E_CONFIGURATION_ERR: return E_CONF_FAIL;
+        case BMP3_E_INVALID_LEN:       return E_OVERFLOW;
+        case BMP3_E_DEV_NOT_FOUND:     return E_NOT_FOUND;
         default:break;
     }
-    return SYS_ERR;
+    return E_ERROR;
 }
 
-#endif /* BMP388_I2C */
+//MEM_GROUP_START(BMP388)
+//MEM_ADD(MEM_UINT32, idptr,    &idptr)
+//MEM_ADD(MEM_FLOAT,  mean,     &barMean)
+//MEM_ADD(MEM_FLOAT,  variance, &barVariance)
+//MEM_GROUP_STOP(BMP388)
 
-MEM_GROUP_START(BMP388)
-MEM_ADD(MEM_UINT32, idptr,    &idptr)
-MEM_ADD(MEM_FLOAT,  mean,     &barMean)
-MEM_ADD(MEM_FLOAT,  variance, &barVariance)
-MEM_GROUP_STOP(BMP388)
+#endif /* BMP388_I2C */

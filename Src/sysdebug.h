@@ -38,7 +38,7 @@
 #define FALSE          (0)
 
 #define OK             (0)
-#define ERROR          (-1)
+#define E_ERROR        (-1)
 #define E_NULL_PTR     (-2)
 #define E_OVERWRITE    (-3)
 #define E_OVERFLOW     (-4)

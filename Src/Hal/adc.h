@@ -31,10 +31,16 @@
 #define ADC_H_
 
 #include <stdint.h>
-#include "system.h"
+#include "rtos.h"
 
-void    adcInit(void);
-int8_t  adcIndex(ADC_HandleTypeDef* hadc);
-int8_t  adcRead(ADC_HandleTypeDef* hadc, uint32_t* pBuffer);
+typedef struct{
+	void* handle;
+	semaphore_t cplt;
+}adc_t;
+
+extern adc_t adc1;
+
+void   adcInit(void);
+int8_t adcRead(adc_t* adc, uint32_t* pBuffer);
 
 #endif /* ADC_H_ */

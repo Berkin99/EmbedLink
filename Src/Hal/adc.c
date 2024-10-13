@@ -30,77 +30,50 @@
 #include "system.h"
 #include "sysconfig.h"
 #include "adc.h"
-#include "FreeRTOS.h"
-#include "semphr.h"
 
 #ifdef HAL_ADC_MODULE_ENABLED
 
 #define ADC_TIMEOUT	(1000)
 
-typedef enum{
-#ifdef ADC1_HANDLE
-	ADC1_INDEX,
-#endif
-#ifdef ADC2_HANDLE
-	ADC2_INDEX,
-#endif
-#ifdef ADC3_HANDLE
-	ADC3_INDEX,
-#endif
-#ifdef ADC4_HANDLE
-	ADC4_INDEX,
-#endif
-	ADC_COUNT,
-}adc_e;
-
-static SemaphoreHandle_t adcComplete [ADC_COUNT];
+adc_t adc1;
 
 void adcInit(void){
-	for (uint8_t i = 0; i < ADC_COUNT; ++i) {
-		adcComplete[i] = xSemaphoreCreateBinary();
-	}
+	#ifdef HADC1
+		adc1.handle = &HADC1;
+		adc1.cplt = semaphoreCreate();
+	#endif
+	#ifdef HADC2
+		adc2.handle = &HADC2;
+		adc2.cplt = semaphoreCreate();
+	#endif
 }
 
-int8_t adcIndex(ADC_HandleTypeDef* hadc){
-	#ifdef ADC1_HANDLE
-		if(hadc->Instance == ADC1) return ADC1_INDEX;
-	#endif
-	#ifdef ADC2_HANDLE
-		if(hadc->Instance == ADC2) return ADC2_INDEX;
-	#endif
-	#ifdef ADC3_HANDLE
-		if(hadc->Instance == ADC3) return ADC3_INDEX;
-	#endif
-	#ifdef ADC4_HANDLE
-		if(hadc->Instance == ADC4) return ADC4_INDEX;
-	#endif
-	return -1;
-}
+int8_t adcRead(adc_t* adc, uint32_t* pBuffer){
 
-int8_t adcRead(ADC_HandleTypeDef* hadc, uint32_t* pBuffer){
-	int8_t ix = adcIndex(hadc);
-	if(ix == -1) return HAL_ERROR;
-
-	uint8_t status = HAL_ADC_Start_IT(hadc);
+	uint8_t status = HAL_ADC_Start_IT(adc->handle);
 	if(status != HAL_OK) return status;
 
-	if(xSemaphoreTake(adcComplete[ix], ADC_TIMEOUT) != pdTRUE) return HAL_TIMEOUT;
+	if(semaphoreTake(adc->cplt, ADC_TIMEOUT) != RTOS_OK) return HAL_TIMEOUT;
 
-	*pBuffer = HAL_ADC_GetValue(hadc);
+	*pBuffer = HAL_ADC_GetValue(adc->handle);
 	return HAL_OK;
 }
 
+adc_t* HAL_ADC_Parent(ADC_HandleTypeDef *hadc){
+	#ifdef HADC1
+		if(hadc == HADC1) return &adc1;
+	#endif
+	#ifdef HADC2
+		if(hadc == HADC2) return &adc2;
+	#endif
+	return NULL;
+}
+
 void HAL_ADC_ConvCpltCallback (ADC_HandleTypeDef *hadc){
-	int8_t ix = adcIndex(hadc);
-	if(ix == -1) return; /* WTF */
-
+	adc_t* parent = HAL_ADC_Parent(hadc);
+	if(parent == NULL) return;
 	HAL_ADC_Stop_IT(hadc);
-	portBASE_TYPE xHigherPriorityTaskWoken = pdFALSE;
-
-	xSemaphoreGiveFromISR(adcComplete[ix],&xHigherPriorityTaskWoken);
-	if(xHigherPriorityTaskWoken){
-		portYIELD();
-	}
+	semaphoreGiveISR(parent->cplt);
 }
 
 #endif

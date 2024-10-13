@@ -27,9 +27,9 @@
  *
  */
 
+#include <sysdefs.h>
 #include "systime.h"
 #include "sysconfig.h"
-#include "sysdebug.h"
 #include "ledseq.h"
 #include "rtos.h"
 #include "led.h"

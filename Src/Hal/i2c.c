@@ -55,70 +55,64 @@ void i2cInit(void){
 	#endif
 }
 
-int8_t i2cReceive(i2c_t* i2c, uint8_t devAddr, uint8_t* pRxData, uint8_t len){
-	if(mutexTake(i2c->mutex, I2C_TIMEOUT) != RTOS_OK) return HAL_ERROR;
+int8_t i2cReceive(i2c_t* i2c, uint8_t devAddr, uint8_t* pRxData, uint16_t len){
+	if(mutexTake(i2c->mutex, I2C_TIMEOUT) != RTOS_OK) return E_TIMEOUT;
 	int8_t status = HAL_I2C_Master_Receive_IT(i2c->handle, devAddr << 1, pRxData, len);
-	if(semaphoreTake(i2c->cplt, I2C_TIMEOUT) != RTOS_OK){
-		mutexGive(i2c->mutex);
-		return HAL_ERROR;
-	}
+	int8_t rslt = OK;
+	if(status != HAL_OK) rslt = E_CONNECTION;
+	else if(semaphoreTake(i2c->cplt, I2C_TIMEOUT) != RTOS_OK)rslt = E_TIMEOUT;
 	mutexGive(i2c->mutex);
-	return status;
+	return rslt;
 }
 
-int8_t i2cTransmit(i2c_t* i2c, uint8_t devAddr, uint8_t* pTxData, uint8_t len ){
-	if(mutexTake(i2c->mutex, I2C_TIMEOUT) != RTOS_OK) return HAL_ERROR;
+int8_t i2cTransmit(i2c_t* i2c, uint8_t devAddr, uint8_t* pTxData, uint16_t len ){
+	if(mutexTake(i2c->mutex, I2C_TIMEOUT) != RTOS_OK) return E_TIMEOUT;
 	int8_t status = HAL_I2C_Master_Transmit_IT(i2c->handle, devAddr << 1, pTxData, len);
-	if(semaphoreTake(i2c->cplt, I2C_TIMEOUT) != RTOS_OK){
-		mutexGive(i2c->mutex);
-		return HAL_ERROR;
-	}
+	int8_t rslt = OK;
+	if(status != HAL_OK) rslt = E_CONNECTION;
+	else if(semaphoreTake(i2c->cplt, I2C_TIMEOUT) != RTOS_OK)rslt = E_TIMEOUT;
 	mutexGive(i2c->mutex);
-	return status;
+	return rslt;
 }
 
-int8_t i2cMemRead(i2c_t* i2c, uint8_t devAddr, uint8_t memAddr, uint8_t* pRxData, uint8_t len ){
-	if(mutexTake(i2c->mutex, I2C_TIMEOUT) != RTOS_OK) return HAL_ERROR;
+int8_t i2cMemRead(i2c_t* i2c, uint8_t devAddr, uint8_t memAddr, uint8_t* pRxData, uint16_t len ){
+	if(mutexTake(i2c->mutex, I2C_TIMEOUT) != RTOS_OK) return E_TIMEOUT;
 	int8_t status = HAL_I2C_Mem_Read_IT(i2c->handle, devAddr << 1, memAddr, I2C_MEMADD_SIZE_8BIT, pRxData, len);
-	if(semaphoreTake(i2c->cplt, I2C_TIMEOUT) != RTOS_OK){
-		mutexGive(i2c->mutex);
-		return HAL_ERROR;
-	}
+	int8_t rslt = OK;
+	if(status != HAL_OK) rslt = E_CONNECTION;
+	else if(semaphoreTake(i2c->cplt, I2C_TIMEOUT) != RTOS_OK)rslt = E_TIMEOUT;
 	mutexGive(i2c->mutex);
-	return status;
+	return rslt;
 }
 
-int8_t i2cMemWrite(i2c_t* i2c, uint8_t devAddr, uint8_t memAddr, uint8_t* pTxData, uint8_t len ){
-	if(mutexTake(i2c->mutex, I2C_TIMEOUT) != RTOS_OK) return HAL_ERROR;
+int8_t i2cMemWrite(i2c_t* i2c, uint8_t devAddr, uint8_t memAddr, uint8_t* pTxData, uint16_t len ){
+	if(mutexTake(i2c->mutex, I2C_TIMEOUT) != RTOS_OK) return E_TIMEOUT;
 	int8_t status = HAL_I2C_Mem_Write_IT(i2c->handle, devAddr << 1, memAddr, I2C_MEMADD_SIZE_8BIT, pTxData, len);
-	if(semaphoreTake(i2c->cplt, I2C_TIMEOUT) != RTOS_OK){
-		mutexGive(i2c->mutex);
-		return HAL_ERROR;
-	}
+	int8_t rslt = OK;
+	if(status != HAL_OK) rslt = E_CONNECTION;
+	else if(semaphoreTake(i2c->cplt, I2C_TIMEOUT) != RTOS_OK)rslt = E_TIMEOUT;
 	mutexGive(i2c->mutex);
-	return status;
+	return rslt;
 }
 
-int8_t i2cMemRead16(i2c_t* i2c, uint8_t devAddr, uint16_t  memAddr, uint8_t* pRxData, uint8_t len){
-	if(mutexTake(i2c->mutex, I2C_TIMEOUT) != RTOS_OK) return HAL_ERROR;
+int8_t i2cMemRead16(i2c_t* i2c, uint8_t devAddr, uint16_t  memAddr, uint8_t* pRxData, uint16_t len){
+	if(mutexTake(i2c->mutex, I2C_TIMEOUT) != RTOS_OK) return E_TIMEOUT;
 	int8_t status = HAL_I2C_Mem_Read_IT(i2c->handle, devAddr << 1, memAddr, I2C_MEMADD_SIZE_16BIT, pRxData, len);
-	if(semaphoreTake(i2c->cplt, I2C_TIMEOUT) != RTOS_OK){
-		mutexGive(i2c->mutex);
-		return HAL_ERROR;
-	}
+	int8_t rslt = OK;
+	if(status != HAL_OK) rslt = E_CONNECTION;
+	else if(semaphoreTake(i2c->cplt, I2C_TIMEOUT) != RTOS_OK)rslt = E_TIMEOUT;
 	mutexGive(i2c->mutex);
-	return status;
+	return rslt;
 }
 
-int8_t i2cMemWrite16(i2c_t* i2c, uint8_t devAddr, uint16_t  memAddr, uint8_t* pTxData, uint8_t len){
-	if(mutexTake(i2c->mutex, I2C_TIMEOUT) != RTOS_OK) return HAL_ERROR;
+int8_t i2cMemWrite16(i2c_t* i2c, uint8_t devAddr, uint16_t  memAddr, uint8_t* pTxData, uint16_t len){
+	if(mutexTake(i2c->mutex, I2C_TIMEOUT) != RTOS_OK) return E_TIMEOUT;
 	int8_t status = HAL_I2C_Mem_Write_IT(i2c->handle, devAddr << 1, memAddr, I2C_MEMADD_SIZE_16BIT, pTxData, len);
-	if(semaphoreTake(i2c->cplt, I2C_TIMEOUT) != RTOS_OK){
-		mutexGive(i2c->mutex);
-		return HAL_ERROR;
-	}
+	int8_t rslt = OK;
+	if(status != HAL_OK) rslt = E_CONNECTION;
+	else if(semaphoreTake(i2c->cplt, I2C_TIMEOUT) != RTOS_OK)rslt = E_TIMEOUT;
 	mutexGive(i2c->mutex);
-	return status;
+	return rslt;
 }
 
 i2c_t* HAL_I2C_Parent(I2C_HandleTypeDef* hi2c){

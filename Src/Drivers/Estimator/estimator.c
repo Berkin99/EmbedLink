@@ -27,7 +27,7 @@
  *
  */
 
-#include "sysdebug.h"
+#include <sysdefs.h>
 #include "systime.h"
 #include "sysconfig.h"
 #include "rtos.h"

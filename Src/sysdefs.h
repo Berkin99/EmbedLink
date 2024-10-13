@@ -27,8 +27,8 @@
  *
  */
 
-#ifndef SYSDEBUG_H_
-#define SYSDEBUG_H_
+#ifndef SYSDEFS_H_
+#define SYSDEFS_H_
 
 #define HIGH	       (1)
 #define LOW		       (0)
@@ -42,7 +42,7 @@
 #define E_NULL_PTR     (-2)
 #define E_OVERWRITE    (-3)
 #define E_OVERFLOW     (-4)
-#define E_COMM_FAIL    (-5)
+#define E_CONNECTION    (-5)
 #define E_CONF_FAIL    (-6)
 #define E_NOT_FOUND    (-7)
 #define E_TIMEOUT      (-8)
@@ -59,4 +59,4 @@ static inline int SYS_ID(char* name)
 	return id;
 }
 
-#endif /* SYSDEBUG_H_ */
+#endif /* SYSDEFS_H_ */

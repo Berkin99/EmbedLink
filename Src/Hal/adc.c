@@ -51,9 +51,9 @@ void adcInit(void){
 int8_t adcRead(adc_t* adc, uint32_t* pBuffer){
 
 	uint8_t status = HAL_ADC_Start_IT(adc->handle);
-	if(status != HAL_OK) return status;
+	if(status != HAL_OK) return E_ERROR;
 
-	if(semaphoreTake(adc->cplt, ADC_TIMEOUT) != RTOS_OK) return HAL_TIMEOUT;
+	if(semaphoreTake(adc->cplt, ADC_TIMEOUT) != RTOS_OK) return E_TIMEOUT;
 
 	*pBuffer = HAL_ADC_GetValue(adc->handle);
 	return HAL_OK;
@@ -61,10 +61,10 @@ int8_t adcRead(adc_t* adc, uint32_t* pBuffer){
 
 adc_t* HAL_ADC_Parent(ADC_HandleTypeDef *hadc){
 	#ifdef HADC1
-		if(hadc == HADC1) return &adc1;
+		if(hadc == &HADC1) return &adc1;
 	#endif
 	#ifdef HADC2
-		if(hadc == HADC2) return &adc2;
+		if(hadc == &HADC2) return &adc2;
 	#endif
 	return NULL;
 }

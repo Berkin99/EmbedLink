@@ -30,8 +30,8 @@
 #ifndef SYSTEM_H_
 #define SYSTEM_H_
 
+#include <sysdefs.h>
 #include "main.h"
-#include "sysdebug.h"
 
 void systemLaunch(void);
 void systemWaitReady(void);

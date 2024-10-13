@@ -103,7 +103,7 @@ int8_t sensorInitBNO055(void){
 int8_t sensorTestBNO055(void){
 	struct bno055_mag_t tmp;
 	if(bno055_read_mag_xyz(&tmp) == BNO055_SUCCESS) return OK;
-	return E_COMM_FAIL;
+	return E_CONNECTION;
 }
 
 void sensorTaskBNO055(void* argv){

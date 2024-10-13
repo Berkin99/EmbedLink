@@ -27,9 +27,9 @@
  *
  */
 
+#include <sysdefs.h>
 #include "rtos.h"
 #include "sysconfig.h"
-#include "sysdebug.h"
 
 #ifdef   BMI088_SPI
 

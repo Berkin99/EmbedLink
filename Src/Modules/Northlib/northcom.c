@@ -30,10 +30,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <sysdefs.h>
 #include "rtos.h"
 #include "sysconfig.h"
 #include "systime.h"
-#include "sysdebug.h"
 #include "uart.h"
 #include "telemetry.h"
 #include "northcom.h"

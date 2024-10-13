@@ -35,7 +35,7 @@ extern "C" {
 #endif
 
 #include <stdint.h>
-#include "sysdebug.h"
+#include <sysdefs.h>
 #include "math3d.h"
 
 #define INDEX_X       0

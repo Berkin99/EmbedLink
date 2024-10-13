@@ -27,7 +27,7 @@
  *
  */
 
-#include "sysdebug.h"
+#include <sysdefs.h>
 #include "sysconfig.h"
 
 #ifdef  ESTIMATOR_COMPLEMENTARY

@@ -44,11 +44,11 @@ extern i2c_t i2c2;
 extern i2c_t i2c3;
 
 void   i2cInit       (void);
-int8_t i2cReceive    (i2c_t* i2c, uint8_t devAddr, uint8_t* pRxData, uint8_t len);
-int8_t i2cTransmit   (i2c_t* i2c, uint8_t devAddr, uint8_t* pTxData, uint8_t len);
-int8_t i2cMemRead    (i2c_t* i2c, uint8_t devAddr, uint8_t  memAddr, uint8_t* pRxData, uint8_t len);
-int8_t i2cMemWrite   (i2c_t* i2c, uint8_t devAddr, uint8_t  memAddr, uint8_t* pTxData, uint8_t len);
-int8_t i2cMemRead16  (i2c_t* i2c, uint8_t devAddr, uint16_t memAddr, uint8_t* pRxData, uint8_t len);
-int8_t i2cMemWrite16 (i2c_t* i2c, uint8_t devAddr, uint16_t memAddr, uint8_t* pTxData, uint8_t len);
+int8_t i2cReceive    (i2c_t* i2c, uint8_t devAddr, uint8_t* pRxData, uint16_t len);
+int8_t i2cTransmit   (i2c_t* i2c, uint8_t devAddr, uint8_t* pTxData, uint16_t len);
+int8_t i2cMemRead    (i2c_t* i2c, uint8_t devAddr, uint8_t  memAddr, uint8_t* pRxData, uint16_t len);
+int8_t i2cMemWrite   (i2c_t* i2c, uint8_t devAddr, uint8_t  memAddr, uint8_t* pTxData, uint16_t len);
+int8_t i2cMemRead16  (i2c_t* i2c, uint8_t devAddr, uint16_t memAddr, uint8_t* pRxData, uint16_t len);
+int8_t i2cMemWrite16 (i2c_t* i2c, uint8_t devAddr, uint16_t memAddr, uint8_t* pTxData, uint16_t len);
 
 #endif /* I2C_H_ */

@@ -33,7 +33,6 @@
 #include "system.h"
 #include "sysconfig.h"
 #include "uart.h"
-#include "rtos.h"
 
 #define UART_TIMEOUT (1000)
 
@@ -78,40 +77,37 @@ void uartSetBaudRate(uart_t* uart, uint32_t rate){
 }
 
 uint32_t uartGetBaudRate(uart_t* uart){
-    return ((UART_HandleTypeDef*)uart->handle)->Init.BaudRate;
+    return ((UART_HandleTypeDef*) uart->handle)->Init.BaudRate;
 }
 
 int8_t uartRead(uart_t* uart, uint8_t* pRxData, uint16_t len){
-    if(mutexTake(uart->mutex, UART_TIMEOUT) != RTOS_OK) return HAL_ERROR;
-    HAL_UART_Receive_IT(uart->handle, pRxData, len);
-    if(semaphoreTake(uart->rxCplt, UART_TIMEOUT) != RTOS_OK){
-        mutexGive(uart->mutex);
-        return HAL_ERROR;
-    }
+    if(mutexTake(uart->mutex, UART_TIMEOUT) != RTOS_OK) return E_TIMEOUT;
+    int8_t status = HAL_UART_Receive_IT(uart->handle, pRxData, len);
+    int8_t rslt = OK;
+    if(status != HAL_OK) rslt = E_CONNECTION;
+    else if(semaphoreTake(uart->rxCplt, UART_TIMEOUT) != RTOS_OK) rslt = E_TIMEOUT;
     mutexGive(uart->mutex);
-    return HAL_OK;
+    return rslt;
 }
 
 int8_t uartReadToIdle (uart_t* uart, uint8_t* pRxData, uint16_t len){
-    if(mutexTake(uart->mutex, UART_TIMEOUT) != RTOS_OK) return HAL_ERROR;
-    HAL_UARTEx_ReceiveToIdle_IT(uart->handle, pRxData, len);
-    if(semaphoreTake(uart->rxCplt, UART_TIMEOUT) != RTOS_OK){
-        mutexGive(uart->mutex);
-        return HAL_ERROR;
-    }
+    if(mutexTake(uart->mutex, UART_TIMEOUT) != RTOS_OK) return E_TIMEOUT;
+    int8_t status = HAL_UARTEx_ReceiveToIdle_IT(uart->handle, pRxData, len);
+    int8_t rslt = OK;
+    if(status != HAL_OK) rslt = E_CONNECTION;
+    else if(semaphoreTake(uart->rxCplt, UART_TIMEOUT) != RTOS_OK) rslt = E_TIMEOUT;
     mutexGive(uart->mutex);
-    return HAL_OK;
+    return rslt;
 }
 
 int8_t uartWrite (uart_t* uart, const uint8_t* pTxData, uint16_t len){
-    if(mutexTake(uart->mutex, UART_TIMEOUT) != RTOS_OK) return HAL_ERROR;
-    HAL_UART_Transmit_IT(uart->handle, pTxData, len);
-    if(semaphoreTake(uart->txCplt, UART_TIMEOUT) != RTOS_OK){
-        mutexGive(uart->mutex);
-        return HAL_ERROR;
-    }
+    if(mutexTake(uart->mutex, UART_TIMEOUT) != RTOS_OK) return E_TIMEOUT;
+    int8_t status = HAL_UART_Transmit_IT(uart->handle, pTxData, len);
+    int8_t rslt = OK;
+    if(status != HAL_OK) rslt = E_CONNECTION;
+    else if(semaphoreTake(uart->rxCplt, UART_TIMEOUT) != RTOS_OK) rslt = E_TIMEOUT;
     mutexGive(uart->mutex);
-    return HAL_OK;
+    return rslt;
 }
 
 int8_t uartPrint(uart_t* uart, const char* format, ...) {

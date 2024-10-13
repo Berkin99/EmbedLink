@@ -29,7 +29,7 @@
 
 #include "system.h"
 #include "spi.h"
-#include <rtos.h>
+#include "rtos.h"
 
 #define SPI_TIMEOUT (100)
 
@@ -58,30 +58,33 @@ void spiInit(void){
 	#endif
 }
 
-int8_t spiBeginTransaction(spi_t* spi){
-	return mutexTake(spi->mutex, SPI_TIMEOUT);
+void spiBeginTransaction(spi_t* spi){
+	mutexTake(spi->mutex, SPI_TIMEOUT);
 }
 
-int8_t spiEndTransaction(spi_t* spi){
-	return mutexGive(spi->mutex);
+void spiEndTransaction(spi_t* spi){
+	mutexGive(spi->mutex);
 }
 
 int8_t spiReceive(spi_t* spi ,uint8_t* pRxData, uint16_t len){
 	int8_t status = HAL_SPI_Receive_IT(spi->handle, pRxData, len);
-	semaphoreTake(spi->rxCplt, SPI_TIMEOUT);
-	return status;
+	if(status != HAL_OK) return E_CONNECTION;
+	if(semaphoreTake(spi->rxCplt, SPI_TIMEOUT) != RTOS_OK) return E_TIMEOUT;
+	return OK;
 }
 
 int8_t spiTransmit(spi_t* spi ,uint8_t* pTxData, uint16_t len){
 	int8_t status = HAL_SPI_Transmit_IT(spi->handle, pTxData, len);
-	semaphoreTake(spi->txCplt, SPI_TIMEOUT);
-	return status;
+	if(status != HAL_OK) return E_CONNECTION;
+	if(semaphoreTake(spi->txCplt, SPI_TIMEOUT) != RTOS_OK) return E_TIMEOUT;
+	return OK;
 }
 
 int8_t spiTransmitReceive(spi_t* spi ,uint8_t* pRxData, uint8_t* pTxData, uint16_t len){
 	int8_t status = HAL_SPI_TransmitReceive_IT(spi->handle, pTxData, pRxData, len);
-	if(semaphoreTake(spi->txCplt, SPI_TIMEOUT) == pdTRUE) return HAL_OK;
-	return status;
+	if(status != HAL_OK) return E_CONNECTION;
+	if(semaphoreTake(spi->txCplt, SPI_TIMEOUT) != RTOS_OK) return E_TIMEOUT;
+	return OK;
 }
 
 spi_t* HAL_SPI_Parent(SPI_HandleTypeDef* hspi){

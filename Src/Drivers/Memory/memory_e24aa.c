@@ -20,9 +20,9 @@
  * <http://www.gnu.org/licenses/>.
  */
 
+#include <sysdefs.h>
 #include "sysconfig.h"
 #include "systime.h"
-#include "sysdebug.h"
 #include "memory_e24aa.h"
 #include "uart.h"
 

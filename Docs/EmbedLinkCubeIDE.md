@@ -47,11 +47,11 @@
 
 ## 2.  Firmware
 
-* Clone The EmbedLink Repo @Core
-* Add The Include Paths
-* Properties/C Build/Settings/MCU Settings > enable newlib float
-* extern and define on the @main.h
-* Call systemLaunch in @main.c
-* Start system timer HAL_TIM_BaseStart() in TIM config end @main.c
+* Clone The EmbedLink Repo @Core : OK
+* Add The Include Paths : OK
+* Properties/C Build/Settings/MCU Settings > enable newlib float : OK
+* extern and define on the @main.h : OK
+* Call systemLaunch in @main.c : OK
+* Start system timer HAL_TIM_BaseStart() in TIM config end @main.c : OK
 * Linker List .mem. .nrx.
 * Configure the sysconfig.h

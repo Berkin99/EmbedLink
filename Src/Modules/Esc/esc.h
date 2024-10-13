@@ -49,14 +49,14 @@ void ESC_SetProtocol(ESC_Handle_t* pEsc, float protocolUs);
 void ESC_Start(ESC_Handle_t* pEsc);
 
 /*
- * @param pEsc : Esc handle pointer, needs to be initalized.
+ * @param pEsc  : Esc handle pointer, needs to be initalized.
  * @param Value : Esc power value [Min, Max] -> [0, 1]
  */
 void ESC_Write(ESC_Handle_t* pEsc, float value);
 
 /*
- * @param pEsc : Esc handle pointer, needs to be initalized.
- * @retrun written esc power value [Min, Max] -> [0, 1]
+ * @param pEsc  : Esc handle pointer, needs to be initalized.
+ * @return      : written esc power value [Min, Max] -> [0, 1]
  */
 float ESC_Read(ESC_Handle_t* pEsc);
 

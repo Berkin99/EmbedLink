@@ -30,8 +30,8 @@
 #ifndef CONTROL_H_
 #define CONTROL_H_
 
+#include <sysdefs.h>
 #include "math3d.h"
-#include "sysdebug.h"
 #include "event.h"
 
 #define CONTROL_TIMEOUT_MS    4000

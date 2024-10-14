@@ -43,7 +43,6 @@
 #include "telemetry.h"
 #include "memory.h"
 #include "estimator.h"
-
 //#include "usb.h"
 
 static uint8_t sysInit;
@@ -102,11 +101,8 @@ void systemTask(void* argv){
     ledseqRun  (LED2, 1, SEQ_HEARTBEAT);
 
     sysInit = 2;
-    int i = 0;
-    serialPrint("[>] System Ready\n \n");
     while(1){
     	delay(1000);
-    	serialPrint("%d\n", ++i);
     }
 }
 

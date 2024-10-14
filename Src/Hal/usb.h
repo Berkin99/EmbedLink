@@ -27,36 +27,18 @@
  *
  */
 
-#ifndef SYSDEFS_H_
-#define SYSDEFS_H_
+#ifndef USB_H_
+#define USB_H_
 
-#define TRUE           (1)
-#define FALSE          (0)
-#define HIGH	       TRUE
-#define LOW		       FALSE
-#define OUTPUT         TRUE
-#define INPUT          FALSE
+#include <stdint.h>
+#include <stdarg.h>
 
-#define OK             (0)
-#define E_ERROR        (-1)
-#define E_NULL_PTR     (-2)
-#define E_OVERWRITE    (-3)
-#define E_OVERFLOW     (-4)
-#define E_CONNECTION   (-5)
-#define E_CONF_FAIL    (-6)
-#define E_NOT_FOUND    (-7)
-#define E_TIMEOUT      (-8)
-#define UNDEFINED      NULL
+void     usbInit(void);
+int8_t   usbReceive (uint8_t* pRxData, uint16_t len);
+int8_t   usbTransmit(uint8_t* pTxData, uint16_t len);
+uint16_t usbAvailableData(void);
+void     usbWaitDataReady(void);
 
-static inline int SYS_ID(char* name)
-{
-	int id = 0;
-	while(*name){
-		id += *name;
-		id *= *name;
-		name++;
-	}
-	return id;
-}
+void 	 usbPrint(char* format, ...);
 
-#endif /* SYSDEFS_H_ */
+#endif /* USB_H_ */

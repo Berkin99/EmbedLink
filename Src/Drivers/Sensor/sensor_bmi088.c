@@ -334,13 +334,9 @@ int8_t sensorAcquireBMI088(measurement_t* plist, uint8_t n){
     return i;
 }
 
-int8_t sensorIsReadyBMI088(void){
-    return isReady;
-}
+int8_t sensorIsReadyBMI088(void){return isReady;}
 
-void sensorWaitDataReadyBMI088(void){
-    while(!accNew) delay(2);
-}
+void sensorWaitDataReadyBMI088(void){while(!accNew) delay(2);}
 
 uint8_t _sensorAccData(vec_t* data){
     /* Output as G values ((9,81m)/s^2)*/

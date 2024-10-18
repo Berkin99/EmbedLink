@@ -56,7 +56,7 @@ RF24_Handle_t RF24_Init(void* intf, uint16_t ce, uint16_t cs){
 }
 
 void beginTransaction(RF24_Handle_t* dev){
-    spiBeginTransaction(dev->intf);  /* Mutex*/
+    spiBeginTransaction(dev->intf);  /* Mutex */
     pinWrite(dev->cs, RF24_PIN_LOW); /* Chip Select */
     delay(RF24_CS_DELAY_MS);
 }
@@ -179,10 +179,10 @@ uint8_t RF24_Available(RF24_Handle_t* dev){
 
 uint8_t RF24_PipeAvailable(RF24_Handle_t* dev, uint8_t* pipe_num){
     uint8_t pipe = (RF24_GetStatus(dev) >> RX_P_NO) & 0x07;
-    if (pipe > 5) return 0;
+    if (pipe > 5) return RF24_FALSE;
     
     *pipe_num = pipe;
-    return 1;
+    return RF24_TRUE;
 }
 
 void RF24_SetRetries(RF24_Handle_t* dev, uint8_t delayms, uint8_t count){
@@ -302,7 +302,7 @@ uint8_t RF24_Begin(RF24_Handle_t* dev){
 
 void RF24_OpenReadingPipe(RF24_Handle_t* dev, uint8_t child, uint8_t* address){
     if (child == 0) {
-        memcpy(dev->_isPipe0Rx, address, dev->addrWidth);
+        memcpy(dev->pipe0addr, address, dev->addrWidth);
         dev->_isPipe0Rx = 1;
     }
 
@@ -362,11 +362,11 @@ uint8_t RF24_Write(RF24_Handle_t* dev, const void* pBuffer, uint8_t length){
 
     RF24_WritePayload(dev, pBuffer, length, W_TX_PAYLOAD);
     pinWrite(dev->ce, RF24_PIN_HIGH);
-    uint32_t timer = millis();
+
+    uint32_t timer = 0;
     while (!(RF24_GetStatus(dev) & (_BV(TX_DS) | _BV(MAX_RT)))) {
-		if (millis() - timer > 95) {
-			return 0;
-		}
+		if (++timer > 95) return RF24_ERROR;
+		delay(1);
 	}
 
     pinWrite(dev->ce, RF24_PIN_LOW);
@@ -375,8 +375,8 @@ uint8_t RF24_Write(RF24_Handle_t* dev, const void* pBuffer, uint8_t length){
 	RF24_WriteRegister(dev, NRF_STATUS, &data, 1);
 	if (dev->status & _BV(MAX_RT)) {
 		flush_tx(dev);
-		return 0;
+		return RF24_ERROR;
 	}
 
-	return 1;
+	return RF24_OK;
 }

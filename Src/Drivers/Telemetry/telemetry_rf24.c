@@ -34,19 +34,15 @@
 
 #ifdef RF24_SPI
 #include "telemetry_rf24.h"
-#include "RF24.h"
+#include "rf24.h"
 #include "event.h"
 #include "uart.h"
+#include "gpio.h"
+#include "spi.h"
 
 #define RF24_BUFFER_LEN 	32
 
-typedef struct{
-	uint8_t size;
-	uint8_t buffer[32];
-}rfData_t;
-
-static uint8_t 	rxBuffer[RF24_BUFFER_LEN];
-static rfData_t txBuffer;
+static RF24_Handle_t radio;
 
 static uint8_t rxaddress[] = RF24_RX_ADDRESS;
 static uint8_t txaddress[] = RF24_TX_ADDRESS;
@@ -57,20 +53,27 @@ static uint8_t isInit  = 0;
 
 static semaphore_t rxSemaphore;
 static semaphore_t txMutex;
-static queue_t txQueue;
+static queue_t 	   txQueue;
 
 static uint8_t isListening = 0;
 
-taskAllocateStatic(RF24,TRX_TASK_STACK,TRX_TASK_PRI)
+typedef struct{
+	uint8_t size;
+	uint8_t buffer[32];
+}rfData_t;
+
+static uint8_t 	rxBuffer[RF24_BUFFER_LEN];
+static rfData_t txBuffer;
 queueAllocateStatic(txQueue, 6, sizeof(rfData_t))
 
+taskAllocateStatic(RF24,TRX_TASK_STACK,TRX_TASK_PRI)
 void _telemetryTaskRF24(void* argv);
 
 int8_t telemetryInitRF24(void){
 	if (isInit == 1) return E_OVERWRITE;
 
-	RF24_Init(&RF24_SPI, RF24_CE, RF24_CS);
-	if(!RF24_begin()) return ERROR;
+	radio = RF24_Init(&RF24_SPI, RF24_CE, RF24_CS);
+	if(!RF24_Begin(&radio)) return ERROR;
 
 	rxSemaphore = semaphoreCreate();
 	txMutex 	= mutexCreate();
@@ -83,16 +86,16 @@ int8_t telemetryInitRF24(void){
 }
 
 int8_t telemetryTestRF24(void){
-	return RF24_available();
+	return RF24_Available(&radio);
 }
 
 void _telemetryTaskRF24(void* argv){
 
-	RF24_setDataRate(RF24_2MBPS);
-	RF24_setPALevel(RF24_PA_MAX, 0);
-	RF24_openWritingPipe(txaddress); 	/*Always uses Pipe 0*/ /*301*/
-	RF24_openReadingPipe(1, rxaddress);					   	   /*300*/
-	RF24_startListening();
+	RF24_SetDataRate(&radio, RF24_2MBPS);
+	RF24_SetPALevel(&radio, RF24_PA_MAX, 0);
+	RF24_OpenWritingPipe(&radio, txaddress); 	/*Always uses Pipe 0*/ /*301*/
+	RF24_OpenReadingPipe(&radio, 1, rxaddress);					   	   /*300*/
+	RF24_StartListening(&radio);
 
 	delay(1);
 	isReady = TRUE;
@@ -100,17 +103,17 @@ void _telemetryTaskRF24(void* argv){
 
 	while(1){
 
-		if (!isListening){RF24_startListening(); isListening = 1;}
+		if (!isListening){RF24_StartListening(&radio); isListening = 1;}
 
-		if (RF24_available()){
-			RF24_read(rxBuffer, RF24_BUFFER_LEN);
+		if (RF24_Available(&radio)){
+			RF24_Read(&radio, rxBuffer, RF24_BUFFER_LEN);
 			newData = 1;
 			xSemaphoreGive(rxSemaphore);
 		}
 
 		while (queueReceive(txQueue, &txBuffer, 0) == pdPASS){
-			if(isListening){RF24_stopListening();isListening = 0;}
-			RF24_write(txBuffer.buffer, txBuffer.size);
+			if(isListening){RF24_StopListening(&radio);isListening = 0;}
+			RF24_Write(&radio, txBuffer.buffer, txBuffer.size);
 		}
 
 		taskDelayUntil(&lastWakeTime, 4);
@@ -121,13 +124,10 @@ void _telemetryTaskRF24(void* argv){
 int8_t telemetryReceiveRF24(uint8_t *pRxBuffer){
 
 	if(!newData) return 0;
-
 	for(uint8_t i = 0; i < RF24_BUFFER_LEN; i++){
 		pRxBuffer[i] = rxBuffer[i];
 	}
-
 	newData = 0;
-
 	return RF24_BUFFER_LEN;
 }
 

@@ -48,7 +48,7 @@ void   spiInit             (void);
 void   spiBeginTransaction (spi_t* spi);
 void   spiEndTransaction   (spi_t* spi);
 int8_t spiReceive          (spi_t* spi, uint8_t* pRxData, uint16_t len);
-int8_t spiTransmit         (spi_t* spi, uint8_t* pTxData, uint16_t len);
-int8_t spiTransmitReceive  (spi_t* spi, uint8_t* pRxData, uint8_t* pTxData, uint16_t len);
+int8_t spiTransmit         (spi_t* spi, const uint8_t* pTxData, uint16_t len);
+int8_t spiTransmitReceive  (spi_t* spi, uint8_t* pRxData, const uint8_t* pTxData, uint16_t len);
 
 #endif /* SPI_H_ */

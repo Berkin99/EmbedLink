@@ -58,11 +58,11 @@
 #define BMI088_SPI             spi1
 #define BMI088_ACC_CS          PC4
 #define BMI088_GYR_CS          PC5
-//#define RF24_SPI               spi1
-//#define RF24_CE                PE5
-//#define RF24_CS                PE6
-//#define RF24_RX_ADDRESS        {0xE7, 0xE7, 0xE7, 0xE3, 0x04}
-//#define RF24_TX_ADDRESS        {0xE7, 0xE7, 0xE7, 0xE3, 0x05}
+#define RF24_SPI               spi1
+#define RF24_CE                PE5
+#define RF24_CS                PE6
+#define RF24_RX_ADDRESS        {0xE7, 0xE7, 0xE7, 0xE3, 0x04}
+#define RF24_TX_ADDRESS        {0xE7, 0xE7, 0xE7, 0xE3, 0x05}
 //#define MPU6500_SPI
 //#define MPU6500_CS
 

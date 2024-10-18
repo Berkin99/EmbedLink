@@ -36,7 +36,7 @@
 #define telemetryNameRF24    "RF24"
 #define telemetryTypeRF24    TRX_TRANSCEIVER
 
-__weak int8_t telemetryInitRF24(void);
+int8_t telemetryInitRF24(void);
 int8_t telemetryTestRF24(void);
 int8_t telemetryReceiveRF24(uint8_t* pRxBuffer);
 int8_t telemetryTransmitRF24(const uint8_t* pTxData, uint8_t Length);

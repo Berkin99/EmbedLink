@@ -73,14 +73,14 @@ int8_t spiReceive(spi_t* spi ,uint8_t* pRxData, uint16_t len){
 	return OK;
 }
 
-int8_t spiTransmit(spi_t* spi ,uint8_t* pTxData, uint16_t len){
+int8_t spiTransmit(spi_t* spi , const uint8_t* pTxData, uint16_t len){
 	int8_t status = HAL_SPI_Transmit_IT(spi->handle, pTxData, len);
 	if(status != HAL_OK) return E_CONNECTION;
 	if(semaphoreTake(spi->txCplt, SPI_TIMEOUT) != RTOS_OK) return E_TIMEOUT;
 	return OK;
 }
 
-int8_t spiTransmitReceive(spi_t* spi ,uint8_t* pRxData, uint8_t* pTxData, uint16_t len){
+int8_t spiTransmitReceive(spi_t* spi ,uint8_t* pRxData, const uint8_t* pTxData, uint16_t len){
 	int8_t status = HAL_SPI_TransmitReceive_IT(spi->handle, pTxData, pRxData, len);
 	if(status != HAL_OK) return E_CONNECTION;
 	if(semaphoreTake(spi->txCplt, SPI_TIMEOUT) != RTOS_OK) return E_TIMEOUT;

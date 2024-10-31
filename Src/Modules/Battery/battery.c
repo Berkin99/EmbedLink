@@ -39,13 +39,9 @@ BATT_Handle_t BATT_NewHandle(adc_t* padc, float voltage){
 }
 
 float BATT_ReadLevel(BATT_Handle_t* pbatt){
-	uint32_t raw;
-	if (adcRead(pbatt->padc, &raw) != OK) return -1.0f;
-	return (float)raw / 65536.0f;
+	return 0;
 }
 
 float BATT_ReadVoltage(BATT_Handle_t* pbatt){
-	uint32_t raw;
-	if (adcRead(pbatt->padc, &raw) != OK) return -1.0f;
-	return ((float)raw / 65536.0f) * pbatt->voltage;
+	return 0;
 }

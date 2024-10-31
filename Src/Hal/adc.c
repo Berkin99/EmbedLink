@@ -61,7 +61,7 @@ int8_t adcRead(adc_t* adc, uint32_t* pBuffer){
 
 adc_t* HAL_ADC_Parent(ADC_HandleTypeDef *hadc){
 	#ifdef HADC1
-		if(hadc == &HADC1) return &adc1;
+		if(hadc == (&HADC1)) return &adc1;
 	#endif
 	#ifdef HADC2
 		if(hadc == &HADC2) return &adc2;

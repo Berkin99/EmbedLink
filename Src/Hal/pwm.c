@@ -34,7 +34,7 @@
 #define PERIPH_FREQ			200000000	/* AHB1 AHB2 Clock Frequency in Hz */
 #define PERIPH_PERIOD_MS	1000.0f/(float)PERIPH_FREQ
 #define PERIPH_PERIOD_US 	1000000.0f/(float)PERIPH_FREQ
-#define TIMER_CH(TIMER, CH) ((&TIMER.Instance->CCR1) - 1 + CH)
+#define TIMER_CH(TIMER, CH) ((&(TIMER.Instance->CCR1)) - 1 + CH)
 
 pwm_t pwm1;
 pwm_t pwm2;

@@ -61,10 +61,26 @@ uint16_t pins[] = {
 #define HAL_GPIO(pin) ports [(pin >> 8)]
 #define HAL_PIN(pin)  pins[(0xFF & pin)]
 
-void pinMode (pin_t pin, uint8_t mode){
-	/* Empty */
-	//HAL_GPIO_Init(GPIOx, GPIO_Init);
+void pinMode(pin_t pin, uint8_t mode){
+
+    HAL_GPIO_DeInit(HAL_GPIO(pin), HAL_PIN(pin));
+
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+    GPIO_InitStruct.Pin = HAL_PIN(pin);
+
+    if (mode == INPUT) {
+        GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+        GPIO_InitStruct.Pull = GPIO_NOPULL;
+    }else if(mode == OUTPUT){
+        GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+        GPIO_InitStruct.Pull = GPIO_NOPULL;
+        GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    }
+    else return;
+
+    HAL_GPIO_Init(HAL_GPIO(pin), &GPIO_InitStruct);
 }
+
 
 void pinWrite (pin_t pin, uint8_t state){
 	HAL_GPIO_WritePin(HAL_GPIO(pin), HAL_PIN(pin), state);

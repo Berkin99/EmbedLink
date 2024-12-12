@@ -29,6 +29,7 @@
 
 #include <sysdefs.h>
 #include "sysconfig.h"
+#include "estimator.h"
 
 #ifdef  ESTIMATOR_COMPLEMENTARY
 

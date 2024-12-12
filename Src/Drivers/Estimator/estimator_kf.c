@@ -29,11 +29,14 @@
 
 #include <sysdefs.h>
 #include "sysconfig.h"
+#include "estimator.h"
+
+#ifdef ESTIMATOR_KALMAN
+
 #include "systime.h"
 #include "math3d.h"
 #include "rtos.h"
 #include "estimator_kf.h"
-#include "estimator.h"
 #include "uart.h"
 #include "geoconfig.h"
 #include "navigation.h"
@@ -43,7 +46,6 @@
 #include "num.h"
 #include "kalman1D.h"
 
-#ifdef ESTIMATOR_KALMAN
 
 #define ESTIMATOR_RATE			RATE_1000_HZ
 #define MADGWICK_UPDATE_RATE	RATE_1000_HZ

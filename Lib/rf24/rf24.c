@@ -216,7 +216,8 @@ uint8_t RF24_SetDataRate(RF24_Handle_t* dev, RF24_DataRate_e speed){
     RF24_WriteRegister(dev, RF_SETUP, &setup,1);
     RF24_ReadRegister(dev, RF_SETUP, &result, 1);
 
-    return (result == setup);
+    if (result == setup) return RF24_OK;
+    return RF24_ERROR;
 }
 
 void toggleFeatures(RF24_Handle_t* dev){

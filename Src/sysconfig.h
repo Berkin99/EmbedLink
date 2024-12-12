@@ -63,8 +63,8 @@
 #define RF24_CS                PE6
 #define RF24_RX_ADDRESS        {0xE7, 0xE7, 0xE7, 0xE3, 0x04}
 #define RF24_TX_ADDRESS        {0xE7, 0xE7, 0xE7, 0xE3, 0x05}
-//#define MPU6500_SPI
-//#define MPU6500_CS
+#define MPU6500_SPI			   spi1
+#define MPU6500_CS             PA0
 
 /// UART ////////////////////////////////////////////////////
 //#define E32100_UART            uart1

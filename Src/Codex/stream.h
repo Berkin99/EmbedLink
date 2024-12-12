@@ -27,36 +27,24 @@
  *
  */
 
-#ifndef SYSDEFS_H_
-#define SYSDEFS_H_
+#ifndef STREAM_H_
+#define STREAM_H_
 
-#define TRUE           (1)
-#define FALSE          (0)
-#define LOW		       FALSE
-#define HIGH	       TRUE
-#define INPUT          (0)
-#define OUTPUT         (1)
+#include <stdint.h>
+#include "sysdefs.h"
 
-#define OK             (0)
-#define E_ERROR        (-1)
-#define E_NULL_PTR     (-2)
-#define E_OVERWRITE    (-3)
-#define E_OVERFLOW     (-4)
-#define E_CONNECTION   (-5)
-#define E_CONF_FAIL    (-6)
-#define E_NOT_FOUND    (-7)
-#define E_TIMEOUT      (-8)
-#define UNDEFINED      NULL
+typedef struct{
+	uint8_t (*read)(void);
+	uint8_t (*peek)(void);
+	int8_t  (*available)(void);
+	uint32_t timeout;
+}stream_t;
 
-static inline int SYS_ID(char* name)
-{
-	int id = 0;
-	while(*name){
-		id += *name;
-		id *= *name;
-		name++;
-	}
-	return id;
-}
+size_t streamFind(stream_t* self, char* target, uint16_t targetLen);
+size_t streamFindUntil(stream_t* self, char* target, uint16_t targetLen, char* terminator, uint16_t termLen);
+size_t streamFindString(stream_t* self, char* target, uint16_t targetLen);
+size_t streamRead(stream_t* self, uint8_t* buffer, uint16_t len);
+size_t streamReadUntil(stream_t* self, uint8_t* buffer, uint16_t len, char* terminator, uint16_t termLen);
+size_t streamReadString(stream_t* self, uint8_t* buffer, uint16_t len);
 
-#endif /* SYSDEFS_H_ */
+#endif /* STREAM_H_ */

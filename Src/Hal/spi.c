@@ -59,7 +59,7 @@ void spiInit(void){
 }
 
 void spiBeginTransaction(spi_t* spi){
-	mutexTake(spi->mutex, SPI_TIMEOUT);
+	mutexTake(spi->mutex, RTOS_MAX_DELAY);
 }
 
 void spiEndTransaction(spi_t* spi){

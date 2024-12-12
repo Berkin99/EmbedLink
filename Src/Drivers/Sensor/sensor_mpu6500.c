@@ -33,10 +33,9 @@
 
 #ifdef MPU6500_SPI
 
-#include "FreeRTOS.h"
+#include "rtos.h"
 #include "semphr.h"
 #include "task.h"
-#include "static_mem.h"
 #include "sensor_mpu6500.h"
 #include "MPU6500.h"
 #include "spi.h"
@@ -44,7 +43,7 @@
 #include "filter.h"
 #include "estimator.h"
 #include "led.h"
-#include "serial.h"
+#include "uart.h"
 
 #define CAL_INTERVAL_MS 	3000
 #define INTERFACE_TYPE 		MPU6500_SPI_INTF
@@ -61,7 +60,7 @@ static uint8_t newacc = 0;
 static uint8_t newgyr = 0;
 static int8_t  status = 0;
 
-STATIC_MEM_TASK_ALLOC(MPU6500,SENS_TASK_STACK,SENS_TASK_PRI);
+taskAllocateStatic(MPU6500,SENS_TASK_STACK,SENS_TASK_PRI);
 void sensorTaskMPU6500(void* argv);
 
 int8_t sensorInitMPU6500(void){
@@ -82,7 +81,7 @@ int8_t sensorInitMPU6500(void){
 
 	/* ( eerpom search for calibration values ) */
 
-	STATIC_MEM_TASK_CREATE(MPU6500, sensorTaskMPU6500, NULL);
+	taskCreateStatic(MPU6500, sensorTaskMPU6500, NULL);
 	delay(10);
 
 	if(!isInit) return SYS_ERR;
@@ -221,13 +220,12 @@ int8_t _sensorReadMPU6500(uint8_t reg_addr, uint8_t *read_data, uint8_t len){
 	/*INFO : Do not write gpio before
 	 * get the semaphore from the spiBeginTransaction()
 	 * */
-	spiBeginTransaction(&MPU6500_SPI);
-	HAL_GPIO_WritePin(MPU6500_GPIO, MPU6500_CS, GPIO_PIN_RESET);
 
+	spiBeginTransaction(&MPU6500_SPI);
+	pinWrite(MPU6500_CS, LOW);
 	spiTransmit(&MPU6500_SPI, &reg_addr, 1);
 	status = spiReceive(&MPU6500_SPI, read_data, len);
-
-	HAL_GPIO_WritePin(MPU6500_GPIO, MPU6500_CS, GPIO_PIN_SET);
+	pinWrite(MPU6500_CS, HIGH);
 	spiEndTransaction(&MPU6500_SPI);
 
 	return (status == HAL_OK);

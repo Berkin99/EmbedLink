@@ -32,9 +32,9 @@
 #include <systime.h>
 
 #ifdef HMC5883L_I2C
-#include "FreeRTOS.h"
+
+#include "rtos.h"
 #include "task.h"
-#include "static_mem.h"
 #include "sensor_hmc5883l.h"
 #include "HMC5883L.h"
 #include "nrx.h"
@@ -52,7 +52,7 @@ static uint8_t is_ready = 0;
 static uint8_t new_data = 0;
 static uint8_t is_calibrated = 0;
 
-STATIC_MEM_TASK_ALLOC(HMC5883L,SENSOR_TASK_STACK,SENSOR_TASK_PRI);
+taskAllocateStatic(HMC5883L, SENSOR_TASK_STACK, SENSOR_TASK_PRI);
 void _sensorTaskHMC5883L(void* argv);
 
 uint8_t sensorInitHMC5883L(void){

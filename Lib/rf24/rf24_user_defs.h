@@ -8,13 +8,14 @@
 #include "systime.h"
 #include "spi.h"
 #include "gpio.h"
+#include "sysconfig.h"
 
-#define RF24_PIN_HIGH      1
-#define RF24_PIN_LOW       0
-#define RF24_OK            0
-#define RF24_ERROR         1
-#define RF24_TRUE          1
-#define RF24_FALSE         0
+#define RF24_PIN_HIGH      HIGH
+#define RF24_PIN_LOW       LOW
+#define RF24_OK            OK
+#define RF24_ERROR         E_ERROR
+#define RF24_TRUE          TRUE
+#define RF24_FALSE         FALSE
 
 #ifndef SPI_H_
 /* 

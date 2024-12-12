@@ -81,26 +81,21 @@ typedef struct{
 }navigation_t;
 
 navstate_t* navigationState (void);
+navstate_t  navigationOrigin(void);
 
-navstate_t navigationOrigin(void);
-void navigationOriginSet(navigation_t* pData);
-void navigationPositionOrigin(vec_t position);
-
-void navigationAppend (navigation_t* pData);
-void navigationStateUpdate(navstate_t* pState);
-
-int8_t navigationIsValid  (navstate_e index);
-int8_t navigationValidity (navstate_e index, uint32_t timeout);
-
-int8_t navigationLocation (location_t* pBuf);
-int8_t navigationCompass  (compass_t* pBuf);
-int8_t navigationAltitude (altitude_t* pBuf);
-int8_t navigationTime     (time_t* pBuf);
-
+void   navigationOriginSet(navigation_t* pData);
+void   navigationPositionOrigin(vec_t position);
+void   navigationAppend(navigation_t* pData);
+void   navigationStateUpdate(navstate_t* pState);
+int8_t navigationIsValid(navstate_e index);
+int8_t navigationValidity(navstate_e index, uint32_t timeout);
+int8_t navigationLocation(location_t* pBuf);
+int8_t navigationCompass(compass_t* pBuf);
+int8_t navigationAltitude(altitude_t* pBuf);
+int8_t navigationTime(time_t* pBuf);
 void   navigationLocationUnits(location_t loc);
 void   navigationLocationPos(position_t* pBuf);
 void   navigationAltitudePos(float* pBuf);
-
 int8_t navigationToMeasurement(const navigation_t* pData, measurement_t* pBuf);
 float  navigationPressureToAltitude(float pressure);
 

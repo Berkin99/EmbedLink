@@ -50,8 +50,7 @@
 #include "memory.h"
 #include "nrx.h"
 
-/* BMI088 Definitions */
-
+/* BMI088 Settings */
 #define BMI088_ACC_FS_CFG   (24)
 #define BMI088_ACC_RANGE    BMI088_ACCEL_RANGE_24G
 #define BMI088_ACC_ODR      BMI08_ACCEL_ODR_1600_HZ
@@ -62,9 +61,13 @@
 #define BMI088_DEG_PER_LSB  ((2.0f * BMI088_GYR_FS_CFG) / 65536.0f)
 #define BMI088_G_PER_LSB    (((float)BMI088_ACC_FS_CFG) * 2.0f / 65536.0f)
 #define BMI088_1G_IN_LSB    (65536.0f / BMI088_ACC_FS_CFG / 2.0f)
+#define BMI088_CAL_INTERVAL_MS      3000
+#define BMI088_ACC_LPF_CUTOFF_FREQ  30
+#define BMI088_GYR_LPF_CUTOFF_FREQ  80
+#define BMI088_SENS_ORIENTATION_Z   90
 
-static uint8_t bmi08AccIntf = 0;
-static uint8_t bmi08GyrIntf = 1;
+static uint8_t bmi08AccIntf = BMI088_ACC_CS;
+static uint8_t bmi08GyrIntf = BMI088_GYR_CS;
 
 struct bmi08_dev bmi08dev;
 struct bmi08_accel_int_channel_cfg accel_int_config;
@@ -74,13 +77,6 @@ struct bmi08_int_cfg bmi08_int_config;
 BMI08_INTF_RET_TYPE bmi08SpiRead (uint8_t reg_addr, uint8_t *reg_data, uint32_t len, void *intf_ptr);
 BMI08_INTF_RET_TYPE bmi08SpiWrite(uint8_t reg_addr, const uint8_t *reg_data, uint32_t len, void *intf_ptr);
 void                bmi08DelayUs (uint32_t period, void *intf_ptr);
-
-/* Sensor Definitions */
-
-#define BMI088_CAL_INTERVAL_MS      3000
-#define BMI088_ACC_LPF_CUTOFF_FREQ  30
-#define BMI088_GYR_LPF_CUTOFF_FREQ  80
-#define BMI088_SENS_ORIENTATION_Z   90
 
 static vec_t      accData;
 static vec_t      accMean;
@@ -96,7 +92,6 @@ static uint8_t    gyrNew;
 
 static measurement_t macc;
 static measurement_t mgyr;
-
 static uint32_t  idptr;
 static uint8_t   isInit;
 static int8_t    isReady;
@@ -121,7 +116,7 @@ int8_t sensorInitBMI088(void){
 
     delay(100);
 
-    /* DEVICE */
+    /* DEVICE SETTINGS */
     bmi08dev.write          = bmi08SpiWrite;
     bmi08dev.read           = bmi08SpiRead;
     bmi08dev.intf           = BMI08_SPI_INTF;
@@ -131,12 +126,12 @@ int8_t sensorInitBMI088(void){
     bmi08dev.intf_ptr_accel = &bmi08AccIntf;
     bmi08dev.intf_ptr_gyro  = &bmi08GyrIntf;
 
-    /* ACCEL POWER */
+    /* ACCEL ACTIVATE */
     bmi08dev.accel_cfg.power = BMI08_ACCEL_PM_ACTIVE;
     bmi08a_set_power_mode(&bmi08dev);
     if( bmi08a_init(&bmi08dev) != BMI08_OK ){ serialPrint("[-] BMI088 ACC init err\n"); return ERROR; }
 
-    /* ACCEL CONFIG */
+    /* ACCEL CONFIGS */
     bmi08dev.accel_cfg.bw    = BMI088_ACC_BW;
     bmi08dev.accel_cfg.range = BMI088_ACC_RANGE;
     bmi08dev.accel_cfg.odr   = BMI088_ACC_ODR;
@@ -146,12 +141,12 @@ int8_t sensorInitBMI088(void){
     rslt = bmi08a_get_data(&bmi08AccData, &bmi08dev);
     if(rslt != BMI08_OK) serialPrint("[-] BMI088 ACC config err\n");
 
-    /* GYRO POWER */
+    /* GYRO ACTIVATE */
     bmi08dev.gyro_cfg.power = BMI08_GYRO_PM_NORMAL;
     bmi08g_set_power_mode(&bmi08dev);
     if( bmi08g_init(&bmi08dev) != BMI08_OK ){ serialPrint("[-] BMI088 GYR init err\n"); return ERROR; }
 
-    /* GYRO CONFIG */
+    /* GYRO CONFIGS */
     bmi08dev.gyro_cfg.odr   = BMI088_GYR_ODR;
     bmi08dev.gyro_cfg.range = BMI088_GYR_RANGE;
     bmi08dev.gyro_cfg.bw    = BMI088_GYR_ODR;
@@ -161,27 +156,15 @@ int8_t sensorInitBMI088(void){
     rslt = bmi08g_get_data(&bmi08GyrData, &bmi08dev);
     if(rslt != BMI08_OK) serialPrint("[-] BMI088 GYR config err\n");
 
-//    /* BMI088 INTERRUPT */
-//    bmi08_int_config.accel_int_config_1.int_channel = BMI08_INT_CHANNEL_1;
-//    bmi08_int_config.accel_int_config_1.int_type = BMI08_ACCEL_INT_DATA_RDY;
-//    bmi08_int_config.accel_int_config_1.int_pin_cfg.output_mode = BMI08_INT_MODE_PUSH_PULL;
-//    bmi08_int_config.accel_int_config_1.int_pin_cfg.lvl = BMI08_INT_ACTIVE_HIGH;
-//    bmi08_int_config.accel_int_config_1.int_pin_cfg.enable_int_pin = BMI08_ENABLE;
-//
-//    /* Setting the interrupt configuration */
-//    rslt = bmi08a_set_int_config(&bmi08_int_config.accel_int_config_1, &bmi08dev);
-//    if(rslt!= BMI08_OK) serialPrint("[-] BMI088 INT config err\n");
-
-    /* LPF Initialize */
+    /* LPF INITIALIZE */
     for (uint8_t i = 0; i < 3; ++i) {
         lpf2pInit(&gyrLpfData[i], sensorFreqBMI088, BMI088_GYR_LPF_CUTOFF_FREQ);
         lpf2pInit(&accLpfData[i], sensorFreqBMI088, BMI088_ACC_LPF_CUTOFF_FREQ);
     }
 
-    /* OK */
+    /* TASK CREATE */
     taskCreateStatic(BMI088, sensorTaskBMI088, NULL);
     isInit = 1;
-
     return OK;
 }
 
@@ -369,13 +352,11 @@ BMI08_INTF_RET_TYPE bmi08SpiRead(uint8_t reg_addr, uint8_t *reg_data, uint32_t l
 
 BMI08_INTF_RET_TYPE bmi08SpiWrite(uint8_t reg_addr, const uint8_t *reg_data, uint32_t len, void *intf_ptr){
 
-    uint16_t intfpin = (*((uint8_t*)intf_ptr) == 0) ? BMI088_ACC_CS : BMI088_GYR_CS;
-
     spiBeginTransaction(&BMI088_SPI);
-    pinWrite(intfpin, 0);
+    pinWrite(*intf_ptr, LOW);
     spiTransmit(&BMI088_SPI, &reg_addr, 1);
     int8_t result = spiTransmit(&BMI088_SPI, (uint8_t*)reg_data, len);
-    pinWrite(intfpin, 1);
+    pinWrite(*intf_ptr, HIGH);
     spiEndTransaction(&BMI088_SPI);
 
     return result;

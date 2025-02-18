@@ -66,7 +66,7 @@ typedef TaskHandle_t      task_t;
 typedef QueueHandle_t     queue_t;
 
 #define taskAllocateStatic(NAME, STACK_DEPTH, PRIORITY) \
-static const int    NAME##_stackDepth = (STACK_DEPTH);\
+static int    		NAME##_stackDepth = (STACK_DEPTH);\
 static StackType_t  NAME##_stackBuffer[(STACK_DEPTH)];\
 static StaticTask_t NAME##_taskBuffer;\
 static UBaseType_t 	NAME##_priority = PRIORITY;
@@ -75,10 +75,10 @@ static UBaseType_t 	NAME##_priority = PRIORITY;
 xTaskCreateStatic((FUNCTION), #NAME, NAME##_stackDepth, (PARAMETERS), (NAME##_priority), NAME##_stackBuffer, &NAME##_taskBuffer)
 
 #define queueAllocateStatic(NAME, LENGTH, ITEM_SIZE)\
-static const int 	 NAME##_length = (LENGTH); \
-static const int 	 NAME##_itemSize = (ITEM_SIZE); \
-static uint8_t 		 NAME##_storage[(LENGTH) * (ITEM_SIZE)]; \
-static StaticQueue_t NAME##_queue;
+static int 	 		 	NAME##_length = (LENGTH); \
+static int 	 			NAME##_itemSize = (ITEM_SIZE); \
+static uint8_t 		 	NAME##_storage[(LENGTH) * (ITEM_SIZE)]; \
+static StaticQueue_t 	NAME##_queue;
 
 #define queueCreateStatic(NAME) \
 xQueueCreateStatic(NAME##_length, NAME##_itemSize, NAME##_storage, &NAME##_queue)
@@ -92,14 +92,17 @@ static inline semaphore_t semaphoreCreate(void) {
 }
 
 static inline int8_t semaphoreTake(semaphore_t sem, uint32_t timeout) {
+    if (sem == NULL) return RTOS_ERROR;
     return (int8_t)xSemaphoreTake(sem, timeout);
 }
 
 static inline int8_t semaphoreGive(semaphore_t sem) {
+    if (sem == NULL) return RTOS_ERROR;
     return (int8_t)xSemaphoreGive(sem);
 }
 
 static inline int8_t semaphoreTakeISR(semaphore_t sem) {
+    if (sem == NULL) return RTOS_ERROR;
     int32_t xHigherPriorityTaskWoken = pdFALSE;
     int8_t result = (int8_t)xSemaphoreTakeFromISR(sem, &xHigherPriorityTaskWoken);
 	if (xHigherPriorityTaskWoken) portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
@@ -107,6 +110,7 @@ static inline int8_t semaphoreTakeISR(semaphore_t sem) {
 }
 
 static inline int8_t semaphoreGiveISR(semaphore_t sem) {
+    if (sem == NULL) return RTOS_ERROR;
 	int32_t xHigherPriorityTaskWoken = pdFALSE;
 	int8_t result = (int8_t)xSemaphoreGiveFromISR(sem, &xHigherPriorityTaskWoken);
 	if (xHigherPriorityTaskWoken) portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
@@ -114,10 +118,11 @@ static inline int8_t semaphoreGiveISR(semaphore_t sem) {
 }
 
 static inline int8_t mutexTake(mutex_t mutex, uint32_t timeout) {
+    if (mutex == NULL) return RTOS_ERROR;
     return (int8_t)xSemaphoreTake(mutex, timeout);
 }
-
 static inline int8_t mutexGive(mutex_t mutex) {
+    if (mutex == NULL) return RTOS_ERROR;
     return (int8_t)xSemaphoreGive(mutex);
 }
 
@@ -126,18 +131,22 @@ static inline queue_t queueCreate(uint32_t length, uint32_t itemSize) {
 }
 
 static inline void queueDelete(queue_t queue) {
+    if (queue == NULL) return RTOS_ERROR;
     vQueueDelete(queue);
 }
 
 static inline int8_t queueSend(queue_t queue, const void* item, uint32_t timeout) {
+    if (queue == NULL) return RTOS_ERROR;
     return (int8_t)xQueueSend(queue, item, timeout);
 }
 
 static inline int8_t queueSendFront(queue_t queue, const void* item, uint32_t timeout) {
+    if (queue == NULL) return RTOS_ERROR;
     return (int8_t)xQueueSendToFront(queue, item, timeout);
 }
 
 static inline int8_t queueSendISR(queue_t queue, const void* item) {
+    if (queue == NULL) return RTOS_ERROR;
 	int32_t xHigherPriorityTaskWoken = pdFALSE;
 	int8_t result = (int8_t)xQueueSendFromISR(queue, item, &xHigherPriorityTaskWoken);
 	if (xHigherPriorityTaskWoken) portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
@@ -145,23 +154,26 @@ static inline int8_t queueSendISR(queue_t queue, const void* item) {
 }
 
 static inline int8_t queueReceive(queue_t queue, void* item, uint32_t timeout) {
+    if (queue == NULL) return RTOS_ERROR;
     return (int8_t)xQueueReceive(queue, item, timeout);
 }
 
 static inline int8_t queueReceiveISR(queue_t queue, void* item) {
+    if (queue == NULL) return RTOS_ERROR;
 	int32_t xHigherPriorityTaskWoken = pdFALSE;
 	int8_t result = (int8_t)xQueueReceiveFromISR(queue, item, &xHigherPriorityTaskWoken);
 	if (xHigherPriorityTaskWoken) portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
     return result;
 }
 
-static inline task_t taskCreate(void (*taskFunc)(void*), const char* name, uint16_t stackSize, void* parameters, int32_t priority) {
+static inline task_t taskCreate(void (*taskFunc)(void*), const char* name, uint16_t stackSize, void* parameters, int32_t priority){
     task_t handle;
     xTaskCreate(taskFunc, name, stackSize, parameters, (UBaseType_t)priority, &handle);
     return handle;
 }
 
 static inline void taskDelete(task_t task){
+    if (task == NULL) return;
 	vTaskDelete(task);
 }
 
@@ -178,18 +190,22 @@ static inline void taskYield(void) {
 }
 
 static inline int32_t taskPriorityGet(task_t task) {
+    if (task == NULL) return RTOS_ERROR;
     return (int32_t)uxTaskPriorityGet(task);
 }
 
 static inline void taskPrioritySet(task_t task, int32_t priority) {
+    if (task == NULL) return;
     vTaskPrioritySet(task, (UBaseType_t)priority);
 }
 
 static inline void taskSuspend(task_t task) {
+    if (task == NULL) return;
     vTaskSuspend(task);
 }
 
 static inline void taskResume(task_t task) {
+    if (task == NULL) return;
     vTaskResume(task);
 }
 

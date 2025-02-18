@@ -31,6 +31,8 @@
 #include "spi.h"
 #include "rtos.h"
 
+#ifdef HAL_SPI_MODULE_ENABLED
+
 #define SPI_TIMEOUT (100)
 
 spi_t spi1;
@@ -117,3 +119,5 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef* hspi){
 	if(parent == NULL) return;
 	semaphoreGiveISR(parent->txCplt);
 }
+
+#endif

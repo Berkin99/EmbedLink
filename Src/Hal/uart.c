@@ -34,6 +34,8 @@
 #include "sysconfig.h"
 #include "uart.h"
 
+#ifdef HAL_UART_MODULE_ENABLED
+
 #define UART_TIMEOUT (1000)
 
 uart_t uart1;
@@ -53,6 +55,7 @@ void uartInit(void){
     uart2.mutex  = mutexCreate();
     uart2.txCplt = semaphoreCreate();
     uart2.rxCplt = semaphoreCreate();
+    mutexGive(uart2.mutex);
 #endif
 #ifdef HUART3
     uart3.handle = &HUART3;
@@ -170,3 +173,5 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size){
     parent->received = Size;
     semaphoreGiveISR(parent->rxCplt);
 }
+
+#endif

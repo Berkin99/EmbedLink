@@ -31,6 +31,8 @@
 #include "sysconfig.h"
 #include "pwm.h"
 
+#ifdef HAL_TIM_MODULE_ENABLED
+
 #define PERIPH_FREQ			200000000	/* AHB1 AHB2 Clock Frequency in Hz */
 #define PERIPH_PERIOD_MS	1000.0f/(float)PERIPH_FREQ
 #define PERIPH_PERIOD_US 	1000000.0f/(float)PERIPH_FREQ
@@ -89,3 +91,5 @@ void pwmWrite (pwm_t* pwm, float us){
 float pwmRead (pwm_t* pwm){
 	return (float) *(pwm->reg) * (pwm->usPerReg);
 }
+
+#endif

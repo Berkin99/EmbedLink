@@ -90,7 +90,9 @@ void ncTask(void* argv){
     {
         telemetryWaitDataReady(ncTRX);
         if(telemetryReceive(ncTRX, rxBuffer) > 0){
+			#ifdef NC_RX_LED
             ledToggle(NC_RX_LED);
+			#endif
             ncDataHandler(rxBuffer);
         }
     }
@@ -103,9 +105,9 @@ uint32_t ncLastDataTime(void){
 int8_t ncTransmitPacket(NTRP_Packet_t* packet, uint8_t size){
     if(!isInit) return E_NOT_FOUND;
 
-    uint8_t txBuffer[NTRP_MAX_MSG_SIZE];
 
     #ifdef NC_NTRPMESSAGE
+    uint8_t txBuffer[NTRP_MAX_MSG_SIZE];
     if(size > NTRP_MAX_MSG_SIZE) size = NTRP_MAX_MSG_SIZE;
     NTRP_Message_t ntrp_tx;
     ntrp_tx.talkerID = nc_ID;
@@ -115,6 +117,7 @@ int8_t ncTransmitPacket(NTRP_Packet_t* packet, uint8_t size){
     if(NTRP_Unite(txBuffer, &ntrp_tx)) telemetryTransmit(ncTRX, txBuffer, size + 5);
 
     #elif defined(NC_NTRPPACKET)
+    uint8_t txBuffer[NTRP_MAX_MSG_SIZE];
 
     if(size > NTRP_MAX_PACKET_SIZE) size = NTRP_MAX_PACKET_SIZE;
 
@@ -124,8 +127,7 @@ int8_t ncTransmitPacket(NTRP_Packet_t* packet, uint8_t size){
     }
 
     #endif
-
-    return     E_CONF_FAIL;
+    return E_CONF_FAIL;
 }
 
 void ncDataHandler(const uint8_t* rxBuffer){

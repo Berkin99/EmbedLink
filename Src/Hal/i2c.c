@@ -31,6 +31,8 @@
 #include "system.h"
 #include "i2c.h"
 
+#ifdef HAL_I2C_MODULE_ENABLED
+
 #define I2C_TIMEOUT	(200)
 
 i2c_t i2c1;
@@ -151,3 +153,5 @@ void HAL_I2C_MemTxCpltCallback(I2C_HandleTypeDef* hi2c){
 	if(parent == NULL) return;
 	semaphoreGiveISR(parent->cplt);
 }
+
+#endif

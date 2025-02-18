@@ -45,7 +45,7 @@
 #include "estimator.h"
 //#include "usb.h"
 
-static uint8_t sysInit;
+static uint8_t sysInit = 0;
 
 taskAllocateStatic(SYSTEM_TASK, SYSTEM_TASK_STACK, SYSTEM_TASK_PRI);
 void systemTask(void* argv);
@@ -54,13 +54,12 @@ void systemLaunch(void){
 
     if(sysInit) return;
     sysInit = 1;
-
-    spiInit();
-    i2cInit();
+//    spiInit();
+//    i2cInit();
     uartInit();
-    pwmInit();
-    adcInit();
-    // usbInit();
+//    pwmInit();
+//    adcInit();
+//    usbInit();
 
     taskCreateStatic(SYSTEM_TASK, systemTask, NULL);
     taskStartScheduler();
@@ -71,38 +70,16 @@ void systemLaunch(void){
 }
 
 void systemTask(void* argv){
+	uint8_t temp[2] = "0\n";
+    while (1){
+    	temp[0] = uartWrite(&uart2, temp, 2) + '8';
+    }
 
-    serialPrint("[>] System Start\n");
+    serialPrint("[>] System Start2\n");
 
-    ledseqInit();
-    ledseqRun(LED1, 1, SEQ_PROCESS_L);
-
-    delay(1000);
-
-    /* Memory First */
-//    memoryInit();
-//    memoryTest();
-//    memoryDownload();
-
-//    ncInit();
-
-    sensorInit();
-    telemetryInit();
-    navigatorInit();
-    estimatorInit();
-
-    sensorTest();
-    telemetryTest();
-    navigatorTest();
-    estimatorTest();
-
-    /* System Ready Signal */
-    ledseqStop (LED1);
-    ledseqRun  (LED2, 1, SEQ_HEARTBEAT);
-
-    sysInit = 2;
     while(1){
     	delay(1000);
+    	serialPrint("[>] Loop ...\n");
     }
 }
 

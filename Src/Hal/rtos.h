@@ -131,7 +131,7 @@ static inline queue_t queueCreate(uint32_t length, uint32_t itemSize) {
 }
 
 static inline void queueDelete(queue_t queue) {
-    if (queue == NULL) return RTOS_ERROR;
+    if (queue == NULL) return;
     vQueueDelete(queue);
 }
 
@@ -190,8 +190,8 @@ static inline void taskYield(void) {
 }
 
 static inline int32_t taskPriorityGet(task_t task) {
-    if (task == NULL) return RTOS_ERROR;
-    return (int32_t)uxTaskPriorityGet(task);
+	if (task == NULL) return RTOS_ERROR;
+	return (int32_t)uxTaskPriorityGet(task);
 }
 
 static inline void taskPrioritySet(task_t task, int32_t priority) {

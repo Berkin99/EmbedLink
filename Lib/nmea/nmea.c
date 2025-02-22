@@ -26,20 +26,15 @@
 
 #include <string.h>
 #include <stdint.h>
-#include <stdbool.h>
 #include <stdlib.h>
 #include <stdarg.h>
-
 #include "nmea.h"
 
 #define NMEA_MAX_MESSAGE_LEN  	80
 #define NMEA_MAX_FIELD_LEN		16
-
 #define NMEA_TALKER_ID_LEN  	2
 #define NMEA_PAYLOAD_ID_LEN 	3
-
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
-
 
 typedef struct NMEA_Identifier_s {
 	uint8_t id_index;
@@ -57,33 +52,32 @@ static const NMEA_Identifer_t TalkerID_Data[] = {
 static const NMEA_Identifer_t PayloadID_Data[] = {
 	{NMEA_MSG_DTM, "DTM"},
 	{NMEA_MSG_GBQ, "GBQ"},
-	{NMEA_MSG_GBS, "GBS"}, // Has NMEA Parser
-	{NMEA_MSG_GGA, "GGA"}, // Has NMEA Parser
-	{NMEA_MSG_GLL, "GLL"}, // Has NMEA Parser
+	{NMEA_MSG_GBS, "GBS"}, // [+] NMEA Parser
+	{NMEA_MSG_GGA, "GGA"}, // [+] NMEA Parser
+	{NMEA_MSG_GLL, "GLL"}, // [+] NMEA Parser
 	{NMEA_MSG_GLQ, "GLQ"},
 	{NMEA_MSG_GNQ, "GNQ"},
 	{NMEA_MSG_GNS, "GNS"},
 	{NMEA_MSG_GPQ, "GPQ"},
 	{NMEA_MSG_GRS, "GRS"},
-	{NMEA_MSG_GSA, "GSA"}, // Has NMEA Parser
-	{NMEA_MSG_GST, "GST"}, // Has NMEA Parser
-	{NMEA_MSG_GSV, "GSV"}, // Has NMEA Parser
-	{NMEA_MSG_RMC, "RMC"}, // Has NMEA Parser
+	{NMEA_MSG_GSA, "GSA"}, // [+] NMEA Parser
+	{NMEA_MSG_GST, "GST"}, // [+] NMEA Parser
+	{NMEA_MSG_GSV, "GSV"}, // [+] NMEA Parser
+	{NMEA_MSG_RMC, "RMC"}, // [+] NMEA Parser
 	{NMEA_MSG_TXT, "TXT"},
 	{NMEA_MSG_VLW, "VLW"},
-	{NMEA_MSG_VTG, "VTG"}, // Has NMEA Parser
-	{NMEA_MSG_ZDA, "ZDA"}, // Has NMEA Parser
+	{NMEA_MSG_VTG, "VTG"}, // [+] NMEA Parser
+	{NMEA_MSG_ZDA, "ZDA"}, // [+] NMEA Parser
 };
 
 static char* main_cursor;
 static uint16_t main_index;
-
 static char talkerid[2];
 static char payloadid[3];
 
-bool NMEA_Pack(NMEA_Message_t* ref, const uint8_t* raw) {
+uint8_t NMEA_Pack(NMEA_Message_t* ref, const uint8_t* raw) {
 
-	if (*raw != '$') return false;
+	if (*raw != '$') return 0;
 
 	main_index = 1;
 	uint8_t i;
@@ -98,23 +92,18 @@ bool NMEA_Pack(NMEA_Message_t* ref, const uint8_t* raw) {
 		main_index++;
 	}
 
-
 	ref->rawdata = (uint8_t*)raw;
 	ref->talkerId = NMEA_Find_TalkerID(talkerid);
 	ref->payloadId = NMEA_Find_PayloadID(payloadid);
 	ref->payload = (uint8_t*)&raw[main_index];
 
-	return true;
+	return 1;
 }
 
 uint8_t NMEA_Checksum(const char* msg)
 {
-	/* Support senteces with or without the starting dollar sign. */
-	if (*msg == '$') msg++;
-
 	uint8_t checksum = 0x00;
-
-	/*  The optional checksum is an XOR of all bytes between "$" and "*". */
+	if (*msg == '$') msg++;	/* Support senteces with or without the starting dollar sign. */
 	while (*msg && (*msg != '*')) checksum ^= *msg++;
 
 	return checksum;
@@ -140,30 +129,25 @@ uint8_t NMEA_Find_PayloadID(const char* msg) {
 	return 0;
 }
 
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 /**
-* Carries main_cursor to the next ',' value of field.
-* @param main_index = Counts move iterations.
-* Returns 1 if there is a field.
-* Returns 0 if found <message end symbol> or <field len overflow>.
-*/
-bool NMEA_NextField(const char* msg) {
+ * Carries main_cursor to the next ',' value of field.
+ * @param main_index = Counts move iterations.
+ * Returns 1 if there is a field.
+ * Returns 0 if found <message end symbol> or <field len overflow>.
+ */
+uint8_t NMEA_NextField(const char* msg) {
 	for (main_index = 1; main_index < NMEA_MAX_FIELD_LEN; main_index++) {
 		if (msg[main_index] == ',') {
 			main_cursor = (char*)&msg[main_index];
-			return true;
+			return 1;
 		}
 		if (msg[main_index] == '*') {
 			main_cursor = (char*)&msg[main_index];
 			return false;
 		}
 	}
-	return false;
+	return 0;
 }
-
-
 
 /**
  * Scanf-like processor for NMEA sentences. Supports the following formats:
@@ -400,16 +384,8 @@ parse_error:
 
 }
 
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/* GBS GNSS satellite fault detection.
-*/
-uint8_t NMEA_GBS_Parse(NMEA_Payload_GBS_t* frame, const NMEA_Message_t* msg) {
+uint8_t NMEA_Parse_GBS(NMEA_Payload_GBS_t* frame, const NMEA_Message_t* msg) {
 	if (msg->payloadId != NMEA_MSG_GBS) return 0;
-
-	//$GPGBS,235503.00,1.6,1.4,3.2,,,,,,*40
-	//$GPGBS,235458.00,1.4,1.3,3.1,03,,-21.4,3.8,1,0*5B
 
 	return NMEA_Scan(msg, "Tfffdfff",
 		&frame->time,
@@ -423,13 +399,8 @@ uint8_t NMEA_GBS_Parse(NMEA_Payload_GBS_t* frame, const NMEA_Message_t* msg) {
 	);
 }
 
-/* GGA Global Positioning System Fix Data. Time, Position and fix related data
-*  for GNSS receiver.
-*/
-uint8_t NMEA_GGA_Parse(NMEA_Payload_GGA_t* frame, const NMEA_Message_t* msg) {
+uint8_t NMEA_Parse_GGA(NMEA_Payload_GGA_t* frame, const NMEA_Message_t* msg) {
 	if (msg->payloadId != NMEA_MSG_GGA) return 0;
-
-	//$GNGGA,092725.00,4717.11399,N,00833.91590,E,1,08,1.01,499.6,M,48.0,M,,*5B
 
 	return NMEA_Scan(msg, "TLqLqii",
 		&frame->time,
@@ -442,13 +413,8 @@ uint8_t NMEA_GGA_Parse(NMEA_Payload_GGA_t* frame, const NMEA_Message_t* msg) {
 	);
 }
 
-
-/* GLL Latitude and longitude, with time of position fix and status.
-*/
-uint8_t NMEA_GLL_Parse(NMEA_Payload_GLL_t* frame, const NMEA_Message_t* msg) {
+uint8_t NMEA_Parse_GLL(NMEA_Payload_GLL_t* frame, const NMEA_Message_t* msg) {
 	if (msg->payloadId != NMEA_MSG_GLL) return 0;
-
-	//$GPGLL,4717.11364,N,00833.91565,E,092321.00,A,A*60
 
 	return NMEA_Scan(msg, "LqLqTcc",
 		&frame->location.latitude,
@@ -461,12 +427,8 @@ uint8_t NMEA_GLL_Parse(NMEA_Payload_GLL_t* frame, const NMEA_Message_t* msg) {
 	);
 }
 
-/* GSA  GNSS DOP and active satellites.
-*/
-uint8_t NMEA_GSA_Parse(NMEA_Payload_GSA_t* frame, const NMEA_Message_t* msg) {
+uint8_t NMEA_Parse_GSA(NMEA_Payload_GSA_t* frame, const NMEA_Message_t* msg) {
 	if (msg->payloadId != NMEA_MSG_GSA) return 0;
-
-	//$GPGSA,A,3,23,29,07,08,09,18,26,28,,,,,1.94,1.18,1.54,1*0D
 
 	return NMEA_Scan(msg, "ciiiiiiiiiiiiifffi",
 		&frame->opMode,
@@ -490,12 +452,8 @@ uint8_t NMEA_GSA_Parse(NMEA_Payload_GSA_t* frame, const NMEA_Message_t* msg) {
 	);
 }
 
-/* GST  GNSS pseudorange error statistics.
-*/
-uint8_t NMEA_GST_Parse(NMEA_Payload_GST_t* frame, const NMEA_Message_t* msg) {
+uint8_t NMEA_Parse_GST(NMEA_Payload_GST_t* frame, const NMEA_Message_t* msg) {
 	if (msg->payloadId != NMEA_MSG_GST) return 0;
-
-	//$GPGST,082356.00,1.8,,,,1.7,1.3,2.2*7E
 
 	return (uint8_t)NMEA_Scan(msg, "Tfffffff",
 		&frame->time,
@@ -509,12 +467,8 @@ uint8_t NMEA_GST_Parse(NMEA_Payload_GST_t* frame, const NMEA_Message_t* msg) {
 	);
 }
 
-/* GSV  GNSS satellites in view.
-*/
-uint8_t NMEA_GSV_Parse(NMEA_Payload_GSV_t* frame, const NMEA_Message_t* msg) {
+uint8_t NMEA_Parse_GSV(NMEA_Payload_GSV_t* frame, const NMEA_Message_t* msg) {
 	if (msg->payloadId != NMEA_MSG_GSV) return 0;
-
-	//$GPGSV,1,1,03,12,,,42,24,,,47,32,,,37,5*66
 
 	return (uint8_t)NMEA_Scan(msg, "iiddddddddddddddddd",
 		&frame->msgNum,
@@ -539,12 +493,8 @@ uint8_t NMEA_GSV_Parse(NMEA_Payload_GSV_t* frame, const NMEA_Message_t* msg) {
 	);
 }
 
-/* RMC Recommended minimum data. (I don't recommend)
-*/
-uint8_t NMEA_RMC_Parse(NMEA_Payload_RMC_t* frame, const NMEA_Message_t* msg) {
+uint8_t NMEA_Parse_RMC(NMEA_Payload_RMC_t* frame, const NMEA_Message_t* msg) {
 	if (msg->payloadId != NMEA_MSG_RMC) return 0;
-
-	//$GPRMC,083559.00,A,4717.11437,N,00833.91522,E,0.004,77.52,091202,,,A,V*57
 
 	return (uint8_t)NMEA_Scan(msg, "TcLqLqffDf_c",
 		&frame->time,
@@ -561,13 +511,8 @@ uint8_t NMEA_RMC_Parse(NMEA_Payload_RMC_t* frame, const NMEA_Message_t* msg) {
 	);
 }
 
-
-/* VTG  Course over ground and ground speed.
-*/
-uint8_t NMEA_VTG_Parse(NMEA_Payload_VTG_t* frame, const NMEA_Message_t* msg) {
+uint8_t NMEA_Parse_VTG(NMEA_Payload_VTG_t* frame, const NMEA_Message_t* msg) {
 	if (msg->payloadId != NMEA_MSG_VTG) return 0;
-
-	//$GPVTG,77.52,T,,M,0.004,N,0.008,K,A*06
 
 	return (uint8_t)NMEA_Scan(msg, "f_f_f_f_c",
 		&frame->cogt,
@@ -578,12 +523,8 @@ uint8_t NMEA_VTG_Parse(NMEA_Payload_VTG_t* frame, const NMEA_Message_t* msg) {
 	);
 }
 
-/* ZDA Time and Date.
-*/
-uint8_t NMEA_ZDA_Parse(NMEA_Payload_ZDA_t* frame, const NMEA_Message_t* msg) {
+uint8_t NMEA_Parse_ZDA(NMEA_Payload_ZDA_t* frame, const NMEA_Message_t* msg) {
 	if (msg->payloadId != NMEA_MSG_ZDA) return 0;
-
-	//$GPZDA,082710.00,16,09,2002,00,00*64
 
 	return (uint8_t)NMEA_Scan(msg, "Tddddd",
 		&frame->time,

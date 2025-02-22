@@ -70,11 +70,6 @@ void systemLaunch(void){
 }
 
 void systemTask(void* argv){
-	uint8_t temp[2] = "0\n";
-    while (1){
-    	temp[0] = uartWrite(&uart2, temp, 2) + '8';
-    }
-
     serialPrint("[>] System Start2\n");
 
     while(1){

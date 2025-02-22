@@ -39,7 +39,7 @@ typedef enum {
 	NMEA_TALKER_GA,			//Galileo
 	NMEA_TALKER_GB,			//BeiDou
 	NMEA_TALKER_GN,			//GNSS Combination
-}NMEA_talkerId_e;
+}NMEA_TalkerId_e;
 
 typedef enum {
 	NMEA_MSG_DTM = 1,
@@ -60,7 +60,7 @@ typedef enum {
 	NMEA_MSG_VLW,
 	NMEA_MSG_VTG,
 	NMEA_MSG_ZDA,
-}NMEA_payloadId_e;
+}NMEA_PayloadId_e;
 
 typedef struct NMEA_Message_s {
 	uint8_t talkerId;
@@ -92,13 +92,10 @@ typedef struct NMEA_SatInfo_s {
 typedef struct NMEA_Location_s {
 	int32_t latitude;	// Degrees as integer 1 lat ~ 111000 meters /*47.1234567 deg = 471234567*/
 	int32_t longitude;	// Degrees as integer 1 lon = cos(lat*deg2rad)* pi / 180
-	int8_t ns_d;		// North South Direction
-	int8_t ew_d;		// East West Direction
+	int8_t  ns_d;
+	int8_t  ew_d;
 }NMEA_Location_t;
 
-/*
-*  Payload Structs
-*/
 typedef struct NMEA_Payload_GBS_s {
 	NMEA_Time_t time;
 	float errLat;
@@ -120,7 +117,6 @@ typedef struct NMEA_Payload_GGA_s {
 typedef struct NMEA_Payload_GLL_s {
 	NMEA_Location_t location;
 	NMEA_Time_t time;
-
 	char status;
 	char posMode;
 }NMEA_Payload_GLL_t;
@@ -180,11 +176,10 @@ typedef struct NMEA_Payload_ZDA_s {
 	int32_t minute_offset;
 }NMEA_Payload_ZDA_t;
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-bool NMEA_Pack(NMEA_Message_t* ref, const uint8_t* raw_sentence);
+uint8_t NMEA_Pack(NMEA_Message_t* ref, const uint8_t* raw_sentence);
 
 uint8_t NMEA_Find_TalkerID(const char* msg);
+
 uint8_t NMEA_Find_PayloadID(const char* msg);
 
 /**
@@ -196,25 +191,30 @@ uint8_t NMEA_Find_PayloadID(const char* msg);
  * i - unsigned byte (uint8_t *)
  * s - string (char *)
  * q - direction N,E = 1 : S,W = -1 (int8_t *)
- * D - date (NMEA_Date *)
- * T - time stamp (NMEA_Time *)
- * L - location (NMEA_Location.latitude *) "latitude,longitude"
+ * D - date (NMEA_Date_t *)
+ * T - time stamp (NMEA_Time_t *)
+ * L - location (NMEA_Location_t.latitude *) "latitude,longitude"
  * _ - ignore this field
  * Returns true on success. See library source code for details.
  */
 uint8_t NMEA_Scan(const NMEA_Message_t* msg, const char* format, ...);
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+uint8_t NMEA_Parse_GBS(NMEA_Payload_GBS_t* frame, const NMEA_Message_t* msg);
 
-uint8_t NMEA_GBS_Parse(NMEA_Payload_GBS_t* frame, const NMEA_Message_t* msg);
-uint8_t NMEA_GGA_Parse(NMEA_Payload_GGA_t* frame, const NMEA_Message_t* msg);
-uint8_t NMEA_GLL_Parse(NMEA_Payload_GLL_t* frame, const NMEA_Message_t* msg);
-uint8_t NMEA_GSA_Parse(NMEA_Payload_GSA_t* frame, const NMEA_Message_t* msg);
-uint8_t NMEA_GST_Parse(NMEA_Payload_GST_t* frame, const NMEA_Message_t* msg);
-uint8_t NMEA_GSV_Parse(NMEA_Payload_GSV_t* frame, const NMEA_Message_t* msg);
-uint8_t NMEA_RMC_Parse(NMEA_Payload_RMC_t* frame, const NMEA_Message_t* msg);
-uint8_t NMEA_VTG_Parse(NMEA_Payload_VTG_t* frame, const NMEA_Message_t* msg);
-uint8_t NMEA_ZDA_Parse(NMEA_Payload_ZDA_t* frame, const NMEA_Message_t* msg);
+uint8_t NMEA_Parse_GGA(NMEA_Payload_GGA_t* frame, const NMEA_Message_t* msg);
 
+uint8_t NMEA_Parse_GLL(NMEA_Payload_GLL_t* frame, const NMEA_Message_t* msg);
+
+uint8_t NMEA_Parse_GSA(NMEA_Payload_GSA_t* frame, const NMEA_Message_t* msg);
+
+uint8_t NMEA_Parse_GST(NMEA_Payload_GST_t* frame, const NMEA_Message_t* msg);
+
+uint8_t NMEA_Parse_GSV(NMEA_Payload_GSV_t* frame, const NMEA_Message_t* msg);
+
+uint8_t NMEA_Parse_RMC(NMEA_Payload_RMC_t* frame, const NMEA_Message_t* msg);
+
+uint8_t NMEA_Parse_VTG(NMEA_Payload_VTG_t* frame, const NMEA_Message_t* msg);
+
+uint8_t NMEA_Parse_ZDA(NMEA_Payload_ZDA_t* frame, const NMEA_Message_t* msg);
 
 #endif /* NMEA_H */

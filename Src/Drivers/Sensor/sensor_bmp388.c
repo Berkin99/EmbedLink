@@ -252,10 +252,10 @@ int8_t _sensorErrorConvertBMP388(int8_t err){
     return E_ERROR;
 }
 
-//MEM_GROUP_START(BMP388)
-//MEM_ADD(MEM_UINT32, idptr,    &idptr)
-//MEM_ADD(MEM_FLOAT,  mean,     &barMean)
-//MEM_ADD(MEM_FLOAT,  variance, &barVariance)
-//MEM_GROUP_STOP(BMP388)
+MEM_GROUP_START(BMP388)
+MEM_ADD(MEM_UINT32, idptr,    &idptr)
+MEM_ADD(MEM_FLOAT,  mean,     &barMean)
+MEM_ADD(MEM_FLOAT,  variance, &barVariance)
+MEM_GROUP_STOP(BMP388)
 
 #endif /* BMP388_I2C */

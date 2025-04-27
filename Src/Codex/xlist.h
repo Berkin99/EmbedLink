@@ -27,46 +27,36 @@
  *
  */
 
-#ifndef MEMORY_H_
-#define MEMORY_H_
+#ifndef XLIST_H_
+#define XLIST_H_
 
-#include <stdint.h>
-#include <stdbool.h>
-#include "mem.h"
+#include <stdlib.h>
+#include <sysdefs.h>
 
-#define MEM_TIMEOUT_MS    (100)
-#define MEM_INVALID 	  (0xFFFF)
-#define MEM_INVALID_ID 	  {0xFFFF, 0xFFFFFFFF}
-
-typedef uint32_t memory_t; /* Unique Key */
-
-typedef struct{
-	uint16_t index;
-	memory_t key;
-}memID_t;
-
+/**
+ * @brief Structure representing a generic dynamic list.
+ */
 typedef struct {
-    const char* Name;
-    int8_t      (*Init)(void);
-    int8_t      (*Test)(void);
-    int8_t      (*MemRead) (memory_t key, uint8_t* pRxData, int8_t len);
-    int8_t      (*MemWrite)(memory_t key, uint8_t* pTxData, int8_t len);
-}memoryHandle_t;
+    size_t length;			/**< Number of elements in the list */
+    size_t item_size;		/**< Size of each element in bytes */
+    void* array;			/**< Pointer to the array of elements */
+    int (*_eq)(void* item1, void* item2); /**< Function pointer for equality comparison */
+    int (*_lt)(void* item1, void* item2); /**< Function pointer for less-than comparison */
+} xlist_t;
 
-void     memoryInit(void);
-void     memoryTest(void);
-int8_t   memoryRead(memory_t key, uint8_t* pRxData, int8_t len);
-int8_t   memoryWrite(memory_t key, uint8_t* pTxData, int8_t len);
-int8_t   memoryClear(void);
-int8_t   memoryUpload(void);
-int8_t   memoryDownload(void);
-int8_t   memoryMemUpload(char* group, char* name);
-int8_t   memoryMemDownload(char* group, char* name);
-mem_t*   memoryGetVar(uint16_t index);
-memID_t  memoryGetID(char* group, char* name);
-uint32_t memoryGetKey(uint16_t index);
-uint8_t  memoryTypeSize(uint8_t type);
-uint8_t  memoryGroupSize(uint16_t index);
-void     memoryLogicInit(void);
+xlist_t xlistNew(size_t item_size, int (*eq)(void*, void*), int (*lt)(void*, void*));
+void*   xlistGet(xlist_t* self, size_t idx);
+void    xlistAppend(xlist_t* self, void* item);
+void    xlistExtract(xlist_t* self, size_t idx, void* out_item);
+void    xlistPop(xlist_t* self);
+void    xlistPush(xlist_t* self, void* item);
+void    xlistSwap(xlist_t* self, size_t idx1, size_t idx2);
+void    xlistInsert(xlist_t* self, size_t idx, void* item);
+int     xlistIndex(xlist_t* self, void* item);
+size_t  xlistCount(xlist_t* self, void* item);
+void    xlistReverse(xlist_t* self);
+void    xlistSort(xlist_t* self);
+void    xlistFree(xlist_t* self);
 
-#endif /* MEMORY_H_ */
+#endif /* XLIST_H_ */
+ 

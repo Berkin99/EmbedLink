@@ -39,6 +39,7 @@
 #ifdef SYSTIME
 
 uint32_t millis(void){
+	// TODO: Change it for 2hour+ support 
 	return SYSTIME.Instance->CNT / 1000;
 }
 

@@ -116,3 +116,35 @@ matrix_t mscl (matrix_t m1, float scl){
     return m;
 }
 
+matrix_t minv(matrix_t m) {
+    matrix_t inv = meye(m.row);
+    matrix_t temp = m; // Copy input matrix to a temp
+
+    for (uint8_t i = 0; i < m.row; i++) {
+        // Find the pivot
+        float pivot = temp.mx[i][i];
+        if (pivot == 0.0f) {
+            // Matrix is singular, return zero matrix (or handle error)
+            return mzero(m.row, m.col);
+        }
+
+        // Normalize the pivot row
+        for (uint8_t j = 0; j < m.col; j++) {
+            temp.mx[i][j] /= pivot;
+            inv.mx[i][j] /= pivot;
+        }
+
+        // Eliminate other rows
+        for (uint8_t k = 0; k < m.row; k++) {
+            if (k == i) continue;
+            float factor = temp.mx[k][i];
+            for (uint8_t j = 0; j < m.col; j++) {
+                temp.mx[k][j] -= factor * temp.mx[i][j];
+                inv.mx[k][j] -= factor * inv.mx[i][j];
+            }
+        }
+    }
+
+    return inv;
+}
+

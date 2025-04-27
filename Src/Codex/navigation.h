@@ -31,76 +31,68 @@
 #define NAVIGATION_H_
 
 #include <stdint.h>
-#include "math3d.h"
-#include "kinematics.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/* Navigation type definitions */
-
-#define NAV_TIMEOUT_MS    1000
-#define NAV_UNAVILABLE    -1
-
-typedef struct{
-	struct{
-	    int32_t latitude;     /* GCS */
-	    int32_t longitude;    /* GCS */
-	};
-	vec_t stdDev;
-}location_t;
-
-typedef float  compass_t;	/* World Z axis angle [-180 , 180] 0 equals North */
-typedef float altitude_t;   /* Altitude from Local Sea Level */
-typedef uint64_t  time_t;	/* Unix Time 64 bit (seconds) */
+#include <sysdefs.h>
+#include <xmathf.h>
 
 typedef enum{
 	NAV_LOCATION,
 	NAV_COMPASS,
 	NAV_ALTITUDE,
-	NAV_TIME,
+	NAV_UNIXTIME,
 	NAV_TYPECOUNT,
-}navstate_e;
+}navigation_e;
 
 typedef struct{
-    location_t location;
-    compass_t  compass;
-    altitude_t altitude;
-    time_t     time;
-}navstate_t;
+	f64 latitude;
+	f64 longitude;
+	f32 stdDev;
+	u32 timestampMs;
+}location_t;   					/* Degrees as f64 */
+
+typedef xf32_t    altitude_t;   /* Altitude from Local Sea Level */
+typedef xf32_t    compass_t;	/* World Z axis angle [-180 , 180] 0 equals North */
+typedef u64       unixtime_t;   /* Unix Time 64 bit (seconds) */
 
 typedef struct{
-	navstate_e type;
+	navigation_e type;
 	union{
 		location_t location;
-		compass_t  compass;
 		altitude_t altitude;
-		time_t     time;
+		compass_t  compass;
+		unixtime_t unixtime;	
 	};
 }navigation_t;
 
-navstate_t* navigationState (void);
-navstate_t  navigationOrigin(void);
+typedef struct{
+	location_t location;
+	altitude_t altitude;
+	compass_t  compass;
+	unixtime_t unixtime;
+}navigationState_t;
 
-void   navigationOriginSet(navigation_t* pData);
-void   navigationPositionOrigin(vec_t position);
-void   navigationAppend(navigation_t* pData);
-void   navigationStateUpdate(navstate_t* pState);
-int8_t navigationIsValid(navstate_e index);
-int8_t navigationValidity(navstate_e index, uint32_t timeout);
-int8_t navigationLocation(location_t* pBuf);
-int8_t navigationCompass(compass_t* pBuf);
-int8_t navigationAltitude(altitude_t* pBuf);
-int8_t navigationTime(time_t* pBuf);
-void   navigationLocationUnits(location_t loc);
-void   navigationLocationPos(position_t* pBuf);
-void   navigationAltitudePos(float* pBuf);
-int8_t navigationToMeasurement(const navigation_t* pData, measurement_t* pBuf);
+void   navigationReset(navigationState_t* self);
+void   navigationSetLocation(navigationState_t* self, location_t* location);
+void   navigationSetAltitude(navigationState_t* self, altitude_t* altitude);
+void   navigationSetCompass(navigationState_t* self, compass_t* compass);
+void   navigationSetUnixtime(navigationState_t* self, unixtime_t* unixtime);
+int8_t navigationIsValid(navigationState_t* self, navigation_e idx, uint32_t timeout_ms);
+
+void   xnavigationReset(void);
+void   xnavigationGetLocation(location_t* location);
+void   xnavigationGetAltitude(altitude_t* altitude);
+void   xnavigationGetCompass(compass_t* compass);
+void   xnavigationGetUnixtime(unixtime_t* unixtime);
+void   xnavigationSetLocation(location_t* location);
+void   xnavigationSetAltitude(altitude_t* altitude);
+void   xnavigationSetCompass(compass_t* compass);
+void   xnavigationSetUnixtime(unixtime_t* unixtime);
+int8_t xnavigationIsValid(navigation_e idx, uint32_t timeout_ms);
+void   xnavigationUnitLocation(const location_t* loc);
+void   xnavigationGetOrigin(navigationState_t* pBuf);
+void   xnavigationSetOrigin(navigationState_t navigation);
+void   xnavigationCalibrateOrigin(vec_t position);
+int8_t xnavigationGetPosition(vec_t* pos);
+
 float  navigationPressureToAltitude(float pressure);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* NAVIGATION_H_ */

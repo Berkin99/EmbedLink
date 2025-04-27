@@ -44,13 +44,13 @@
 	.MemWrite = &memoryWrite##NAME,\
 },
 
-static const MEM_Handle_t mhandleList[] ={
+static const memoryHandle_t mhandleList[] ={
 	#ifdef E24AA_I2C
 		MEMORY_ADD(E24AA)
 	#endif
 };
 
-static const uint8_t mhandleLen = sizeof(mhandleList)/sizeof(MEM_Handle_t);
+static const uint8_t mhandleLen = sizeof(mhandleList)/sizeof(memoryHandle_t);
 
 static const uint8_t typeLength[] = {
 	[MEM_UINT8]  = 1,

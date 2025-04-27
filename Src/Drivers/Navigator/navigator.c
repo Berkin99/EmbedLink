@@ -50,7 +50,7 @@
 	.WaitDataReady = &navigatorWaitDataReady##NAME,\
 },
 
-static const NAV_Handle_t navList[] ={
+static const navigatorHandle_t navList[] ={
 	#ifdef NEOM8N_UART
 		NAVIGATOR_ADD(NEOM8N)
 	#endif
@@ -59,7 +59,7 @@ static const NAV_Handle_t navList[] ={
 	#endif
 };
 
-static const uint8_t navLen = sizeof(navList)/sizeof(NAV_Handle_t);
+static const uint8_t navLen = sizeof(navList)/sizeof(navigatorHandle_t);
 
 void navigatorInit(void){
     for(uint8_t i = 0; i < navLen; i++){

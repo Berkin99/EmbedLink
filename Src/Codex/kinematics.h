@@ -27,33 +27,7 @@
  *
  */
 
-#ifndef KINEMATICS_H_
-#define KINEMATICS_H_
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include <stdint.h>
-#include <sysdefs.h>
-#include "math3d.h"
-
-#define INDEX_X       0
-#define INDEX_Y       1
-#define INDEX_Z       2
-
-#define STATE_X    (1U<<0)
-#define STATE_Y    (1U<<1)
-#define STATE_Z    (1U<<2)
-
-#define STATE_XYZ  (STATE_X | STATE_Y | STATE_Z)
-
-#define KINEMATICS_TIMEOUT_MS 1000
-
-#define STATE_DEFINITE    -1
-#define STATE_AXIS_OUT    -2
-
-/*
+ /**
  *  @brief  This  file  is referenced by
  *  all sensor measurements, it can used
  *  for estimators.
@@ -62,99 +36,63 @@ extern "C" {
  *  deviation of the measurement. It has to be
  *  positive value.
  *
- *  @stdDev =  0: not defined standard deviation.
- *  @stdDev = -1: definite correction data
- *  @stdDev = -2: defines the axis is out of
- *  usage.
+ *  @stdDev =  0: definite correction data
+ *  @stdDev = -1: not defined standard deviation.
+ *  @stdDev = -2: invalid standart deviation
  */
 
-typedef struct{
-	union{
-		struct{
-			float x;
-			float y;
-			float z;
-		};
-		float axis[3];
-		float value;
-		vec_t vector;
-	};
-    vec_t stdDev;
-}kinv_t;
+#ifndef KINEMATICS_H_
+#define KINEMATICS_H_
 
-static inline kinv_t kinzero(void){
-	kinv_t tmp;
-	tmp.vector = vzero();
-	tmp.stdDev = vzero();
-	return tmp;
-}
+#include <stdint.h>
+#include <sysdefs.h>
+#include <xmathf.h>
+
+typedef enum{
+    KINV_POSITION,              /* meters */
+    KINV_ROTATION,              /* deg */
+    KINV_VELOCITY,              /* m/s */
+    KINV_ACCELERATION,          /* m/s^2 */
+    KINV_ATTITUDE,              /* deg/s */
+    KINV_IROTATION,             /* deg */
+    KINV_IVELOCITY,             /* m/s */
+    KINV_IACCELERATION,         /* m/s^2 */
+    KINV_IATTITUDE,             /* deg/s */
+    KINV_TYPECOUNT
+}kinematics_e;
+
+typedef xv3f32_t kinv_t;
 
 typedef kinv_t position_t;
 typedef kinv_t rotation_t;
 typedef kinv_t velocity_t;
 typedef kinv_t acceleration_t;
 typedef kinv_t attitude_t;
-typedef kinv_t magnetization_t;
-typedef kinv_t pressure_t;
-typedef kinv_t temperature_t;
-
-typedef enum{
-    STATE_POSITION,              /* meters */
-    STATE_ROTATION,              /* deg */
-    STATE_VELOCITY,              /* m/s */
-    STATE_ACCELERATION,          /* m/s^2 */
-    STATE_ATTITUDE,              /* deg/s */
-    STATE_INTERNAL_VELOCITY,     /* m/s */
-    STATE_INTERNAL_ACCELERATION, /* m/s^2 */
-    STATE_INTERNAL_ATTITUDE,     /* deg/s */
-	STATE_MAGNETIZATION,         /* azimuth */
-    STATE_PRESSURE,              /* mbar */
-    STATE_TEMPERATURE,           /* celcius */
-
-    STATE_TYPECOUNT
-}state_e;
 
 typedef union{
-	struct{
-		position_t      position;      /* World frame position */
-		rotation_t      rotation;      /* World frame rotation */
-		velocity_t      velocity;      /* World frame speed m/s */
-		acceleration_t  acceleration;  /* World frame acceleration */
-		attitude_t      attitude;      /* World frame angular speed */
-		velocity_t      ivelocity;     /* Self frame speed m/s */
-		acceleration_t  iacceleration; /* Self frame acceleration */
-		attitude_t      iattitude;     /* Self frame angular speed */
-		magnetization_t magnetization; /* Self frame microTesla */
-        pressure_t      pressure;
-        temperature_t   temperature;
-	};
-	kinv_t kinv[STATE_TYPECOUNT];
-}state_t;
-
-typedef struct{
-    state_e type;
-    union{
-        position_t      position;
-        rotation_t      rotation;
-        velocity_t      velocity;
-        acceleration_t  acceleration;
-        attitude_t      attitude;
-        magnetization_t magnetization;
-        pressure_t      pressure;
-        temperature_t   temperature;
-        kinv_t			kinv;
+    struct
+    {
+        position_t position;      		/* Position m 	 */
+        rotation_t rotation;      		/* Rotation deg  */
+        velocity_t velocity;      		/* Speed m/s 	 */
+        acceleration_t acceleration;  	/* Acceleration  */
+        attitude_t attitude;      		/* Angular speed */
+        rotation_t irotation;      		/* Rotation deg  */
+        velocity_t ivelocity;      		/* Speed m/s 	 */
+        acceleration_t iacceleration;  	/* Acceleration  */
+        attitude_t iattitude;      		/* Angular speed */
     };
-}measurement_t;
+    kinv_t kinv[KINV_TYPECOUNT];
+}kinematicsState_t;
 
-state_t* kinematicsState(void);
-void     kinematicsAppend(state_e index, kinv_t data);
-void     kinematicsStateUpdate(state_t* pState, uint8_t* checkList);
-int8_t   kinematicsValidity(state_e index, uint32_t timeout);
-int8_t   kinematicsVector(state_e index, kinv_t* pBuffer);
-vec_t    kinematicsRotateFrame(vec_t v, vec_t frame);
+void   kinematicsReset(kinematicsState_t *self);
+kinv_t kinematicsGet(kinematicsState_t *self, kinematics_e idx);
+void   kinematicsSet(kinematicsState_t *self, kinematics_e idx, kinv_t data);
+int8_t kinematicsIsValid(kinematicsState_t *self, kinematics_e idx, uint32_t timeout_ms);
 
-#ifdef __cplusplus
-}
-#endif
+void   xkinematicsReset(void);
+kinv_t xkinematicsGet(kinematics_e idx);
+void   xkinematicsSet(kinematics_e idx, kinv_t data);
+int8_t xkinematicsIsValid(kinematics_e idx, uint32_t timeout_ms);
 
 #endif /* KINEMATICS_H_ */

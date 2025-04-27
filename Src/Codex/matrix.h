@@ -48,5 +48,6 @@ matrix_t msub    (matrix_t m1, matrix_t m2);
 matrix_t mdot    (matrix_t m1, matrix_t m2);
 matrix_t mtrans  (matrix_t m1);
 matrix_t mscl    (matrix_t m1, float scl);
+matrix_t minv	 (matrix_t m);
 
 #endif

@@ -27,24 +27,24 @@
  *
  */
 
-#ifndef STREAM_H_
-#define STREAM_H_
+#ifndef XSTREAM_H_
+#define XSTREAM_H_
 
 #include <stdint.h>
-#include "sysdefs.h"
+#include <sysdefs.h>
 
 typedef struct{
-	uint8_t (*read)(void);
-	uint8_t (*peek)(void);
-	int8_t  (*available)(void);
-	uint32_t timeout;
-}stream_t;
+    uint8_t (*read)(void);      /* Read function */
+    uint8_t (*peek)(void);      /* Peek function */
+    int8_t  (*available)(void); /* Available function */
+    uint32_t timeout;
+}xstream_t;
 
-size_t streamFind(stream_t* self, char* target, uint16_t targetLen);
-size_t streamFindUntil(stream_t* self, char* target, uint16_t targetLen, char* terminator, uint16_t termLen);
-size_t streamFindString(stream_t* self, char* target, uint16_t targetLen);
-size_t streamRead(stream_t* self, uint8_t* buffer, uint16_t len);
-size_t streamReadUntil(stream_t* self, uint8_t* buffer, uint16_t len, char* terminator, uint16_t termLen);
-size_t streamReadString(stream_t* self, uint8_t* buffer, uint16_t len);
+size_t xstreamFind(xstream_t* self, char* target, uint16_t targetLen);
+size_t xstreamFindUntil(xstream_t* self, char* target, uint16_t targetLen, char* terminator, uint16_t termLen);
+size_t xstreamFindString(xstream_t* self, char* target, uint16_t targetLen);
+size_t xstreamRead(xstream_t* self, uint8_t* buffer, uint16_t len);
+size_t xstreamReadUntil(xstream_t* self, uint8_t* buffer, uint16_t len, char* terminator, uint16_t termLen);
+size_t xstreamReadString(xstream_t* self, uint8_t* buffer, uint16_t len);
 
-#endif /* STREAM_H_ */
+#endif /* XSTREAM_H_ */

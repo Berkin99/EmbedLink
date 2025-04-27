@@ -27,23 +27,32 @@
  *
  */
 
-#ifndef LISTLIB_H_
-#define LISTLIB_H_
+#ifndef XQUEUE_H_
+#define XQUEUE_H_
+
+#include <sysdefs.h>
+#include <stdint.h>
+
+#define XQUEUE_INIT_CAPACITY 4
 
 typedef struct{
-	uint16_t size;
-	void*     arr;
-}list_t;
+    size_t item_size;
+    size_t capacity;
+    size_t length;
+    size_t front;
+    size_t rear;
+    void* array;
+} xqueue_t;
 
-typedef struct{
-	uint32_t data;
-	void*    next;
-}llist_t;
+xqueue_t xqueueNew(size_t item_size);
+int8_t   xqueueEnqueue(xqueue_t* q, void* item);
+int8_t   xqueueDequeue(xqueue_t* q, void* out_item);
+void*    xqueueFront(xqueue_t* q);
+void*    xqueueRear(xqueue_t* q);
+int8_t   xqueueIsEmpty(xqueue_t* q);
+size_t   xqueueSize(xqueue_t* q);
+void     xqueueClear(xqueue_t* q);
+void     xqueueFree(xqueue_t* q);
 
-typedef struct{
-	uint32_t data;
-	void*    next;
-	void*    prev;
-}ldlist_t;
-
-#endif /* LISTLIB_H_ */
+#endif /* XQUEUE_H_ */
+ 

@@ -28,137 +28,98 @@
  */
 
 #include <math.h>
-#include "systime.h"
+#include <systime.h>
 #include "navigation.h"
 #include "geoconfig.h"
 #include "nrx.h"
 
-static float LONLSB = 0.0111f; /* meters */
-static float LATLSB = 0.0111f; /* meters */
+#define BASE_LATITUDE  (111000.0)
+#define BASE_LONGITUDE (2 * M_PI_F64 * EARTH_EQX_R / 360.0)
 
-static navstate_t navstate;
-static navstate_t origin;
+static f64 UNITLAT = BASE_LATITUDE;   // Y axis meters
+static f64 UNITLON = BASE_LONGITUDE;  // X axis meters
 
-static uint32_t navstateTimestamps[NAV_TYPECOUNT];
+static navigationState_t _navigation;
+static navigationState_t _origin;
 
-navstate_t* navigationState (void){
-	return &navstate;
+void   navigationReset(navigationState_t* self){
+	self->location = (location_t){0,0,0,0};
+	self->compass  = xfzero();
+	self->altitude = xfzero();
+	self->unixtime = 0;
 }
 
-navstate_t navigationOrigin(void){
-	return origin;
+void   navigationSetLocation(navigationState_t* self, location_t* location){
+	self->location = *location;
+	self->location.timestampMs = millis();
 }
 
-void navigationOriginSet(navigation_t* pData){
-	switch (pData->type) {
-		case NAV_LOCATION:{
-			origin.location       = pData->location;
-			navigationLocationUnits(origin.location);
-			break;
-		}
-		case NAV_COMPASS:        origin.compass        = pData->compass;  break;
-		case NAV_ALTITUDE:       origin.altitude       = pData->altitude; break;
-		case NAV_TIME:           origin.time           = pData->time;     break;
-		default: return; break;
+void   navigationSetAltitude(navigationState_t* self, altitude_t* altitude){
+	self->altitude = *altitude;
+	self->altitude.timestampMs = millis();
+}
+
+void   navigationSetCompass(navigationState_t* self, compass_t* compass){
+	self->compass = *compass;
+	self->compass.timestampMs = millis();
+}
+
+void   navigationSetUnixtime(navigationState_t* self, unixtime_t* unixtime){
+	self->unixtime = *unixtime;
+}
+
+int8_t navigationIsValid(navigationState_t* self, navigation_e idx, uint32_t timeout_ms){
+	switch (idx){
+		case NAV_LOCATION:	return (self->location.timestampMs + timeout_ms < millis());
+		case NAV_ALTITUDE:	return (self->altitude.timestampMs + timeout_ms < millis());
+		case NAV_COMPASS:	return (self->compass.timestampMs  + timeout_ms < millis());
 	}
+	return E_NOT_FOUND;
 }
 
-void navigationPositionOrigin(vec_t position){
-	location_t temp = navstate.location;
-	temp.latitude  -= (int32_t)(position.y / LATLSB);
-	temp.longitude -= (int32_t)(position.x / LONLSB);
-	origin.location = temp;
-	origin.altitude = navstate.altitude;
+void   xnavigationReset(void){navigationReset(&_navigation);}
+void   xnavigationGetLocation(location_t* location){*location = _navigation.location;}
+void   xnavigationGetAltitude(altitude_t* altitude){*altitude = _navigation.altitude;}
+void   xnavigationGetCompass(compass_t* compass){*compass = _navigation.compass;}
+void   xnavigationGetUnixtime(unixtime_t* unixtime){*unixtime = _navigation.unixtime;}
+void   xnavigationSetLocation(location_t* location){navigationSetLocation(&_navigation, location);}
+void   xnavigationSetAltitude(altitude_t* altitude){navigationSetAltitude(&_navigation, altitude);}
+void   xnavigationSetCompass(compass_t* compass){navigationSetCompass(&_navigation, compass);}
+void   xnavigationSetUnixtime(unixtime_t* unixtime){navigationSetUnixtime(&_navigation, unixtime);}
+int8_t xnavigationIsValid(navigation_e idx, uint32_t timeout_ms){navigationIsValid(&_navigation, idx, timeout_ms);}
+
+void xnavigationUnitLocation(const location_t* loc){
+	UNITLON = (2.0) * (M_PI_F64) * (EARTH_EQX_R * cos(loc->latitude * DEG2RAD))  / (360.0); /* (2.pi.r / 360) */
 }
 
-void navigationAppend (navigation_t* pData){
-	switch (pData->type) {
-        case NAV_LOCATION:       navstate.location     = pData->location; break;
-        case NAV_COMPASS:        navstate.compass      = pData->compass;  break;
-        case NAV_ALTITUDE:       navstate.altitude     = pData->altitude; break;
-        case NAV_TIME:           navstate.time         = pData->time;     break;
-        default: return; break;
-    }
-    navstateTimestamps[pData->type] = millis();
+void xnavigationGetOrigin(navigationState_t* pBuf){
+	*pBuf = _origin;
 }
 
-void navigationStateUpdate (navstate_t* pState){
-	origin = *pState;
+void xnavigationSetOrigin(navigationState_t navigation){
+	_origin = navigation;
 }
 
-int8_t navigationIsValid (navstate_e index){
-	return navigationValidity(index, NAV_TIMEOUT_MS);
+void xnavigationCalibrateOrigin(vec_t position){
+	location_t temp = _navigation.location;
+	temp.latitude  -= (position.y / UNITLAT);
+	temp.longitude -= (position.x / UNITLON);
+	_origin.location = temp;
+	_origin.altitude.value = _navigation.altitude.value - position.z;
 }
 
-int8_t navigationValidity (navstate_e index, uint32_t timeout){
-	if(millis() - navstateTimestamps[index] > timeout) return FALSE;
-	return TRUE;
-}
-
-int8_t navigationLocation(location_t* pBuf){
-    *pBuf = navstate.location;
-	if(navigationIsValid(NAV_LOCATION)){return TRUE;}
-	return FALSE;
-}
-
-int8_t navigationCompass(compass_t* pBuf){
-	*pBuf = navstate.compass;
-	if(navigationIsValid(NAV_COMPASS)){
-    	return TRUE;
-	}
-	return FALSE;
-}
-
-int8_t navigationAltitude(altitude_t* pBuf){
-	*pBuf = navstate.altitude;
-	if(navigationIsValid(NAV_ALTITUDE)){
-    	return TRUE;
-	}
-	return FALSE;
-}
-
-int8_t navigationTime(time_t* pBuf){
-    *pBuf = navstate.time;
-	if(navigationIsValid(NAV_TIME)){
-	    return TRUE;
-	}
-	return FALSE;
-}
-
-void navigationLocationUnits(location_t loc){
-	double lat = (double)(loc.latitude) / 10000000.0; /* latitude as degrees */
-	double ulon = (2.0) * (M_PI_F) * (EARTH_EQX_R * cos(lat * DEG2RAD))  / (360.0); /* (2.pi.r / 360) */
-	LONLSB = (float)(ulon / 10000000.0f); /* degree meter to lsb meter */
-}
-
-void navigationLocationPos(position_t* pBuf){
+int8_t xnavigationGetPosition(vec_t* pos){
 	location_t ldif;
-	ldif.latitude  = navstate.location.latitude  - origin.location.latitude;
-	ldif.longitude = navstate.location.longitude - origin.location.longitude;
-
-	pBuf->y = (float)ldif.latitude  * LATLSB; /* Y axis */
-	pBuf->x = (float)ldif.longitude * LONLSB; /* X axis */
-}
-
-void   navigationAltitudePos(float* pBuf){
-	*pBuf = navstate.altitude - origin.altitude;
+	ldif.latitude  = _navigation.location.latitude  - _origin.location.latitude;
+	ldif.longitude = _navigation.location.longitude - _origin.location.longitude;
+	pos->y = (float)(ldif.latitude  * UNITLAT); /* Y axis */
+	pos->x = (float)(ldif.longitude * UNITLON); /* X axis */
+	pos->z = (float)_navigation.altitude.value - _origin.altitude.value;
+	return 1;
 }
 
 /* Converts pressure to altitude above sea level (ASL) in meters */
-float navigationPressureToAltitude(float pressure /* float temperature */){
+float navigationPressureToAltitude(float pressure /*, float temperature */){
 	if (pressure > 0){return ((powf((CONST_SEA_PRESSURE / pressure), CONST_PF) - 1.0f) * (FIX_TEMP + 273.15f)) / 0.0065f;}
 	return 0;
 }
-
-NRX_GROUP_START(location)
-NRX_ADD(NRX_INT32, lat, &navstate.location.latitude)
-NRX_ADD(NRX_INT32, lon, &navstate.location.longitude)
-NRX_GROUP_STOP(location)
-
-NRX_GROUP_START(altitude)
-NRX_ADD(NRX_FLOAT, value, &navstate.altitude)
-NRX_GROUP_STOP(altitude)
-
-NRX_GROUP_START(compass)
-NRX_ADD(NRX_FLOAT, value, &navstate.compass)
-NRX_GROUP_STOP(compass)

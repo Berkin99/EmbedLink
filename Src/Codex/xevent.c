@@ -28,58 +28,58 @@
  */
 
 #include <stdlib.h>
-#include "event.h"
+#include "xevent.h"
 
-eventHandle_t eventNew(void){
-    eventHandle_t handle;
-    handle.arr_capacity = EVENT_INIT_CAPACITY;
+xeventHandle_t xeventNew(void){
+    xeventHandle_t handle;
+    handle.arr_capacity = XEVENT_INIT_CAPACITY;
     handle.arr_size = 0;
-    handle.arr = malloc(handle.arr_capacity * sizeof(event_t));
+    handle.arr = malloc(handle.arr_capacity * sizeof(xevent_t));
     if(handle.arr != NULL){
-        handle.state = EVENT_READY;
+        handle.state = XEVENT_READY;
         return handle;
     }
-    handle.state = EVENT_ERROR;
+    handle.state = XEVENT_ERROR;
     return handle;
 }
 
-void eventCall(eventHandle_t* handle){
-    if(handle->state != EVENT_READY) return;
+void xeventCall(xeventHandle_t* handle){
+    if(handle->state != XEVENT_READY) return;
 
     for (uint8_t i = 0; i < handle->arr_size; i++) {
-        event_t temp = handle->arr[i];
+        xevent_t temp = handle->arr[i];
         temp();
     }
 }
 
-void eventAdd(eventHandle_t* handle, event_t event){
-    if (handle->state != EVENT_READY) {
-        *handle = eventNew();
-        if (handle->state != EVENT_READY) return;
+void xeventAdd(xeventHandle_t* handle, xevent_t xevent){
+    if (handle->state != XEVENT_READY) {
+        *handle = xeventNew();
+        if (handle->state != XEVENT_READY) return;
     }
 
-    if(handle->arr_size == EVENT_MAX_CAPACITY) return;
+    if(handle->arr_size == XEVENT_MAX_CAPACITY) return;
     handle->arr_size++;
     if (handle->arr_size > handle->arr_capacity) {
 
         handle->arr_capacity *= 2;
-        if((handle->arr_capacity)>EVENT_MAX_CAPACITY) handle->arr_capacity = EVENT_MAX_CAPACITY;
-        handle->arr = realloc(handle->arr,handle->arr_capacity * sizeof(event_t));
+        if((handle->arr_capacity)>XEVENT_MAX_CAPACITY) handle->arr_capacity = XEVENT_MAX_CAPACITY;
+        handle->arr = realloc(handle->arr,handle->arr_capacity * sizeof(xevent_t));
     }
 
     if(handle->arr_size>handle->arr_capacity) return;
-    handle->arr[handle->arr_size -1] = event;
+    handle->arr[handle->arr_size -1] = xevent;
 }
 
-void eventRemove(eventHandle_t* handle){
-    if(handle->state != EVENT_READY) return;
+void xeventRemove(xeventHandle_t* handle){
+    if(handle->state != XEVENT_READY) return;
 
     if (!(handle->arr_size > 0)) return;
     handle->arr[handle->arr_size-1] = NULL;
     handle->arr_size--;
 }
 
-void eventFree(eventHandle_t* handle){
-    if(handle->state != EVENT_READY) return;
+void xeventFree(xeventHandle_t* handle){
+    if(handle->state != XEVENT_READY) return;
     free(handle->arr);
 }

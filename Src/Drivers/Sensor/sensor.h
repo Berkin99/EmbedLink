@@ -32,12 +32,42 @@
 
 #include <stdint.h>
 #include <system.h>
-#include "math3d.h"
-#include "kinematics.h"
+#include <xmathf.h>
 
-#define SENS_AXIS_X    (1U << 0)
-#define SENS_AXIS_Y    (1U << 1)
-#define SENS_AXIS_Z    (1U << 2)
+#define SENSE_AXIS_X    (1U << 0)
+#define SENSE_AXIS_Y    (1U << 1)
+#define SENSE_AXIS_Z    (1U << 2)
+
+typedef enum{
+    SENSE_POSITION,
+    SENSE_ROTATION,
+    SENSE_VELOCITY,
+    SENSE_ACCELERATION,
+    SENSE_ATTITUDE,
+    SENSE_IROTATION,
+    SENSE_IVELOCITY,
+    SENSE_IATTITUDE,
+    SENSE_MAGNETIZATION,
+    SENSE_PRESSURE,
+    SENSE_TEMPERATURE
+}sense_e;
+
+typedef struct{
+    sense_e type;
+    union{
+        xv3f32_t position;
+        xv3f32_t rotation;
+        xv3f32_t velocity;
+        xv3f32_t acceleration;
+        xv3f32_t attitude;
+        xv3f32_t irotation;
+        xv3f32_t ivelocity;
+        xv3f32_t iattitude;
+        xv3f32_t magnetization;
+        xf32_t   pressure;
+        xf32_t   temperature;
+    }
+}sense_t;
 
 typedef struct {
     const char* Name;
@@ -45,10 +75,10 @@ typedef struct {
     int8_t      (*Test)(void);
     void        (*Calibrate)(void);
     int8_t      (*IsCalibrated)(void);
-    int8_t      (*Acquire)(measurement_t* plist, uint8_t n);    /* @return plist length */
+    int8_t      (*Acquire)(sense_t* plist, uint8_t length);    /* @return plist length */
     int8_t      (*IsReady)(void);
     void        (*WaitDataReady)(void);
-}SENS_Handle_t;
+}sensor_t;
 
 void   sensorInit(void);
 void   sensorTest(void);
@@ -58,6 +88,6 @@ int8_t sensorGetSize(void);
 const char* sensorName(uint8_t index);
 int8_t sensorIsCalibrated(uint8_t index);
 void   sensorCalibrate(uint8_t index);
-int8_t sensorAcquire(uint8_t index, measurement_t* plist, uint8_t n);
+int8_t sensorAcquire(uint8_t index, sense_t* plist, uint8_t length);
 
 #endif /* SENSOR_H_ */

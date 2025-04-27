@@ -48,15 +48,4 @@
 #define E_TIMEOUT      (-8)
 #define UNDEFINED      NULL
 
-static inline int SYS_ID(char* name)
-{
-	int id = 0;
-	while(*name){
-		id += *name;
-		id *= *name;
-		name++;
-	}
-	return id;
-}
-
 #endif /* SYSDEFS_H_ */

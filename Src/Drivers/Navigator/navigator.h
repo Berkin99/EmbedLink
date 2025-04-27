@@ -31,8 +31,24 @@
 #define NAVIGATOR_H_
 
 #include <stdint.h>
-#include "math3d.h"
+#include <xmath3d.h>
 #include "navigation.h"
+
+typedef enum{
+    NAV_POSITION,
+    NAV_ROTATION,
+    SENSE_VELOCITY,
+    SENSE_ACCELERATION,
+    SENSE_ATTITUDE,
+    SENSE_IROTATION,
+    SENSE_IVELOCITY,
+    SENSE_IATTITUDE,
+    SENSE_MAGNETIZATION,
+    SENSE_PRESSURE,
+    SENSE_TEMPERATURE
+}navigate_e;
+
+typedef navigate_t xv3f64_t;
 
 typedef struct {
     const char* Name;
@@ -43,7 +59,7 @@ typedef struct {
     int8_t      (*Acquire)(navigation_t* plist, uint8_t n);
     int8_t      (*IsReady)(void);
     void        (*WaitDataReady)(void);
-}NAV_Handle_t;
+}navigatorHandle_t;
 
 void   navigatorInit(void);
 void   navigatorTest(void);

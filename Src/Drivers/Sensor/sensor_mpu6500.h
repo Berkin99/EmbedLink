@@ -41,7 +41,7 @@ int8_t sensorInitMPU6500(void);
 int8_t sensorTestMPU6500(void);
 void   sensorCalibrateMPU6500(void);
 int8_t sensorIsCalibratedMPU6500(void);
-int8_t sensorAcquireMPU6500(measurement_t* plist, uint8_t n);
+int8_t sensorAcquireMPU6500(sense_t* plist, uint8_t n);
 int8_t sensorIsReadyMPU6500(void);
 void   sensorWaitDataReadyMPU6500(void);
 

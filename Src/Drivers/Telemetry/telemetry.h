@@ -38,11 +38,11 @@ typedef enum{
 	TRX_RECEIVER,
 	TRX_TRANSMITTER,
 	TRX_TRANSCEIVER
-}TRX_Type_e;
+}telemetry_e;
 
 typedef struct{
 	const char* Name;
-	TRX_Type_e  Type;
+	telemetry_e Type;
 	int8_t      (*Init)(void);
 	int8_t      (*Test)(void);
 	void 	    (*Config)(void);
@@ -50,7 +50,7 @@ typedef struct{
 	int8_t      (*Transmit)(const uint8_t* pTxData, uint8_t Length);
     int8_t      (*IsReady)(void);
 	void        (*WaitDataReady)(void);
-}TRX_Handle_t;
+}telemetry_t;
 
 void   telemetryInit(void);
 void   telemetryTest(void);

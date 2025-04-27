@@ -28,9 +28,9 @@
  */
 
 #include <string.h>
-#include "stream.h"
+#include <xstream.h>
 
-size_t streamFind(stream_t* self, char* target, uint16_t targetLen) {
+size_t xstreamFind(xstream_t* self, char* target, uint16_t targetLen) {
     if (self == NULL || self->available == NULL || self->read == NULL) {
         return E_NULL_PTR;
     }
@@ -53,7 +53,7 @@ size_t streamFind(stream_t* self, char* target, uint16_t targetLen) {
     return count;
 }
 
-size_t streamFindUntil(stream_t* self, char* target, uint16_t targetLen, char* terminator, uint16_t termLen) {
+size_t xstreamFindUntil(xstream_t* self, char* target, uint16_t targetLen, char* terminator, uint16_t termLen) {
     if (self == NULL || target == NULL || terminator == NULL || self->available == NULL || self->read == NULL ) {
         return E_NULL_PTR;
     }
@@ -87,11 +87,11 @@ size_t streamFindUntil(stream_t* self, char* target, uint16_t targetLen, char* t
     return count;
 }
 
-size_t streamFindString(stream_t* self, char* target, uint16_t targetLen) {
-    return streamFindUntil(self, target, targetLen, "", 0);
+size_t xstreamFindString(xstream_t* self, char* target, uint16_t targetLen) {
+    return xstreamFindUntil(self, target, targetLen, "", 0);
 }
 
-size_t streamRead(stream_t* self, uint8_t* buffer, uint16_t len) {
+size_t xstreamRead(xstream_t* self, uint8_t* buffer, uint16_t len) {
     if (self == NULL || buffer == NULL || self->read == NULL || self->available == NULL) {
         return E_NULL_PTR;
     }
@@ -105,7 +105,7 @@ size_t streamRead(stream_t* self, uint8_t* buffer, uint16_t len) {
     return count;
 }
 
-size_t streamReadUntil(stream_t* self, uint8_t* buffer, uint16_t len, char* terminator, uint16_t termLen){
+size_t xstreamReadUntil(xstream_t* self, uint8_t* buffer, uint16_t len, char* terminator, uint16_t termLen){
     if (self == NULL || buffer == NULL || self->read == NULL || self->available == NULL) {
         return E_NULL_PTR;
     }
@@ -132,6 +132,6 @@ size_t streamReadUntil(stream_t* self, uint8_t* buffer, uint16_t len, char* term
 
 }
 
-size_t streamReadString(stream_t* self, uint8_t* buffer, uint16_t len) {
-	return streamReadUntil(self, buffer, len, '\0', 1);
+size_t xstreamReadString(xstream_t* self, uint8_t* buffer, uint16_t len) {
+	return xstreamReadUntil(self, buffer, len, '\0', 1);
 }

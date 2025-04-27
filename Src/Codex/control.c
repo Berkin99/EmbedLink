@@ -27,7 +27,7 @@
  *
  */
 
-#include "systime.h"
+#include <systime.h>
 #include "control.h"
 #include "num.h"
 #include "nrx.h"

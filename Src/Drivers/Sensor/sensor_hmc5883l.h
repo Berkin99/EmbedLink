@@ -41,7 +41,7 @@ int8_t sensorInitHMC5883L(void);
 int8_t sensorTestHMC5883L(void);
 void   sensorCalibrateHMC5883L(void);
 int8_t sensorIsCalibratedHMC5883L(void);
-int8_t sensorAcquireHMC5883L(measurement_t* plist, uint8_t n);
+int8_t sensorAcquireHMC5883L(sense_t* plist, uint8_t n);
 int8_t sensorIsReadyHMC5883L(void);
 void   sensorWaitDataReadyHMC5883L(void);
 

@@ -9,7 +9,6 @@
 #include <math.h>
 #include "main.h"
 
-
 #define REG_CONFIG 0x00
 #define REG_SHUNTVOLTAGE 0x01
 #define REG_BUSVOLTAGE 0x02
@@ -40,7 +39,6 @@ int8_t INA219_ReadRegister(INA219_Device_t *dev, uint8_t reg, uint16_t *pRxBuffe
     return status;
 }
 
-
 int8_t INA219_WriteRegister(INA219_Device_t *dev, uint8_t reg, uint16_t *pTxBuffer)
 {
 	uint8_t buffer[2];
@@ -49,8 +47,6 @@ int8_t INA219_WriteRegister(INA219_Device_t *dev, uint8_t reg, uint16_t *pTxBuff
     int8_t status = dev->write(dev->intf, reg, buffer, 2);
 	return status;
 }
-
-
 
 void INA219_SetBusVoltage(INA219_Device_t *dev, INA219_BusVoltageRange_e range)
 {
@@ -100,8 +96,6 @@ void INA219_SetShuntAdcResolution(INA219_Device_t *dev, INA219_ADCResolution_e r
     INA219_WriteRegister(dev, REG_CONFIG, &buffer);
 }
 
-
-
 void INA219_SetMode(INA219_Device_t *dev, INA219_OperatingMode_e range)
 {
     uint16_t buffer = 0;
@@ -114,7 +108,6 @@ void INA219_SetMode(INA219_Device_t *dev, INA219_OperatingMode_e range)
     INA219_WriteRegister(dev, REG_CONFIG, &buffer);
 }
 
-
 void INA219_SetLsb(INA219_Device_t *dev)
 {
     dev->current_lsb = 0.0001;
@@ -126,7 +119,6 @@ void INA219_CalibReg(INA219_Device_t *dev)
     uint16_t calib = (uint16_t)round(0.04096 / (dev->current_lsb * dev->r_shunt));
     INA219_WriteRegister(dev, REG_CALIBRATION, &calib);
 }
-
 
 int8_t INA219_ReadBusVoltage(INA219_Device_t *dev, float *pRxBuffer)
 {
@@ -162,7 +154,6 @@ int8_t INA219_ReadPowerWatt(INA219_Device_t *dev, float *pRxBuffer)
     *pRxBuffer = (float)power_register * dev->power_lsb;
     return status;
 }
-
 
 void INA219_Reset(INA219_Device_t *dev)
 {

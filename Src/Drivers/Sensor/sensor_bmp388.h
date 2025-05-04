@@ -41,7 +41,7 @@ int8_t sensorInitBMP388(void);
 int8_t sensorTestBMP388(void);
 void   sensorCalibrateBMP388(void);
 int8_t sensorIsCalibratedBMP388(void);
-int8_t sensorAcquireBMP388(measurement_t* plist, uint8_t n);
+int8_t sensorAcquireBMP388(sense_t* plist, uint8_t n);
 int8_t sensorIsReadyBMP388(void);
 void   sensorWaitDataReadyBMP388(void);
 

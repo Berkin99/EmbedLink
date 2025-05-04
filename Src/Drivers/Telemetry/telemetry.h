@@ -46,19 +46,18 @@ typedef struct{
 	int8_t      (*Init)(void);
 	int8_t      (*Test)(void);
 	void 	    (*Config)(void);
-	int8_t      (*Receive)(uint8_t* pRxBuffer);
-	int8_t      (*Transmit)(const uint8_t* pTxData, uint8_t Length);
+	int8_t      (*Receive)(uint8_t* pRxData, uint16_t length);
+	int8_t      (*Transmit)(const uint8_t* pTxData, uint16_t length);
     int8_t      (*IsReady)(void);
 	void        (*WaitDataReady)(void);
 }telemetry_t;
 
-void   telemetryInit(void);
-void   telemetryTest(void);
-int8_t telemetryIsReady(uint8_t index);
-void   telemetryWaitDataReady(uint8_t index);
-int8_t telemetryGetIndex(char* name);
-int8_t telemetryGetSize(void);
-int8_t telemetryReceive (uint8_t index, uint8_t* pRxBuffer);
-int8_t telemetryTransmit(uint8_t index, const uint8_t* pTxData, uint8_t Length);
+void    telemetryInit(void);
+void    telemetryTest(void);
+int8_t  telemetryIsReady(void);
+int8_t  telemetryGet(char* name, telemetry_t** ptelemetry);
+uint8_t telemetrySize(void);
+int8_t  telemetryReceive (char* name, uint8_t* pRxData, uint16_t length);
+int8_t  telemetryTransmit(char* name, const uint8_t* pTxData, uint16_t length);
 
 #endif /* TELEMETRY_H_ */

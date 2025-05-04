@@ -60,7 +60,7 @@
 	.WaitDataReady = &sensorWaitDataReady##SENSOR,\
 },\
 
-static const SENS_Handle_t sensList[] = {
+static const sensor_t sensorList[] = {
 	#ifdef MPU6500_SPI
 	SENS_ADD(MPU6500)
 	#endif
@@ -78,65 +78,37 @@ static const SENS_Handle_t sensList[] = {
 	#endif
 };
 
-static const uint8_t sensLen = sizeof(sensList)/sizeof(SENS_Handle_t);
+static const uint8_t sensorLen = sizeof(sensorList)/sizeof(sensor_t);
 
 void sensorInit(void){
-	for(uint8_t i = 0; i < sensLen; i++){
-		if(sensList[i].Init() == OK) serialPrint("[+] Sensor %s init OK\n",sensList[i].Name);
-		else serialPrint("[-] Sensor %s init ERROR\n",sensList[i].Name);
+	for(uint8_t i = 0; i < sensorLen; i++){
+		if(sensorList[i].Init() == OK) serialPrint("[+] Sensor %s init OK\n",sensorList[i].Name);
+		else serialPrint("[-] Sensor %s init ERROR\n",sensorList[i].Name);
 	}
 }
 
 void sensorTest(void){
-	for(uint8_t i = 0; i < sensLen; i++){
-		if(sensList[i].Test() == OK) serialPrint("[+] Sensor %s test OK\n",sensList[i].Name);
-		else serialPrint("[-] Sensor %s test ERROR\n",sensList[i].Name);
+	for(uint8_t i = 0; i < sensorLen; i++){
+		if(sensorList[i].Test() == OK) serialPrint("[+] Sensor %s test OK\n",sensorList[i].Name);
+		else serialPrint("[-] Sensor %s test ERROR\n",sensorList[i].Name);
 	}
 }
 
 int8_t sensorIsReady(void){
-	for(uint8_t i = 0; i < sensLen; i++){
-		if(sensList[i].IsReady() != TRUE) return FALSE;
-	}
+	for(uint8_t i = 0; i < sensorLen; i++){if(sensorList[i].IsReady() != TRUE) return FALSE;}
 	return TRUE;
 }
 
-int8_t sensorGetIndex(const char* name){
-	for(uint8_t i = 0; i < sensLen; i++){
-		if(strcmp(sensList[i].Name,name) == 0) return i;
+uint8_t sensorSize(void){
+	return sensorLen;
+}
+
+int8_t sensorGet(const char* name, sensor_t** psensor){
+	for(uint8_t i = 0; i < sensorLen; i++){
+		if(strcmp(sensorList[i].Name,name) == 0){
+			*psensor = &sensorList[i];
+			return OK;
+		}
 	}
-	return -1;
-}
-
-int8_t sensorGetSize(void){
-	return sensLen;
-}
-
-const char*  sensorName(uint8_t index){
-	if(index >= sensLen) return NULL;
-	return sensList[index].Name;
-}
-
-void sensorCalibrate(uint8_t index){
-	if(index >= sensLen) return;
-	sensList[index].Calibrate();
-}
-
-int8_t sensorIsCalibrated(uint8_t index){
-	if(index >= sensLen) return E_OVERFLOW;
-	return sensList[index].IsCalibrated();
-}
-
-/*  @brief Acquires the all data from sensors in the
- *  sensList array, inserts data into the given buffer.
- *
- *	@param index: Sensor index
- *  @param plist: measurement_t array pointer.
- *
- *  @return Inserted data count.
- *  @retval < 0: ERROR handling.
- */
-int8_t sensorAcquire(uint8_t index, measurement_t* plist, uint8_t n){
-	if(index >= sensLen) return E_OVERFLOW;
-	return sensList[index].Acquire(plist, n);
+	return E_NOT_FOUND;
 }

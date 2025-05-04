@@ -46,6 +46,7 @@ typedef enum{
     SENSE_ATTITUDE,
     SENSE_IROTATION,
     SENSE_IVELOCITY,
+    SENSE_IACCELERATION,
     SENSE_IATTITUDE,
     SENSE_MAGNETIZATION,
     SENSE_PRESSURE,
@@ -53,20 +54,8 @@ typedef enum{
 }sense_e;
 
 typedef struct{
-    sense_e type;
-    union{
-        xv3f32_t position;
-        xv3f32_t rotation;
-        xv3f32_t velocity;
-        xv3f32_t acceleration;
-        xv3f32_t attitude;
-        xv3f32_t irotation;
-        xv3f32_t ivelocity;
-        xv3f32_t iattitude;
-        xv3f32_t magnetization;
-        xf32_t   pressure;
-        xf32_t   temperature;
-    }
+    sense_e  type;
+    xv3f32_t xvec;
 }sense_t;
 
 typedef struct {
@@ -80,14 +69,10 @@ typedef struct {
     void        (*WaitDataReady)(void);
 }sensor_t;
 
-void   sensorInit(void);
-void   sensorTest(void);
-int8_t sensorIsReady(void);
-int8_t sensorGetIndex(const char* name);
-int8_t sensorGetSize(void);
-const char* sensorName(uint8_t index);
-int8_t sensorIsCalibrated(uint8_t index);
-void   sensorCalibrate(uint8_t index);
-int8_t sensorAcquire(uint8_t index, sense_t* plist, uint8_t length);
+void    sensorInit(void);
+void    sensorTest(void);
+int8_t  sensorIsReady(void);
+uint8_t sensorSize(void);
+int8_t  sensorGet(const char* name, sensor_t** psensor);
 
 #endif /* SENSOR_H_ */

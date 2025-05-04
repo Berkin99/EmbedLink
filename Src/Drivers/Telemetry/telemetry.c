@@ -51,7 +51,7 @@
 	.WaitDataReady = &telemetryWaitDataReady##TELN,},
 
 
-static const TRX_Handle_t trxList[] ={
+static const telemetry_t trxList[] ={
 	#ifdef RF24_SPI
 		TRX_ADD(RF24)
 	#endif
@@ -60,7 +60,7 @@ static const TRX_Handle_t trxList[] ={
 	#endif
 };
 
-static const uint8_t trxLen = sizeof(trxList)/sizeof(TRX_Handle_t);
+static const uint8_t trxLen = sizeof(trxList)/sizeof(telemetry_t);
 
 void telemetryInit(void){
 	for(uint8_t i = 0; i < trxLen; i++){
@@ -70,39 +70,41 @@ void telemetryInit(void){
 }
 
 void telemetryTest(void){
-	for(uint8_t i = 0; i<trxLen; i++){
+	for(uint8_t i = 0; i < trxLen; i++){
 		if(trxList[i].Test() == OK) serialPrint("[+] Telemetry %s test OK\n",trxList[i].Name);
 		else serialPrint("[-] Telemetry %s test ERROR\n",trxList[i].Name);
 	}
 }
 
-int8_t telemetryIsReady(uint8_t index){
-	if(index >= trxLen) return E_OVERFLOW;
-	return trxList[index].IsReady();
-}
-
-void telemetryWaitDataReady(uint8_t index){
-	if(index >= trxLen) return;
-	trxList[index].WaitDataReady();
-}
-
-int8_t telemetryGetIndex(char* name){
-	for(uint8_t i = 0; i<trxLen; i++){
-		if(strcmp(trxList[i].Name, name) == 0) return i;
+int8_t telemetryIsReady(void){
+	for(uint8_t i = 0; i < trxLen; i++){
+		if(!trxList[i].IsReady()) return FALSE;
 	}
-	return -1;
+	return TRUE;
 }
 
-int8_t telemetryGetSize(void){
+int8_t telemetryGet(char* name, telemetry_t** ptelemetry){
+	for(uint8_t i = 0; i<trxLen; i++){
+		if(strcmp(trxList[i].Name, name) == 0){
+			*ptelemetry = &trxList[i];
+			return OK;
+		}
+	}
+	return E_NOT_FOUND;
+}
+
+uint8_t telemetryGetSize(void){
 	return trxLen;
 }
 
-int8_t telemetryReceive(uint8_t index, uint8_t* pRxBuffer){
-	if(index >= trxLen) return E_OVERFLOW;
-	return trxList[index].Receive(pRxBuffer);
+int8_t telemetryReceive(char* name, uint8_t* pRxData, uint16_t length){
+	telemetry_t* ptrx;
+	if(telemetryGet(name, &ptrx) != OK) return E_NOT_FOUND;
+	return ptrx->Receive(pRxData, length);
 }
 
-int8_t telemetryTransmit(uint8_t index, const uint8_t* pTxData, uint8_t Length){
-	if(index >= trxLen) return E_OVERFLOW;
-	return trxList[index].Transmit(pTxData, Length);
+int8_t telemetryTransmit(char* name, const uint8_t* pTxData, uint8_t Length){
+	telemetry_t* ptrx;
+	if(telemetryGet(name, &ptrx) != OK) return E_NOT_FOUND;
+	return ptrx->Transmit(pTxData, Length);
 }

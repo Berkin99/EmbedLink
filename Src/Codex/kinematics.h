@@ -94,5 +94,6 @@ void   xkinematicsReset(void);
 kinv_t xkinematicsGet(kinematics_e idx);
 void   xkinematicsSet(kinematics_e idx, kinv_t data);
 int8_t xkinematicsIsValid(kinematics_e idx, uint32_t timeout_ms);
+const  kinematicsState_t* xkinematicsState(void);
 
 #endif /* KINEMATICS_H_ */

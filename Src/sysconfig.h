@@ -47,7 +47,7 @@
 //#define LED4_PIN               PD4
 
 /// I2C /////////////////////////////////////////////////////
-//#define BMP388_I2C             i2c2
+#define BMP388_I2C             i2c2
 //#define BNO055_I2C             i2c2
 //#define E24AA_I2C              i2c2
 //#define HMC5883L_I2C           i2c1
@@ -55,7 +55,7 @@
 //#define MS5611_I2C             i2c1
 
 /// SPI /////////////////////////////////////////////////////
-//#define BMI088_SPI             spi1
+#define BMI088_SPI             spi1
 //#define BMI088_ACC_CS          PC4
 //#define BMI088_GYR_CS          PC5
 //#define RF24_SPI               spi1

@@ -57,6 +57,10 @@ kinv_t xkinematicsGet(kinematics_e idx){return kinematicsGet(&_kinematics, idx);
 
 int8_t xkinematicsIsValid(kinematics_e idx, uint32_t timeout_ms){return kinematicIsValid(&_kinematics, idx, timeout_ms);}
 
+const kinematicsState_t* xkinematicsState(void){
+    return (const kinematicsState_t*) &_kinematics;
+}
+
 // vec_t kinematicsRotateFrame(vec_t v, vec_t frame){
 //     matrix_t R =  mnew(3, 3);
 //     matrix_t mv = mnew(3, 1);

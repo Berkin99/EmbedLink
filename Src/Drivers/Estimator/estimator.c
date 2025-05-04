@@ -179,7 +179,7 @@ void estimatorUpdate(state_t* pState, uint8_t* pChecklist){
 	}
 }
 
-int8_t estimatorEnqueue(const measurement_t* pMeasurement, int8_t isISR){
+int8_t estimatorEnqueue(const sense_t* pMeasurement, int8_t isISR){
 	if(!qready) return ERROR;
 	int8_t result;
     if (isISR) result = queueSendISR(qmeasure, pMeasurement);

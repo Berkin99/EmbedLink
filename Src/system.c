@@ -70,7 +70,7 @@ void systemLaunch(void){
 }
 
 void systemTask(void* argv){
-    serialPrint("[>] System Start2\n");
+    serialPrint("[>] System Start\n");
 
     while(1){
     	delay(1000);
@@ -84,5 +84,5 @@ void systemWaitReady(void){
 
 void systemErrorCall(void){
     serialPrint("[E] System Hard Fault Error!\n");
-    while(1){}
+    while(1);
 }

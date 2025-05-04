@@ -50,7 +50,7 @@
 	.WaitDataReady = &navigatorWaitDataReady##NAME,\
 },
 
-static const navigatorHandle_t navList[] ={
+static const navigator_t navList[] ={
 	#ifdef NEOM8N_UART
 		NAVIGATOR_ADD(NEOM8N)
 	#endif
@@ -59,7 +59,7 @@ static const navigatorHandle_t navList[] ={
 	#endif
 };
 
-static const uint8_t navLen = sizeof(navList)/sizeof(navigatorHandle_t);
+static const uint8_t navLen = sizeof(navList)/sizeof(navigator_t);
 
 void navigatorInit(void){
     for(uint8_t i = 0; i < navLen; i++){
@@ -82,17 +82,16 @@ int8_t navigatorIsReady(void){
     return TRUE;
 }
 
-int8_t navigatorGetHandle(char * name){
+int8_t navigatorGet(char* name, navigator_t** pnavigator){
     for(uint8_t i = 0; i<navLen; i++){
-        if(strcmp(navList[i].Name, name) == 0) return i;
+        if(strcmp(navList[i].Name, name) == 0){
+            *pnavigator = &navList[i];
+            return OK;
+        };
     }
-    return -1;
+    return E_NOT_FOUND;
 }
 
-int8_t navigatorGetSize(void){
+uint8_t navigatorSize(void){
     return navLen;
-}
-
-int8_t navigatorAcquire(uint8_t index, navigation_t* plist, uint8_t n){
-	return 0;
 }

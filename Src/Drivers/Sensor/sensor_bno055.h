@@ -41,7 +41,7 @@ int8_t sensorInitBNO055(void);
 int8_t sensorTestBNO055(void);
 void   sensorCalibrateBNO055(void);
 int8_t sensorIsCalibratedBNO055(void);
-int8_t sensorAcquireBNO055(measurement_t* plist, uint8_t n);
+int8_t sensorAcquireBNO055(sense_t* plist, uint8_t n);
 int8_t sensorIsReadyBNO055(void);
 void   sensorWaitDataReadyBNO055(void);
 

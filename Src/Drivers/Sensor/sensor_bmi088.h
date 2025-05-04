@@ -41,7 +41,7 @@ int8_t	sensorInitBMI088(void);
 int8_t	sensorTestBMI088(void);
 void	sensorCalibrateBMI088(void);
 int8_t	sensorIsCalibratedBMI088(void);
-int8_t	sensorAcquireBMI088(measurement_t* plist, uint8_t n);
+int8_t	sensorAcquireBMI088(sense_t* plist, uint8_t n);
 int8_t	sensorIsReadyBMI088(void);
 void	sensorWaitDataReadyBMI088(void);
 

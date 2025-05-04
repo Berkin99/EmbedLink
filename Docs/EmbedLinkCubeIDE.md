@@ -7,9 +7,6 @@
 * RCC/HSE
 * SYS/TimebaseSource/TIM1
 
-#### Analog:
-* ADC1/SingleEnded : PSC8 : ADC12bit : NVIC
-
 #### Timers:
 * TIM2/ClockSource/Internal
 * TIM2/PSC = (TIM BUS SPEED MHZ) - 1 = 1MHZ

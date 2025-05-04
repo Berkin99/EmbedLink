@@ -28,70 +28,79 @@
  */
 
 #include <sysdefs.h>
-#include "rtos.h"
-#include "sysconfig.h"
+#include <sysconfig.h>
+#include <systime.h>
+#include <rtos.h>
 
 #ifdef   BMI088_SPI
 
-#include "systime.h"
-#include "uart.h"
-#include "gpio.h"
+#include "xmath.h"
 #include "sensor_bmi088.h"
-#include "spi.h"
 #include "bmi08.h"
 #include "bmi08x.h"
 #include "bmi08_defs.h"
+#include "gpio.h"
+#include "uart.h"
+#include "spi.h"
 #include "geoconfig.h"
 #include "filter.h"
 #include "estimator.h"
-#include "led.h"
-#include "ledseq.h"
 #include "mem.h"
 #include "memory.h"
 #include "nrx.h"
 
 /* BMI088 Settings */
-#define BMI088_ACC_FS_CFG   (24)
-#define BMI088_ACC_RANGE    BMI088_ACCEL_RANGE_24G
-#define BMI088_ACC_ODR      BMI08_ACCEL_ODR_1600_HZ
-#define BMI088_ACC_BW       BMI08_ACCEL_BW_OSR4
-#define BMI088_GYR_FS_CFG   (2000)
-#define BMI088_GYR_RANGE    BMI08_GYRO_RANGE_2000_DPS
-#define BMI088_GYR_ODR      BMI08_GYRO_BW_116_ODR_1000_HZ
-#define BMI088_DEG_PER_LSB  ((2.0f * BMI088_GYR_FS_CFG) / 65536.0f)
-#define BMI088_G_PER_LSB    (((float)BMI088_ACC_FS_CFG) * 2.0f / 65536.0f)
-#define BMI088_1G_IN_LSB    (65536.0f / BMI088_ACC_FS_CFG / 2.0f)
-#define BMI088_CAL_INTERVAL_MS      3000
-#define BMI088_ACC_LPF_CUTOFF_FREQ  30
-#define BMI088_GYR_LPF_CUTOFF_FREQ  80
-#define BMI088_SENS_ORIENTATION_Z   90
+#define BMI088_ACC_FS_CFG           (24)
+#define BMI088_GYR_FS_CFG           (2000)
+#define BMI088_DEG_PER_LSB          ((2.0f * BMI088_GYR_FS_CFG) / 65536.0f)
+#define BMI088_G_PER_LSB            (((float)BMI088_ACC_FS_CFG) * 2.0f / 65536.0f)
+#define BMI088_1G_IN_LSB            (65536.0f / BMI088_ACC_FS_CFG / 2.0f)
+#define BMI088_CAL_INTERVAL_MS      (3000)
+#define BMI088_ACC_LPF_CUTOFF_FREQ  (30)
+#define BMI088_GYR_LPF_CUTOFF_FREQ  (80)
+#define BMI088_SENS_ORIENTATION_Z   (90)
 
-static uint8_t bmi08AccIntf = BMI088_ACC_CS;
-static uint8_t bmi08GyrIntf = BMI088_GYR_CS;
-
-struct bmi08_dev bmi08dev;
-struct bmi08_accel_int_channel_cfg accel_int_config;
-struct bmi08_gyro_int_channel_cfg gyro_int_config;
-struct bmi08_int_cfg bmi08_int_config;
-
+static pin_t bmi08AccCsPin = BMI088_ACC_CS;
+static pin_t bmi08GyrCsPin = BMI088_GYR_CS;
 BMI08_INTF_RET_TYPE bmi08SpiRead (uint8_t reg_addr, uint8_t *reg_data, uint32_t len, void *intf_ptr);
 BMI08_INTF_RET_TYPE bmi08SpiWrite(uint8_t reg_addr, const uint8_t *reg_data, uint32_t len, void *intf_ptr);
 void                bmi08DelayUs (uint32_t period, void *intf_ptr);
 
-static vec_t      accData;
-static vec_t      accMean;
-static vec_t      accScale;
-static vec_t      accRot;
-static lpf2pData  accLpfData[3];
-static uint8_t    accNew;
+struct bmi08_dev bmi08dev = {
+    .intf_ptr_accel = (void*)&bmi08AccCsPin,
+    .intf_ptr_gyro  = (void*)&bmi08GyrCsPin,
+    .write          = bmi08SpiWrite,
+    .read           = bmi08SpiRead,
+    .intf           = BMI08_SPI_INTF,
+    .delay_us       = bmi08DelayUs,
+    .read_write_len = 32,
+    .variant        = BMI088_VARIANT,
+    .accel_cfg = {
+        .power = BMI08_ACCEL_PM_ACTIVE,
+        .range = BMI088_ACCEL_RANGE_24G,
+        .bw    = BMI08_ACCEL_BW_OSR4,
+        .odr   = BMI08_ACCEL_ODR_1600_HZ,
+    },
+    .gyro_cfg = {
+        .power = BMI08_GYRO_PM_NORMAL,
+        .range = BMI08_GYRO_RANGE_2000_DPS,
+        .bw    = BMI08_GYRO_BW_116_ODR_1000_HZ,
+        .odr   = BMI08_GYRO_BW_116_ODR_1000_HZ,
+    },
+};
 
-static vec_t      gyrData;
-static vec_t      gyrMean;
-static lpf2pData  gyrLpfData[3];
-static uint8_t    gyrNew;
+/* SENSOR_DATA */
+typedef struct {
+    vec_t      data;
+    vec_t      mean;
+    vec_t      scale;
+    vec_t      rot;
+    lpf2pData  lpfdata[3];
+}sensor_data_bmi088_t;
 
-static measurement_t macc;
-static measurement_t mgyr;
+static sensor_data_bmi088_t accv, gyrv;
+static sense_t accs, gyrs;
+
 static uint32_t  idptr;
 static uint8_t   isInit;
 static int8_t    isReady;
@@ -102,64 +111,32 @@ void sensorTaskBMI088 (void* argv);
 uint8_t _sensorAccData(vec_t* data);
 uint8_t _sensorGyrData(vec_t* data);
 void    _sensorMeanBMI088     (vec_t* accMean, vec_t* gyrMean);
-void    _sensorVarianceBMI088 (vec_t* accVar, vec_t* gyrVar);
+void    _sensorVarianceBMI088 (vec_t accMean, vec_t gyrMean, vec_t * accVar, vec_t* gyrVar);
 
 int8_t sensorInitBMI088(void){
     if(isInit) return E_OVERWRITE;
 
     uint8_t rslt;
-    struct bmi08_sensor_data bmi08AccData;
-    struct bmi08_sensor_data bmi08GyrData;
-
-    pinWrite(BMI088_ACC_CS, 1);
-    pinWrite(BMI088_GYR_CS, 1);
+ 
+    pinWrite(bmi08AccCsPin, HIGH);
+    pinWrite(bmi08GyrCsPin, HIGH);
 
     delay(100);
 
-    /* DEVICE SETTINGS */
-    bmi08dev.write          = bmi08SpiWrite;
-    bmi08dev.read           = bmi08SpiRead;
-    bmi08dev.intf           = BMI08_SPI_INTF;
-    bmi08dev.delay_us       = bmi08DelayUs;
-    bmi08dev.read_write_len = 32;
-    bmi08dev.variant        = BMI088_VARIANT;
-    bmi08dev.intf_ptr_accel = &bmi08AccIntf;
-    bmi08dev.intf_ptr_gyro  = &bmi08GyrIntf;
-
-    /* ACCEL ACTIVATE */
-    bmi08dev.accel_cfg.power = BMI08_ACCEL_PM_ACTIVE;
-    bmi08a_set_power_mode(&bmi08dev);
-    if( bmi08a_init(&bmi08dev) != BMI08_OK ){ serialPrint("[-] BMI088 ACC init err\n"); return ERROR; }
-
-    /* ACCEL CONFIGS */
-    bmi08dev.accel_cfg.bw    = BMI088_ACC_BW;
-    bmi08dev.accel_cfg.range = BMI088_ACC_RANGE;
-    bmi08dev.accel_cfg.odr   = BMI088_ACC_ODR;
-    bmi08a_set_meas_conf(&bmi08dev);
-
-    /* ACCEL TEST */
-    rslt = bmi08a_get_data(&bmi08AccData, &bmi08dev);
-    if(rslt != BMI08_OK) serialPrint("[-] BMI088 ACC config err\n");
-
-    /* GYRO ACTIVATE */
-    bmi08dev.gyro_cfg.power = BMI08_GYRO_PM_NORMAL;
-    bmi08g_set_power_mode(&bmi08dev);
+    /* INITIALIZE BMI088 */
+    bmi08a_set_power_mode(&bmi08dev);     /* ACCEL ACTIVATE */
+    if(bmi08a_init(&bmi08dev) != BMI08_OK ){ serialPrint("[-] BMI088 ACC init err\n"); return ERROR; }
+    bmi08a_set_meas_conf(&bmi08dev);     /* ACCEL SET CONFIGS */
+    if(_sensorAccData(&accv.data) != OK) serialPrint("[-] BMI088 ACC config err\n");     /* ACCEL TEST */
+    bmi08g_set_power_mode(&bmi08dev);     /* GYRO ACTIVATE */
     if( bmi08g_init(&bmi08dev) != BMI08_OK ){ serialPrint("[-] BMI088 GYR init err\n"); return ERROR; }
-
-    /* GYRO CONFIGS */
-    bmi08dev.gyro_cfg.odr   = BMI088_GYR_ODR;
-    bmi08dev.gyro_cfg.range = BMI088_GYR_RANGE;
-    bmi08dev.gyro_cfg.bw    = BMI088_GYR_ODR;
-    bmi08g_set_meas_conf(&bmi08dev);
-
-    /* GYRO TEST */
-    rslt = bmi08g_get_data(&bmi08GyrData, &bmi08dev);
-    if(rslt != BMI08_OK) serialPrint("[-] BMI088 GYR config err\n");
+    bmi08g_set_meas_conf(&bmi08dev);     /* GYRO SET CONFIGS */
+    if(_sensorGyrData(&gyrv.data) != OK) serialPrint("[-] BMI088 GYR config err\n");     /* GYRO TEST */
 
     /* LPF INITIALIZE */
-    for (uint8_t i = 0; i < 3; ++i) {
-        lpf2pInit(&gyrLpfData[i], sensorFreqBMI088, BMI088_GYR_LPF_CUTOFF_FREQ);
-        lpf2pInit(&accLpfData[i], sensorFreqBMI088, BMI088_ACC_LPF_CUTOFF_FREQ);
+    for (uint8_t i = 0; i < 3; i++) {
+        lpf2pInit(&accv.lpfdata[i], sensorFreqBMI088, BMI088_ACC_LPF_CUTOFF_FREQ);
+        lpf2pInit(&gyrv.lpfdata[i], sensorFreqBMI088, BMI088_GYR_LPF_CUTOFF_FREQ);
     }
 
     /* TASK CREATE */
@@ -169,7 +146,6 @@ int8_t sensorInitBMI088(void){
 }
 
 int8_t sensorTestBMI088(void){
-
     bmi08a_get_regs(BMI08_REG_ACCEL_CHIP_ID, &bmi08dev.accel_chip_id, 1, &bmi08dev);
     bmi08g_get_regs(BMI08_REG_GYRO_CHIP_ID,  &bmi08dev.gyro_chip_id,  1, &bmi08dev);
 
@@ -179,49 +155,48 @@ int8_t sensorTestBMI088(void){
     return ERROR;
 }
 
-void   sensorTaskBMI088(void* argv){
-
-    /* Calculated STDDEV */
-    macc.type = STATE_INTERNAL_ACCELERATION;
-    mgyr.type = STATE_INTERNAL_ATTITUDE;
+void sensorTaskBMI088(void* argv){
 
     delay(500);
-    _sensorMeanBMI088(&accMean, &gyrMean);
-    macc.kinv.stdDev = vrepeat(0.03f);
-    mgyr.kinv.stdDev = vrepeat(0.001f);
+
+    accs.type = SENSE_IACCELERATION;
+    gyrs.type = SENSE_IATTITUDE;
+    
+    _sensorMeanBMI088(&accv.mean, &gyrv.mean);
+
+    /* Calculated STDDEV */
+    accs.xvec.stdDev = vrepeat(0.03f);
+    gyrs.xvec.stdDev = vrepeat(0.001f);
 
     if(!sensorIsCalibratedBMI088()){
         serialPrint("[!] BMI088 is not calibrated\n");
-        accRot = vzero();
-        accScale = vrepeat(1.0f);
+        accv.rot   = vzero();
+        accv.scale = vrepeat(1.0f);
     }
 
     uint32_t xLastWakeTime = taskGetTickCount();
+
     isReady = 1;
 
     while(1){
-
-        if(_sensorAccData(&accData)){
-        	accData = kinematicsRotateFrame(accData, accRot);
-            accData = veltmul(accData, accScale);
+        if(_sensorAccData(&accv.data) == OK){
+            vec_t va = veltmul(kinematicsRotateFrame(accv.data, accv.rot), accv.scale);
 
             for (uint8_t i = 0; i < 3; ++i) {
-                macc.acceleration.axis[i] = lpf2pApply(&accLpfData[i], accData.axis[i]);
+                accs.xvec.axis[i] = lpf2pApply(&accv.lpfdata[i], va.axis[i]);
             }
-            estimatorEnqueue(&macc, 0);
-            accNew = 1;
+            accs.xvec.timestampMs = millis();
+            estimatorEnqueue(&accs, 0);
         }
-
-        if(_sensorGyrData(&gyrData)){
-            gyrData = vsub(gyrData, gyrMean);
+        if(_sensorGyrData(&gyrv.data) == OK){
+            vec_t vg = vsub(gyrv.data, gyrv.mean);
+            
             for (uint8_t i = 0; i < 3; i++) {
-                mgyr.attitude.axis[i] = lpf2pApply(&gyrLpfData[i], gyrData.axis[i]);
+                gyrv.xvec.axis[i] = lpf2pApply(&gyrv.lpfdata[i], vg.axis[i]);
             }
-            estimatorEnqueue(&mgyr, 0);
-            gyrNew = 1;
+            gyrs.xvec.timestampMs = millis();
+            estimatorEnqueue(&gyrs, 0);
         }
-
-        /* TODO: IRQ Based waiting needed */
         taskDelayUntil(&xLastWakeTime, (1000 / sensorFreqBMI088));
     }
 }
@@ -230,25 +205,25 @@ void sensorCalibrateBMI088(void){
 	vec_t tempaccx = vzero();
 	vec_t tempaccy = vzero();
 	vec_t tempaccz = vzero();
-	vec_t tempgyr;
+	vec_t tempgyr  = vzero();
 
-	accRot = kinematicsState()->rotation.vector;
+	accv.rot = xkinematicsState()->rotation.v;
 
 	_sensorMeanBMI088(&tempaccz, &tempgyr);
-	accScale.z = GRAVITY / tempaccz.z;
+	accv.scale.z = GRAVITY / tempaccz.z;
 
 	float loopx = 0;
 	float loopy = 0;
 
 	while(loopy < 1000){
 		if(kinematicsState()->rotation.x > 85 && kinematicsState()->rotation.x < 95){
-			tempaccy = vmean(tempaccy, accData, loopy);
+			tempaccy = vmean(tempaccy, accv.data, loopy);
 			loopy++;
 		}
 		delay(4);
 	}
 
-	while(kinematicsState()->rotation.x > 5 ) delay(4);
+	while(kinematicsState()->rotation.x > 5) delay(4);
 
 	while(loopx < 1000){
 		if(kinematicsState()->rotation.y < -85 && kinematicsState()->rotation.y > -95){
@@ -258,33 +233,35 @@ void sensorCalibrateBMI088(void){
 		delay(4);
 	}
 
-
-	accScale.y = GRAVITY / tempaccy.y;
-	accScale.x = GRAVITY / tempaccx.x;
+	accv.scale.y = GRAVITY / tempaccy.y;
+	accv.scale.x = GRAVITY / tempaccx.x;
 
 	idptr = (uint32_t)SYS_ID(sensorNameBMI088);
     memoryMemUpload(sensorNameBMI088, NULL);
 }
 
 void _sensorMeanBMI088(vec_t* accMean, vec_t* gyrMean){
-    float i = 0;
-    float j = 0;
+    float i, j;
+    vec_t tempacc, tempgyr;
+    
+    i = 0;
+    j = 0;
     uint32_t intervalMs = millis() + BMI088_CAL_INTERVAL_MS;
 
     while(millis() < intervalMs){
-        if(_sensorAccData(&accData)){
-            *accMean = vmean(*accMean, accData, i);
+        if(_sensorAccData(&tempacc) == OK){
+            *accMean = vmean(*accMean, tempacc, i);
             i++;
         }
-        if(_sensorGyrData(&gyrData)){
-            *gyrMean = vmean(*gyrMean, gyrData, j);
+        if(_sensorGyrData(&tempgyr) == OK){
+            *gyrMean = vmean(*gyrMean, tempgyr, j);
             j++;
         }
         delay(2);
     }
 }
 
-void _sensorVarianceBMI088(vec_t* accVar, vec_t* gyrVar){
+void _sensorVarianceBMI088(vec_t accMean, vec_t gyrMean, vec_t * accVar, vec_t* gyrVar){
     float i = 0;
     float j = 0;
     uint32_t intervalMs = millis() + BMI088_CAL_INTERVAL_MS;
@@ -292,12 +269,12 @@ void _sensorVarianceBMI088(vec_t* accVar, vec_t* gyrVar){
     *gyrVar = vzero();
 
     while(millis() < intervalMs){
-        if(_sensorAccData(&accData)){
-            *accVar = vsigma2(*accVar, accMean, accData, i);
+        if(_sensorAccData(&accv.data) == OK){
+            *accVar = vsigma2(*accVar, accv.mean, accv.data, i);
             i++;
         }
-        if(_sensorGyrData(&gyrData)){
-            *gyrVar = vsigma2(*gyrVar, gyrMean, gyrData, j);
+        if(_sensorGyrData(&gyrv.data) == OK){
+            *gyrVar = vsigma2(*gyrVar, gyrv.mean, gyrv.data, j);
             j++;
         }
         delay(2);
@@ -310,23 +287,22 @@ int8_t sensorIsCalibratedBMI088(void){
     return FALSE;
 }
 
-int8_t sensorAcquireBMI088(measurement_t* plist, uint8_t n){
-    uint8_t i = 0;
-    if(accNew && i < n){plist[i] = macc; accNew = 0; i++;}
-    if(gyrNew && i < n){plist[i] = mgyr; gyrNew = 0; i++;}
-    return i;
+int8_t sensorAcquireBMI088(sense_t* plist, uint8_t n){
+    return E_ERROR;
 }
 
-int8_t sensorIsReadyBMI088(void){return isReady;}
+int8_t sensorIsReadyBMI088(void){
+    return isReady;
+}
 
-void sensorWaitDataReadyBMI088(void){while(!accNew) delay(2);}
+void sensorWaitDataReadyBMI088(void){while()}
 
 uint8_t _sensorAccData(vec_t* data){
     /* Output as G values ((9,81m)/s^2)*/
     struct bmi08_sensor_data bmi08AccData;
     int8_t rslt = bmi08a_get_data(&bmi08AccData, &bmi08dev);
     *data = vscl(mkvec(bmi08AccData.y, bmi08AccData.x * -1, bmi08AccData.z), BMI088_G_PER_LSB * GRAVITY);
-    return (rslt == BMI08_OK);
+    return (rslt == BMI08_OK) ? OK : E_ERROR;
 }
 
 uint8_t _sensorGyrData(vec_t* data){
@@ -334,35 +310,31 @@ uint8_t _sensorGyrData(vec_t* data){
     struct bmi08_sensor_data bmi08GyrData;
     int8_t rslt = bmi08g_get_data(&bmi08GyrData, &bmi08dev);
     *data = vscl(mkvec(bmi08GyrData.y, bmi08GyrData.x * -1, bmi08GyrData.z), BMI088_DEG_PER_LSB);
-    return (rslt == BMI08_OK);
+    return (rslt == BMI08_OK) ? OK : E_ERROR;
 }
 
-BMI08_INTF_RET_TYPE bmi08SpiRead(uint8_t reg_addr, uint8_t *reg_data, uint32_t len, void *intf_ptr)
-{
-    uint16_t intfpin = (*((uint8_t*)intf_ptr) == 0) ? BMI088_ACC_CS : BMI088_GYR_CS;
-
-    spiBeginTransaction( &BMI088_SPI );
-    pinWrite(intfpin, 0);
+BMI08_INTF_RET_TYPE bmi08SpiRead(uint8_t reg_addr, uint8_t *reg_data, uint32_t len, void *intf_ptr){
+    spiBeginTransaction(&BMI088_SPI);
+    pinWrite(*(pin_t*)intf_ptr), LOW);
     spiTransmit(&BMI088_SPI, &reg_addr, 1);
     int8_t result = spiReceive(&BMI088_SPI, reg_data, (uint16_t)len);
-    pinWrite(intfpin, 1);
+    pinWrite(*(pin_t*)intf_ptr, HIGH);
     spiEndTransaction(&BMI088_SPI);
     return result;
 }
 
 BMI08_INTF_RET_TYPE bmi08SpiWrite(uint8_t reg_addr, const uint8_t *reg_data, uint32_t len, void *intf_ptr){
-
     spiBeginTransaction(&BMI088_SPI);
-    pinWrite(*intf_ptr, LOW);
+    pinWrite(*(pin_t*)intf_ptr, LOW);
     spiTransmit(&BMI088_SPI, &reg_addr, 1);
     int8_t result = spiTransmit(&BMI088_SPI, (uint8_t*)reg_data, len);
-    pinWrite(*intf_ptr, HIGH);
+    pinWrite(*(pin_t*)intf_ptr, HIGH);
     spiEndTransaction(&BMI088_SPI);
-
     return result;
 }
 
 void bmi08DelayUs(uint32_t period, void *intf_ptr){
+    (void) intf_ptr;
     delayUs(period);
 }
 

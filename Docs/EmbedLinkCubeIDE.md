@@ -49,6 +49,6 @@
 * Properties/C Build/Settings/MCU Settings > enable newlib float : OK
 * extern and define on the @main.h : OK
 * Call systemLaunch in @main.c : OK
-* Start system timer HAL_TIM_BaseStart() in TIM config end @main.c : OK
+* Start system timer HAL_TIM_Base_Start(&htim2) in TIM config end @main.c : OK
 * Linker List .mem. .nrx.
 * Configure the sysconfig.h

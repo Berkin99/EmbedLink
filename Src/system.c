@@ -36,13 +36,6 @@
 #include "uart.h"
 #include "adc.h"
 #include "pwm.h"
-#include "led.h"
-#include "ledseq.h"
-#include "sensor.h"
-#include "navigator.h"
-#include "telemetry.h"
-#include "memory.h"
-#include "estimator.h"
 //#include "usb.h"
 
 static uint8_t sysInit = 0;
@@ -55,7 +48,7 @@ void systemLaunch(void){
     if(sysInit) return;
     sysInit = 1;
 //    spiInit();
-//    i2cInit();
+    i2cInit();
     uartInit();
 //    pwmInit();
 //    adcInit();

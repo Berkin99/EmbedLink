@@ -30,11 +30,11 @@
 #ifndef XMATH_H_
 #define XMATH_H_
 
+#include <math.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <sysdefs.h>
-#include <xmath_types.h>
+#include "xmath_types.h"
 
 /* Clamp a f32 value between a min and max value */
 static inline f32 clampf32(f32 val, f32 min, f32 max) {
@@ -91,6 +91,14 @@ static inline f32 cycdiff32(f32 angle1, f32 angle2){
     if (diff < -M_PI_F32) return (diff + (2 * M_PI_F32));
     if (diff >  M_PI_F32) return (diff - (2 * M_PI_F32));
     return diff;
+}
+
+static inline f32 meanf32(f32 pmean, f32 new, i32 i) {
+    return (pmean * (f32)i / (i + 1)) + (new * 1.0f / (i + 1));
+}
+
+static inline f64 meanf64(f64 pmean, f64 new, i32 i) {
+    return (pmean * (f64)i / (i + 1)) + (new * 1.0 / (i + 1));
 }
 
 #endif

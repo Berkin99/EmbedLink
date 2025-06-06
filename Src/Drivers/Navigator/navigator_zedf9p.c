@@ -31,6 +31,7 @@
 #include "systime.h"
 #include "system.h"
 
+#define ZEDF9P_UART
 #ifdef ZEDF9P_UART
 
 #include "rtos.h"

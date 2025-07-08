@@ -27,15 +27,20 @@
  *
  */
 
-#include "system.h"
-#include "sysconfig.h"
 #include "pwm.h"
+
+#include "sysconfig.h"
+#include "system.h"
 
 #ifdef HAL_TIM_MODULE_ENABLED
 
-#define PERIPH_FREQ			200000000	/* AHB1 AHB2 Clock Frequency in Hz */
-#define PERIPH_PERIOD_MS	1000.0f/(float)PERIPH_FREQ
-#define PERIPH_PERIOD_US 	1000000.0f/(float)PERIPH_FREQ
+#ifndef PWM_TIMER_FREQ_MHZ
+#error "[-][EMBEDLINK][PWM] Timer Peripheral Frequency should be defined!"
+#endif
+
+#define PERIPH_FREQ			(PWM_TIMER_FREQ_MHZ * 1000000)	/* AHB1 AHB2 Timers Clock Frequency in Hz */
+#define PERIPH_PERIOD_MS	(1000.0f/(float)PERIPH_FREQ)
+#define PERIPH_PERIOD_US 	(1000000.0f/(float)PERIPH_FREQ)
 #define TIMER_CH(TIMER, CH) ((&(TIMER.Instance->CCR1)) - 1 + CH)
 
 pwm_t pwm1;

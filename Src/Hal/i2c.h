@@ -31,6 +31,7 @@
 #define I2C_H_
 
 #include <stdint.h>
+
 #include "rtos.h"
 
 typedef struct i2c_s{

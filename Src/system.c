@@ -27,15 +27,22 @@
  *
  */
 
-#include "rtos.h"
 #include "system.h"
 #include "systime.h"
 #include "sysconfig.h"
-#include "spi.h"
-#include "i2c.h"
-#include "uart.h"
+
 #include "adc.h"
+#include "gpio.h"
+#include "i2c.h"
 #include "pwm.h"
+#include "rtos.h"
+#include "spi.h"
+#include "uart.h"
+#include "sensor.h"
+#include "estimator.h"
+
+#include <string.h>
+
 //#include "usb.h"
 
 static uint8_t sysInit = 0;
@@ -44,30 +51,54 @@ taskAllocateStatic(SYSTEM_TASK, SYSTEM_TASK_STACK, SYSTEM_TASK_PRI);
 void systemTask(void* argv);
 
 void systemLaunch(void){
-
     if(sysInit) return;
     sysInit = 1;
-//    spiInit();
-    i2cInit();
-    uartInit();
-//    pwmInit();
-//    adcInit();
-//    usbInit();
 
     taskCreateStatic(SYSTEM_TASK, systemTask, NULL);
     taskStartScheduler();
-
     /* Should not reach here */
     systemErrorCall();
     while(1);
 }
 
 void systemTask(void* argv){
+
+    i2cInit();
+    pwmInit();
+    spiInit();
+    uartInit(); 
+
+    /* SPI Pins */
+    pinWrite(PC4, HIGH);
+    pinWrite(PC5, HIGH);
+    pinWrite(PB0, HIGH);
+
+    delay(600);
+
     serialPrint("[>] System Start\n");
 
+    uint8_t buffer[256] = {0};
+    HAL_UART_Receive_DMA(&HUART4, buffer, 256);
+
     while(1){
-    	delay(1000);
-    	serialPrint("[>] Loop ...\n");
+    	/* If there is new string get that */
+        uint8_t temp[256];
+        memcpy(temp, /*buffer[new string start]*/, /*new string length*/);
+    	delay(100);
+    }
+
+    sensorInit();
+    sensorTest();
+    estimatorInit();
+
+    sysInit = 2;
+    /* ACCEL TEST */
+    while(1){
+    	pinToggle(LED2_PIN);
+    	delay(50);
+    	pinToggle(LED1_PIN);
+    	delay(50);
+        serialPrint("%.2f\n", xkinematicsState()->position.z);
     }
 }
 

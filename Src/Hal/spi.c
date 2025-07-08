@@ -27,8 +27,9 @@
  *
  */
 
-#include "system.h"
 #include "spi.h"
+
+#include "system.h"
 #include "rtos.h"
 
 #ifdef HAL_SPI_MODULE_ENABLED

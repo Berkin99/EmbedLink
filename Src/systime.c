@@ -27,10 +27,11 @@
  *
  */
 
-#include "system.h"
-#include "sysconfig.h"
 #include "systime.h"
+
 #include "rtos.h"
+#include "sysconfig.h"
+#include "system.h"
 
 #ifndef SYSTIME
 #error "/SYSTEM> SYSTIME Timer should be defined!"

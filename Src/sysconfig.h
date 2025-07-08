@@ -36,17 +36,20 @@
 #define SYSTIME                htim2
 
 /// SYSDEBUG ////////////////////////////////////////////////
-#define SERIAL_UART              uart2
-//#define SYSLED1                LED3
-//#define SYSLED2                LED4
+#define SERIAL_UART            uart2
+#define SYSLED1                LED1
+#define SYSLED2                LED2
 
 /// LED /////////////////////////////////////////////////////
-//#define LED1_PIN               PE11
-//#define LED2_PIN               PE10
+#define LED1_PIN               PE10
+#define LED2_PIN               PE11
 //#define LED3_PIN               PD3
 //#define LED4_PIN               PD4
 
 /// I2C /////////////////////////////////////////////////////
+#define BMP581_I2C              i2c1
+#define BMP581_I2C_ADDR         (0x46)
+
 //#define BMP388_I2C             i2c2
 //#define BNO055_I2C             i2c2
 //#define E24AA_I2C              i2c2
@@ -55,9 +58,9 @@
 //#define MS5611_I2C             i2c1
 
 /// SPI /////////////////////////////////////////////////////
-//#define BMI088_SPI             spi1
-//#define BMI088_ACC_CS          PC4
-//#define BMI088_GYR_CS          PC5
+#define BMI088_SPI             spi1
+#define BMI088_ACC_CS          PC4
+#define BMI088_GYR_CS          PC5
 //#define RF24_SPI               spi1
 //#define RF24_CE                PE5
 //#define RF24_CS                PE6
@@ -75,14 +78,15 @@
 //#define ZEDF9P_UART            uart1
 
 /// PWM /////////////////////////////////////////////////////s
-//#define PWM1_TIMER             htim3
-//#define PWM2_TIMER             htim3
-//#define PWM3_TIMER             htim3
-//#define PWM4_TIMER             htim3
-//#define PWM1_CH                4
-//#define PWM2_CH                3
-//#define PWM3_CH                2
-//#define PWM4_CH                1
+#define PWM_TIMER_FREQ_MHZ     200
+#define PWM1_TIMER             htim3
+#define PWM2_TIMER             htim3
+#define PWM3_TIMER             htim3
+#define PWM4_TIMER             htim3
+#define PWM1_CH                4
+#define PWM2_CH                3
+#define PWM3_CH                2
+#define PWM4_CH                1
 
 /// ADC /////////////////////////////////////////////////////
 //#define ADC1_HANDLE            hadc1
@@ -105,7 +109,7 @@
 #define SENS_TASK_PRI           (4)
 #define NAV_TASK_PRI            (4)
 #define TRX_TASK_PRI            (4)
-#define ESTIMATOR_TASK_PRI      (5)
+#define ESTIMATOR_TASK_PRI      (4)
 #define CONTROL_TASK_PRI        (6)
 
 #define SYSTEM_TASK_STACK       (2 * RTOS_MIN_STACK)

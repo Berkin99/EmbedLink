@@ -30,6 +30,7 @@
 #include <systime.h>
 #include "kinematics.h"
 #include "matrix.h"
+#include "uart.h"
 
 static kinematicsState_t _kinematics;
 
@@ -38,7 +39,6 @@ void kinematicsReset(kinematicsState_t *self){
 }
 
 void kinematicsSet(kinematicsState_t *self, kinematics_e idx, xvec_t data){
-    if(!xvtime(&data, KINEMATICS_TIMEOUT_MS)) return;
     self->kinv[idx] = data;
 }
 
@@ -67,6 +67,15 @@ void   xkinematicsStateUpdate(kinematicsState_t* pState){
 const kinematicsState_t* xkinematicsState(void){
     return (const kinematicsState_t*) &_kinematics;
 }
+
+void xkinematicsPrint(kinematics_e idx){
+    serialPrint("%.3f      %.3f     %.3f\n",
+        _kinematics.kinv[idx].x,
+        _kinematics.kinv[idx].y,
+        _kinematics.kinv[idx].z
+    );
+}
+
 
 vec_t kinematicsRotateFrame(vec_t v, vec_t frame){
     matrix_t R =  mnew(3, 3);

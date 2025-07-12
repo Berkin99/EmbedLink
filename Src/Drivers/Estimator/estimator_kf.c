@@ -45,6 +45,7 @@
 #include "sensor.h"
 #include "madgwick.h"
 #include "kalman1D.h"
+#include "uart.h"
 
 #define ESTIMATOR_RATE			RATE_1000_HZ
 #define ESTIMATOR_TIMEOUT_MS	(1000)
@@ -114,7 +115,11 @@ void estimatorTaskKF(void* argv){
 
 void _estimatorUpdateKF(uint32_t tick){
     /* Estimator responsible for updating the kinematics */
-    estimatorIterate(&state);
+	state_t tstate;
+	estimatorReset(&tstate);
+    estimatorIterate(&tstate);
+	estimatorUpdate(&state, &tstate);
+
 	/* TODO: Advanced iacceleration & iattitude calculation */
 	xkinematicsSet(KINV_IACCELERATION, state.iacceleration);
 	xkinematicsSet(KINV_IATTITUDE, state.iattitude);
@@ -161,6 +166,7 @@ void _estimatorHeightKF(void){
 	xvec_t acc;
 	xvec_t velocity = xvzero();
 	xvec_t position = xvzero();
+
 	/* Height Estimate */
 	if(!xvtime(&state.pressure, ESTIMATOR_TIMEOUT_MS)) return;
 	if(!xkinematicsIsValid(KINV_ACCELERATION, ESTIMATOR_TIMEOUT_MS)) return;

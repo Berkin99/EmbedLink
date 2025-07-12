@@ -98,13 +98,14 @@ int8_t estimatorIsReady(void){
 	return estimator.isReady();
 }
 
-void estimatorIterate(state_t* pState){
-
+void estimatorReset(state_t* pState){
 	/* Set all states to zero */
-	for (uint8_t i = 0; i < SENSE_TYPECOUNT; i++) {
+	for (uint8_t i = 0; i < STATE_TYPECOUNT; i++) {
 		pState->v[i] = xvnew(vzero(), vrepeat(999999.0f), 0U);
 	}
+}
 
+void estimatorIterate(state_t* pState){
 	/* For each sense in the sense queue */
 	sense_t z;
 	while(sensorDequeue(&z, 0) == TRUE){
@@ -112,22 +113,21 @@ void estimatorIterate(state_t* pState){
 	}
 }
 
+void estimatorUpdate(state_t* base, const state_t* update){
+	for (int32_t i = 0; i < STATE_TYPECOUNT; i++){
+		if(base->v[i].timestampMs > update->v[i].timestampMs) continue;
+		base->v[i] = update->v[i];
+	}
+}
+
 void estimatorStabilize(state_t* pState, uint32_t timeoutMs){
 
 	serialPrint("[>] Estimator stabilizing\n");
-
-	estimatorIterate(pState);
+	estimatorReset(pState);
 
 	while(timeoutMs > 0){
 		if(timeoutMs % 1000 == 0) serialPrint(" *\n");
-		state_t tstate;
-		estimatorIterate(&tstate);
-
-		for (uint8_t i = 0; i < STATE_TYPECOUNT; i++) {
-			if(tstate.v[i].timestampMs == 0) continue;
-			pState->v[i] = xvcomb(pState->v[i], tstate.v[i]);
-		}
-
+		estimatorIterate(pState);
 		delay(1);
 		timeoutMs--;
 	}
@@ -135,6 +135,10 @@ void estimatorStabilize(state_t* pState, uint32_t timeoutMs){
 	serialPrint("READY\n");
 
 	for (uint8_t i = 0; i < STATE_TYPECOUNT; i++) {
-		serialPrint("[%d] %.3f, %.3f, %.3f\n", i, pState->v[i].x, pState->v[i].y, pState->v[i].z);
+		serialPrint("[%d]	%.3f, %.3f, %.3f\n",
+			i, 
+			pState->v[i].x,
+			pState->v[i].y,
+			pState->v[i].z);
 	}
 }

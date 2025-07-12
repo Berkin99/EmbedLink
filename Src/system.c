@@ -77,16 +77,6 @@ void systemTask(void* argv){
 
     serialPrint("[>] System Start\n");
 
-    uint8_t buffer[256] = {0};
-    HAL_UART_Receive_DMA(&HUART4, buffer, 256);
-
-    while(1){
-    	/* If there is new string get that */
-        uint8_t temp[256];
-        memcpy(temp, /*buffer[new string start]*/, /*new string length*/);
-    	delay(100);
-    }
-
     sensorInit();
     sensorTest();
     estimatorInit();
@@ -98,8 +88,16 @@ void systemTask(void* argv){
     	delay(50);
     	pinToggle(LED1_PIN);
     	delay(50);
-        serialPrint("%.2f\n", xkinematicsState()->position.z);
-    }
+        // serialPrint("[IACC] %d ", xkinematicsState()->iacceleration.timestampMs);
+        // xkinematicsPrint(KINV_IACCELERATION);
+        // serialPrint("[IATT] %d ", xkinematicsState()->iattitude.timestampMs);
+        // xkinematicsPrint(KINV_IATTITUDE);
+        // serialPrint("[ROT]  %d ", xkinematicsState()->rotation.timestampMs);
+        // xkinematicsPrint(KINV_ROTATION);
+        // serialPrint("[ACC]  %d ", xkinematicsState()->acceleration.timestampMs);
+        // xkinematicsPrint(KINV_ACCELERATION);
+        serialPrint("[POS]  %d ", xkinematicsState()->position.timestampMs);
+        xkinematicsPrint(KINV_POSITION);    }
 }
 
 void systemWaitReady(void){

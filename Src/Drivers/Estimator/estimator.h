@@ -83,7 +83,9 @@ typedef struct{
 void   estimatorInit (void);
 void   estimatorTest (void);
 int8_t estimatorIsReady(void);
+void   estimatorReset(state_t* pState);
 void   estimatorIterate(state_t* pState);
+void   estimatorUpdate(state_t* base, const state_t* update);
 void   estimatorStabilize(state_t* pState, uint32_t timeoutMs);
 
 #endif /* ESTIMATOR_H_ */

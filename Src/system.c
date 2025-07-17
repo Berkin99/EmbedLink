@@ -77,27 +77,15 @@ void systemTask(void* argv){
 
     serialPrint("[>] System Start\n");
 
-    sensorInit();
-    sensorTest();
-    estimatorInit();
+    //sensorInit();
+    //sensorTest();
+    //estimatorInit();
 
     sysInit = 2;
-    /* ACCEL TEST */
+
     while(1){
-    	pinToggle(LED2_PIN);
-    	delay(50);
-    	pinToggle(LED1_PIN);
-    	delay(50);
-        // serialPrint("[IACC] %d ", xkinematicsState()->iacceleration.timestampMs);
-        // xkinematicsPrint(KINV_IACCELERATION);
-        // serialPrint("[IATT] %d ", xkinematicsState()->iattitude.timestampMs);
-        // xkinematicsPrint(KINV_IATTITUDE);
-        // serialPrint("[ROT]  %d ", xkinematicsState()->rotation.timestampMs);
-        // xkinematicsPrint(KINV_ROTATION);
-        // serialPrint("[ACC]  %d ", xkinematicsState()->acceleration.timestampMs);
-        // xkinematicsPrint(KINV_ACCELERATION);
-        serialPrint("[POS]  %d ", xkinematicsState()->position.timestampMs);
-        xkinematicsPrint(KINV_POSITION);    }
+        
+    }
 }
 
 void systemWaitReady(void){

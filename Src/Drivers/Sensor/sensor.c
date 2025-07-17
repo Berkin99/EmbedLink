@@ -38,18 +38,27 @@
 #ifdef MPU6500_SPI
 #include "sensor_mpu6500.h"
 #endif
+
 #ifdef BMI088_SPI
 #include "sensor_bmi088.h"
 #endif
+
+#ifdef ICM20948_SPI
+#include "sensor_icm20948.h"
+#endif
+
 #ifdef BMP581_I2C
 #include "sensor_bmp581.h"
 #endif
+
 #ifdef BNO055_I2C
 #include "sensor_bno055.h"
 #endif
+
 #ifdef BMP388_I2C
 #include "sensor_bmp388.h"
 #endif
+
 #ifdef HMC5883L_I2C
 #include "sensor_hmc5883l.h"
 #endif
@@ -71,6 +80,9 @@ static const sensor_t sensorList[] = {
 	#endif
 	#ifdef BMI088_SPI
 	SENS_ADD(BMI088)
+	#endif
+	#ifdef ICM20948_SPI
+	SENS_ADD(ICM20948)
 	#endif
 	#ifdef BMP581_I2C
 	SENS_ADD(BMP581)

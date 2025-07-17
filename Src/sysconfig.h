@@ -58,6 +58,9 @@
 //#define MS5611_I2C             i2c1
 
 /// SPI /////////////////////////////////////////////////////
+#define ICM20948_SPI           spi1
+#define ICM20948_CS            PB0
+
 #define BMI088_SPI             spi1
 #define BMI088_ACC_CS          PC4
 #define BMI088_GYR_CS          PC5

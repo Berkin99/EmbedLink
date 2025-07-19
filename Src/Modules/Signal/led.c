@@ -27,73 +27,50 @@
  *
  */
 
-#include "system.h"
-#include "systime.h"
-#include "sysconfig.h"
-
-#include "adc.h"
+#include "led.h"
 #include "gpio.h"
-#include "i2c.h"
-#include "pwm.h"
-#include "rtos.h"
-#include "spi.h"
-#include "uart.h"
-#include "sensor.h"
-#include "estimator.h"
 
-#include <string.h>
+typedef struct {
+	uint8_t value;
+	uint16_t pin;
+}led_t;
 
-//#include "usb.h"
+static led_t led[LED_COUNT] = {
+	#ifdef LED1_PIN
+			{.value = 0, .pin = (LED1_PIN)},
+	#endif
+	#ifdef LED2_PIN
+			{.value = 0, .pin = (LED2_PIN)},
+	#endif
+	#ifdef LED3_PIN
+			{.value = 0, .pin = (LED3_PIN)},
+	#endif
+	#ifdef LED4_PIN
+			{.value = 0, .pin = (LED4_PIN)},
+	#endif
+	#ifdef LED5_PIN
+			{.value = 0, .pin = (LED5_PIN)},
+	#endif
+	#ifdef LED6_PIN
+			{.value = 0, .pin = (LED6_PIN)},
+	#endif
+	#ifdef LED7_PIN
+			{.value = 0, .pin = (LED7_PIN)},
+	#endif
+	#ifdef LED8_PIN
+			{.value = 0, .pin = (LED8_PIN)},
+	#endif
+};
 
-static uint8_t sysInit = 0;
-
-taskAllocateStatic(SYSTEM_TASK, SYSTEM_TASK_STACK, SYSTEM_TASK_PRI);
-void systemTask(void* argv);
-
-void systemLaunch(void){
-    if(sysInit) return;
-    sysInit = 1;
-
-    taskCreateStatic(SYSTEM_TASK, systemTask, NULL);
-    taskStartScheduler();
-    /* Should not reach here */
-    systemErrorCall();
-    while(1);
+void ledSet(uint8_t index, uint8_t value){
+	led[index].value = value;
+	pinWrite(led[index].pin, value);
 }
 
-void systemTask(void* argv){
-
-    i2cInit();
-    pwmInit();
-    spiInit();
-    uartInit(); 
-
-    /* SPI Pins */
-    pinWrite(PC4, HIGH);
-    pinWrite(PC5, HIGH);
-    pinWrite(PB0, HIGH);
-
-    delay(600);
-
-    serialPrint("[>] System Start\n");
-
-    sensorInit();
-    sensorTest();
-    estimatorInit();
-
-    sysInit = 2;
-
-    while(1){
-        serialPrint("%.3f\n", xkinematicsState()->position.z);
-        delay(10);        
-    }
+uint8_t ledGet(uint8_t index){
+	return led[index].value;
 }
 
-void systemWaitReady(void){
-	while(sysInit != 2) delay(100);
-}
-
-void systemErrorCall(void){
-    serialPrint("[E] System Hard Fault Error!\n");
-    while(1);
+void ledToggle(uint8_t index){
+	ledSet(index, !(ledGet(index)));
 }

@@ -295,8 +295,6 @@ void ICM20948_SetAccelLPF(ICM20948_Device_t* dev, uint8_t cfg) {
     dev->settings.accel_dlpf = cfg;
 }
 
-#include "icm20948.h"
-
 // Helper: Write one byte to AK09916
 static void ICM20948_WriteAK09916(ICM20948_Device_t* dev, uint8_t reg, uint8_t val) {
     // Set up Slave 0 for write (W=0)

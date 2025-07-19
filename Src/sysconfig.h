@@ -78,7 +78,7 @@
 //#define E32100_M1
 //#define E32100_AUX
 //#define NEOM8N_UART            uart1
-//#define ZEDF9P_UART            uart1
+#define ZEDF9P_UART            uart1
 
 /// PWM /////////////////////////////////////////////////////s
 #define PWM_TIMER_FREQ_MHZ     200

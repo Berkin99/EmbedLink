@@ -27,73 +27,24 @@
  *
  */
 
-#include "system.h"
-#include "systime.h"
-#include "sysconfig.h"
+#ifndef BATTERY_H_
+#define BATTERY_H_
 
+#include <stdint.h>
+#include <sysdefs.h>
 #include "adc.h"
-#include "gpio.h"
-#include "i2c.h"
-#include "pwm.h"
-#include "rtos.h"
-#include "spi.h"
-#include "uart.h"
-#include "sensor.h"
-#include "estimator.h"
 
-#include <string.h>
+typedef struct{
+	adc_t* 	 padc;
+	float 	 voltage;
+}BATT_Handle_t;
 
-//#include "usb.h"
+/*
+ * @param padc    : Analog to digital converter handle pointer.
+ * @param voltage : Max ADC value reference voltage.
+ */
+BATT_Handle_t BATT_NewHandle(adc_t* padc, float voltage);
+float BATT_ReadLevel(BATT_Handle_t* pbatt);
+float BATT_ReadVoltage(BATT_Handle_t* pbatt);
 
-static uint8_t sysInit = 0;
-
-taskAllocateStatic(SYSTEM_TASK, SYSTEM_TASK_STACK, SYSTEM_TASK_PRI);
-void systemTask(void* argv);
-
-void systemLaunch(void){
-    if(sysInit) return;
-    sysInit = 1;
-
-    taskCreateStatic(SYSTEM_TASK, systemTask, NULL);
-    taskStartScheduler();
-    /* Should not reach here */
-    systemErrorCall();
-    while(1);
-}
-
-void systemTask(void* argv){
-
-    i2cInit();
-    pwmInit();
-    spiInit();
-    uartInit(); 
-
-    /* SPI Pins */
-    pinWrite(PC4, HIGH);
-    pinWrite(PC5, HIGH);
-    pinWrite(PB0, HIGH);
-
-    delay(600);
-
-    serialPrint("[>] System Start\n");
-
-    sensorInit();
-    sensorTest();
-    estimatorInit();
-
-    sysInit = 2;
-
-    while(1){
-        serialPrint("%.3f\n", xkinematicsState()->position.z);
-        delay(10);        
-    }
-}
-
-void systemWaitReady(void){
-	while(sysInit != 2) delay(100);
-}
-
-void systemErrorCall(void){
-    serialPrint("[E] System Hard Fault Error!\n");
-    while(1);
-}
+#endif /* BATTERY_H_ */

@@ -56,15 +56,15 @@ typedef struct{
 	int8_t  (*init)(void);
 	int8_t  (*test)(void);
 	int8_t  (*isReady)(void);
-	const state_t* (*state)(void);
+	const kinematicsState_t* (*state)(void);
 }estimator_t;
 
 void estimatorInit (void);
 void estimatorTest (void);
 int8_t estimatorIsReady(void);
 
-void estimatorStabilize(state_t* pState, uint32_t tim);
-void estimatorUpdate(state_t* pState, uint8_t* pChecklist);
+void estimatorStabilize(kinematicsState_t* pState, uint32_t tim);
+void estimatorUpdate(kinematicsState_t* pState, uint8_t* pChecklist);
 
 int8_t estimatorEnqueue(const measurement_t* pMeasurement, int8_t isISR);
 int8_t estimatorDequeue(measurement_t* pMeasurement, uint32_t portDelay);

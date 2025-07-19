@@ -1,8 +1,7 @@
 
 #include <math.h>
-
+#include "xmath.h"
 #include "madgwick.h"
-#include "math3d.h"
 
 #ifdef CONFIG_IMU_MADGWICK_QUATERNION
   #define BETA_DEF     0.01f    // 2 * proportional gain
@@ -138,9 +137,9 @@ static void madgwickUpdateQImpl(float gx, float gy, float gz, float ax, float ay
   float halfex, halfey, halfez;
   float qa, qb, qc;
 
-  gx = gx * M_PI_F / 180;
-  gy = gy * M_PI_F / 180;
-  gz = gz * M_PI_F / 180;
+  gx = gx * M_PI_F32 / 180;
+  gy = gy * M_PI_F32 / 180;
+  gz = gz * M_PI_F32 / 180;
 
   // Compute feedback only if accelerometer measurement valid (avoids NaN in accelerometer normalisation)
   if(!((ax == 0.0f) && (ay == 0.0f) && (az == 0.0f)))
@@ -219,9 +218,9 @@ void madgwickGetEulerRPY(float* roll, float* pitch, float* yaw)
   float gy = gravY;
   float gz = gravZ;
 
-  *yaw   = atan2f(2*(qw*qz + qx*qy), qw*qw + qx*qx - qy*qy - qz*qz) * 180 / M_PI_F;
-  *roll  = atan2f(gx, gz) * -180 / M_PI_F;
-  *pitch = atan2f(gy, gz) *  180 / M_PI_F; /*Changed*/
+  *yaw   = atan2f(2*(qw*qz + qx*qy), qw*qw + qx*qx - qy*qy - qz*qz) * 180 / M_PI_F32;
+  *roll  = atan2f(gx, gz) * -180 / M_PI_F32;
+  *pitch = atan2f(gy, gz) *  180 / M_PI_F32; /*Changed*/
 }
 
 float madgwickGetAccZWithoutGravity(const float ax, const float ay, const float az)

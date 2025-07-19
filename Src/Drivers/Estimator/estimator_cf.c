@@ -47,7 +47,6 @@
 #include "madgwick.h"
 #include "num.h"
 
-
 #define ESTIMATOR_RATE			RATE_1000_HZ
 #define MADGWICK_UPDATE_RATE	RATE_1000_HZ
 #define COMPASS_UPDATE_RATE	    RATE_100_HZ

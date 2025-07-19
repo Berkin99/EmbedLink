@@ -74,7 +74,8 @@
 //#define NEOM8N_UART            uart1
 //#define ZEDF9P_UART            uart1
 
-/// PWM /////////////////////////////////////////////////////s
+/// PWM /////////////////////////////////////////////////////
+#define PWM_TIMER_FREQ_MHZ     200
 //#define PWM1_TIMER             htim3
 //#define PWM2_TIMER             htim3
 //#define PWM3_TIMER             htim3

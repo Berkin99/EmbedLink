@@ -29,7 +29,7 @@
 
 #include <math.h>
 #include "pid.h"
-#include "num.h"
+#include "xmath.h"
 
 void pidInit(pidHandle_t* handle){
 	handle->iLimit = DEFAULT_PID_INTEGRATION_LIMIT;
@@ -61,7 +61,7 @@ float pidUpdate(pidHandle_t* handle, float measurement, float desired){
 
 	/* Calculated I Value added to output */
 	handle->integral += handle->coefficient.ki * (error * handle->dt); //1.6
-	handle->integral = constrainFloat(handle->integral, -handle->iLimit, handle->iLimit);
+	handle->integral = clampf32(handle->integral, -handle->iLimit, handle->iLimit);
 	output += handle->integral;
 
 	/* Calculated D Value added to output */

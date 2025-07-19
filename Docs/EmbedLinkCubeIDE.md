@@ -30,11 +30,10 @@
 * SerialWire
 
 #### Software:
-* FreeRTOS > CMSIS_V2
+* FreeRTOS > CMSIS_V2 > Newlib
 * USB Device
 
 ### 1.2 Clock Configuration MHz
-* HSE  26
 * CPU  200
 * TIM  200
 * SPI  32
@@ -49,6 +48,6 @@
 * Properties/C Build/Settings/MCU Settings > enable newlib float : OK
 * extern and define on the @main.h : OK
 * Call systemLaunch in @main.c : OK
-* Start system timer HAL_TIM_BaseStart() in TIM config end @main.c : OK
+* Start system timer HAL_TIM_Base_Start() in TIM config end @main.c : OK
 * Linker List .mem. .nrx.
 * Configure the sysconfig.h

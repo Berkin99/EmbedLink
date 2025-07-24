@@ -46,12 +46,9 @@ typedef struct{
 	float iLimit;
 	float integral;			/* Integration */
 	float dt;				/* Deltatime between measurements */
-
 	float last_error;		/* Last Error */
 	float last_measurement;	/* Last Measurement */
-
 	float output_limit;
-
 	bool enableDFilter;		/* Enable Low Pass Filter*/
 	//lpf2pData  DFilter;	/* Derivative Low Pass Filter */
 }pidHandle_t;

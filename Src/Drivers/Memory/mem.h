@@ -30,6 +30,8 @@
 #ifndef MEM_H_
 #define MEM_H_
 
+#include <stdint.h>
+
 struct mem_s{
   uint8_t type;
   char * name;

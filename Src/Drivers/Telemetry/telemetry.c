@@ -28,8 +28,8 @@
  */
 
 #include <string.h>
-#include <sysconfig.h>
 #include <stdio.h>
+#include "sysconfig.h"
 #include "uart.h"
 #include "telemetry.h"
 

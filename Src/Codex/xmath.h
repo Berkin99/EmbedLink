@@ -33,8 +33,6 @@
 #include <math.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <stddef.h>
-
 #include "xmath_types.h"
 
 /* Clamp a f32 value between a min and max value */

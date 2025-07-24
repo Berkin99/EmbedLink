@@ -168,7 +168,6 @@ int8_t _navigatorStabilizeZEDF9P(int iter, location_t* pLocation){
 			meanf64(stabilized.latitude, temp.latitude, i);
 			meanf64(stabilized.longitude, temp.longitude, i);
 		}
-
 		i++;
 	}
 

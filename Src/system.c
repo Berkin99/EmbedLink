@@ -40,12 +40,16 @@
 #include "uart.h"
 #include "sensor.h"
 #include "estimator.h"
-
-#include <string.h>
+#include "telemetry.h"
+#include "memory.h"
+#include "ledseq.h"
+#include "led.h"
 
 //#include "usb.h"
 
 static uint8_t sysInit = 0;
+
+static uint32_t sysmem;
 
 taskAllocateStatic(SYSTEM_TASK, SYSTEM_TASK_STACK, SYSTEM_TASK_PRI);
 void systemTask(void* argv);
@@ -68,6 +72,10 @@ void systemTask(void* argv){
     spiInit();
     uartInit(); 
 
+    ledseqInit();
+    ledseqRun(LED2, 1, SEQ_HEARTBEAT);
+    ledseqRun(LED1, 1, SEQ_PROCESS_L);
+
     /* SPI Pins */
     pinWrite(PC4, HIGH);
     pinWrite(PC5, HIGH);
@@ -77,15 +85,24 @@ void systemTask(void* argv){
 
     serialPrint("[>] System Start\n");
 
+    memoryInit();
+    memoryTest();
+    memoryDownload();
+
     sensorInit();
     sensorTest();
     estimatorInit();
+    // telemetryInit();
+    // telemetryTest();
+
+    ledseqStop(LED1);
 
     sysInit = 2;
 
     while(1){
-        serialPrint("%.3f\n", xkinematicsState()->position.z);
-        delay(10);        
+        serialPrint("0x%x", sysmem);
+        // serialPrint("%.3f\n", xkinematicsState()->position.z);
+        delay(1000);        
     }
 }
 
@@ -97,3 +114,7 @@ void systemErrorCall(void){
     serialPrint("[E] System Hard Fault Error!\n");
     while(1);
 }
+
+MEM_GROUP_START(SYSTEM)
+MEM_ADD(MEM_UINT32,  sysmem,    &sysmem)
+MEM_GROUP_STOP(SYSTEM)

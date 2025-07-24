@@ -4,8 +4,8 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <sysdefs.h>
-#include <xmath_types.h>
-#include <xmath3d.h>
+#include "xmath_types.h"
+#include "xmath3d.h"
 
 /* 4. Quaternions */
 typedef struct {
@@ -142,16 +142,16 @@ static inline quat_t rpy2quat_small(vec_t rpy) {
 
 /* Conversions to other parameterizations of 3D rotations */
 
-/* Convert quaternion to (roll, pitch, yaw) Euler angles using Tait-Bryan convention
-   (yaw, then pitch about new pitch axis, then roll about new roll axis) */
-static inline vec_t quat2rpy(quat_t q) {
-    /* from https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles */
-    vec_t v;
-    v.x = atan2f(2.0f * (q.w * q.x + q.y * q.z), 1 - 2 * (fsqr(q.x) + fsqr(q.y))); /* roll */
-    v.y = asinf(2.0f * (q.w * q.y - q.x * q.z)); /* pitch */
-    v.z = atan2f(2.0f * (q.w * q.z + q.x * q.y), 1 - 2 * (fsqr(q.y) + fsqr(q.z))); /* yaw */
-    return v;
-}
+// /* Convert quaternion to (roll, pitch, yaw) Euler angles using Tait-Bryan convention
+//    (yaw, then pitch about new pitch axis, then roll about new roll axis) */
+// static inline vec_t quat2rpy(quat_t q) {
+//     /* from https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles */
+//     vec_t v;
+//     v.x = atan2f(2.0f * (q.w * q.x + q.y * q.z), 1 - 2 * (fsqr(q.x) + fsqr(q.y))); /* roll */
+//     v.y = asinf(2.0f * (q.w * q.y - q.x * q.z)); /* pitch */
+//     v.z = atan2f(2.0f * (q.w * q.z + q.x * q.y), 1 - 2 * (fsqr(q.y) + fsqr(q.z))); /* yaw */
+//     return v;
+// }
 
 /* Compute the axis of a quaternion's axis-angle decomposition. */
 static inline vec_t quat2axis(quat_t q) {

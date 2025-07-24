@@ -27,19 +27,46 @@
  *
  */
 
-#ifndef UAVCOM_H_
-#define UAVCOM_H_
+#ifndef MEMORY_H_
+#define MEMORY_H_
 
 #include <stdint.h>
+#include <stdbool.h>
+#include "mem.h"
 
-void uavcomInit(void);
-void uavcomUpdate(uint8_t *pBuffer);
+#define MEM_TIMEOUT_MS    (100)
+#define MEM_INVALID 	  (0xFFFF)
+#define MEM_INVALID_ID 	  {0xFFFF, 0xFFFFFFFF}
 
-void uavIDLE(void);
-void uavMANUAL(void);
-void uavHEIGHT(void);
-void uavAUTO(void);
-void uavTAKEOFF(void);
-void uavLAND(void);
+typedef uint32_t memory_t; /* Unique Key */
 
-#endif /* UAVCOM_H_ */
+typedef struct{
+	uint16_t index;
+	memory_t key;
+}memID_t;
+
+typedef struct {
+    const char* Name;
+    int8_t      (*Init)(void);
+    int8_t      (*Test)(void);
+    int8_t      (*MemRead) (memory_t key, uint8_t* pRxData, int8_t len);
+    int8_t      (*MemWrite)(memory_t key, uint8_t* pTxData, int8_t len);
+}memoryHandle_t;
+
+void     memoryInit(void);
+void     memoryTest(void);
+int8_t   memoryRead(memory_t key, uint8_t* pRxData, int8_t len);
+int8_t   memoryWrite(memory_t key, uint8_t* pTxData, int8_t len);
+int8_t   memoryClear(void);
+int8_t   memoryUpload(void);
+int8_t   memoryDownload(void);
+int8_t   memoryMemUpload(char* group, char* name);
+int8_t   memoryMemDownload(char* group, char* name);
+mem_t*   memoryGetVar(uint16_t index);
+memID_t  memoryGetID(char* group, char* name);
+uint32_t memoryGetKey(uint16_t index);
+uint8_t  memoryTypeSize(uint8_t type);
+uint8_t  memoryGroupSize(uint16_t index);
+void     memoryLogicInit(void);
+
+#endif /* MEMORY_H_ */

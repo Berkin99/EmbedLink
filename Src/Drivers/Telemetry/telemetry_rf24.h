@@ -27,50 +27,20 @@
  *
  */
 
-#include "led.h"
-#include "gpio.h"
+#ifndef TELEMETRY_RF24_H_
+#define TELEMETRY_RF24_H_
 
-typedef struct {
-	uint8_t value;
-	uint16_t pin;
-}led_t;
+#include <stdint.h>
+#include "telemetry.h"
 
-static led_t led[LED_COUNT] = {
-	#ifdef LED1_PIN
-			{.value = 0, .pin = (LED1_PIN)},
-	#endif
-	#ifdef LED2_PIN
-			{.value = 0, .pin = (LED2_PIN)},
-	#endif
-	#ifdef LED3_PIN
-			{.value = 0, .pin = (LED3_PIN)},
-	#endif
-	#ifdef LED4_PIN
-			{.value = 0, .pin = (LED4_PIN)},
-	#endif
-	#ifdef LED5_PIN
-			{.value = 0, .pin = (LED5_PIN)},
-	#endif
-	#ifdef LED6_PIN
-			{.value = 0, .pin = (LED6_PIN)},
-	#endif
-	#ifdef LED7_PIN
-			{.value = 0, .pin = (LED7_PIN)},
-	#endif
-	#ifdef LED8_PIN
-			{.value = 0, .pin = (LED8_PIN)},
-	#endif
-};
+#define telemetryNameRF24    "RF24"
+#define telemetryTypeRF24    TRX_TRANSCEIVER
 
-void ledSet(led_e index, uint8_t value){
-	led[index].value = value;
-	pinWrite(led[index].pin, value);
-}
+int8_t telemetryInitRF24(void);
+int8_t telemetryTestRF24(void);
+int8_t telemetryReceiveRF24(uint8_t* pRxBuffer);
+int8_t telemetryTransmitRF24(const uint8_t* pTxData, uint8_t Length);
+int8_t telemetryIsReadyRF24(void);
+void   telemetryWaitDataReadyRF24(void);
 
-uint8_t ledGet(led_e index){
-	return led[index].value;
-}
-
-void ledToggle(led_e index){
-	ledSet(index, !(ledGet(index)));
-}
+#endif /* TELEMETRY_RF24_H_ */

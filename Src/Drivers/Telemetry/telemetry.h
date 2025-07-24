@@ -27,29 +27,37 @@
  *
  */
 
-#ifndef NRX_LOGIC_H_
-#define NRX_LOGIC_H_
+#ifndef TELEMETRY_H_
+#define TELEMETRY_H_
 
-#include <stdbool.h>
 #include <stdint.h>
-#include "nrx.h"
-#include "ntrp.h"
+#include "system.h"
 
-#define NRX_VARID_IS_VALID(varId) (varId.id != 0xffffu)
+typedef enum{
+	TRX_EMPTY,
+	TRX_RECEIVER,
+	TRX_TRANSMITTER,
+	TRX_TRANSCEIVER
+}telemetry_e;
 
-typedef struct nrxVarId_s {
-  uint16_t id;
-  uint16_t index;
-} __attribute__((packed)) nrxVarId_t;
+typedef struct{
+	const char* Name;
+	telemetry_e Type;
+	int8_t      (*Init)(void);
+	int8_t      (*Test)(void);
+	void 	    (*Config)(void);
+	int8_t      (*Receive)(uint8_t* pRxData, uint16_t length);
+	int8_t      (*Transmit)(const uint8_t* pTxData, uint16_t length);
+    int8_t      (*IsReady)(void);
+	void        (*WaitDataReady)(void);
+}telemetry_t;
 
-struct nrx_s* nrxGetVar(uint16_t index);
-nrxVarId_t nrxGetVarId(const char* group, const char* name);
+void    telemetryInit(void);
+void    telemetryTest(void);
+int8_t  telemetryIsReady(void);
+int8_t  telemetryGet(char* name, telemetry_t** ptelemetry);
+uint8_t telemetrySize(void);
+int8_t  telemetryReceive (char* name, uint8_t* pRxData, uint16_t length);
+int8_t  telemetryTransmit(char* name, const uint8_t* pTxData, uint16_t length);
 
-int nrxGetType(uint16_t index);
-
-uint8_t nrxVarSize(int type);
-uint8_t nrxGroupSize(int index);
-
-void nrxLogicInit();
-
-#endif /* nrx_LOGIC_H_ */
+#endif /* TELEMETRY_H_ */

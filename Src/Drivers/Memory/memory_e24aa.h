@@ -27,34 +27,18 @@
  *
  */
 
-#ifndef NORTHCOM_H_
-#define NORTHCOM_H_
+#ifndef MEMORY_E24AA_H_
+#define MEMORY_E24AA_H_
 
-#include <stdlib.h>
 #include <stdint.h>
-#include "ntrp.h"
-#include "control.h"
+#include "memory.h"
 
-#define NC_TASK_FREQ      250 //Hz
+#define memoryNameE24AA	"E24AA"
 
-uint8_t  ncInit(void);
-void 	 ncDataHandler    (const uint8_t* buffer);
-void 	 ncPacketHandler  (NTRP_Packet_t* packet);
-uint32_t ncLastDataTime   (void);
-int8_t   ncTransmitPacket (NTRP_Packet_t* packet, uint8_t size);
-void     ncDebug          (char* format, ...);
+int8_t memoryInitE24AA(void);
+int8_t memoryTestE24AA(void);
+int8_t memoryReadE24AA(memory_t key, uint8_t* pRxData, int8_t len);
+int8_t memoryWriteE24AA(memory_t key, uint8_t* pTxData, int8_t len);
 
-//void RxNAK(void);
-//void TxNAK(void);
-void RxACK(void);
-void TxACK(void);
-void RxMSG(const uint8_t* msg, uint8_t len);
-void TxMSG(const char* msg);
-void RxCMD(uint8_t cmdid, uint8_t* data);
-void TxCMD(uint8_t cmdid, const uint8_t* data);
-void RxGET(uint8_t dataid);
-//void TxGET(void);	/*Agent Can't control Master Computer but want data from other agents (TOC need to be same)*/
-void RxSET(uint8_t dataid, uint8_t* data);
-void TxSET(uint8_t dataid, void* bytes, uint8_t size);
+#endif /* MEMORY_E24AA_H_ */
 
-#endif /* NORTHCOM_H_ */

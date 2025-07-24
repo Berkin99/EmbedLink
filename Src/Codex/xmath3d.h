@@ -2,9 +2,8 @@
 #define XMATH3D_H_
 
 #include <stdbool.h>
-#include <stddef.h>
 #include <math.h>
-#include <xmath_types.h>
+#include "xmath_types.h"
 
 typedef v3f32_t vec_t;
 

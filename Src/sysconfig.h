@@ -50,9 +50,10 @@
 #define BMP581_I2C              i2c1
 #define BMP581_I2C_ADDR         (0x46)
 
+#define E24AA_I2C               i2c1
+
 //#define BMP388_I2C             i2c2
 //#define BNO055_I2C             i2c2
-//#define E24AA_I2C              i2c2
 //#define HMC5883L_I2C           i2c1
 //#define MPU6050_I2C            i2c1
 //#define MS5611_I2C             i2c1

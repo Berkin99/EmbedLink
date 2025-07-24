@@ -52,3 +52,34 @@
 * Start system timer HAL_TIM_Base_Start(&htim2) in TIM config end @main.c : OK
 * Linker List .mem. .nrx.
 * Configure the sysconfig.h
+
+  /* The program code and other data goes into FLASH */
+  .text :
+  {
+    . = ALIGN(4);
+    *(.text)           /* .text sections (code) */
+    *(.text*)          /* .text* sections (code) */
+    *(.glue_7)         /* glue arm to thumb code */
+    *(.glue_7t)        /* glue thumb to arm code */
+    *(.eh_frame)
+
+    KEEP (*(.init))
+    KEEP (*(.fini))
+
+    /* Parameters */
+    . = ALIGN(4);
+    _nrx_start = .;
+    KEEP(*(.nrx))
+    KEEP(*(.nrx.*))
+    _nrx_stop = .;
+
+    /* Parameters */
+    . = ALIGN(4);
+    _mem_start = .;
+    KEEP(*(.mem))
+    KEEP(*(.mem.*))
+    _mem_stop = .;
+
+    . = ALIGN(4);
+    _etext = .;        /* define a global symbols at end of code */
+  } >FLASH

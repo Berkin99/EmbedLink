@@ -74,7 +74,7 @@ int8_t estimatorInitKF (void){
 
 	kalmanInit(&hKalman[0], (1.0f / KF_POS_UPDATE_RATE),  0.2f,  0.8f);   /* Navigation X */
 	kalmanInit(&hKalman[1], (1.0f / KF_POS_UPDATE_RATE),  0.2f,  0.8f);   /* Navigation Y */
-	kalmanInit(&hKalman[2], (1.0f / KF_UPDATE_RATE),      0.3f,  0.1f);   /*  Pressure Z  */
+	kalmanInit(&hKalman[2], (1.0f / KF_UPDATE_RATE),      5.0f,  0.1f);   /*  Pressure Z  */
 
 	taskCreateStatic(ESTIMATOR_KF, estimatorTaskKF, NULL);
 	isInit = 1;
@@ -126,7 +126,7 @@ void _estimatorUpdateKF(uint32_t tick){
 	
     if(RATE_DO_EXECUTE(MADGWICK_UPDATE_RATE, tick))   _estimatorMadgwickKF();
     //if(RATE_DO_EXECUTE(COMPASS_UPDATE_RATE,  tick)) _estimatorCompassKF();
-	if(RATE_DO_EXECUTE(KF_UPDATE_RATE,       tick)) _estimatorHeightKF();
+	if(RATE_DO_EXECUTE(KF_UPDATE_RATE,       tick))   _estimatorHeightKF();
 	//if(RATE_DO_EXECUTE(KF_POS_UPDATE_RATE,   tick)) _estimatorPositionKF();
 }
 

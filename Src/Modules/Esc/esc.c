@@ -32,7 +32,7 @@
 
 ESC_Handle_t ESC_NewHandle(pwm_t* pwm, float protocolUs){
 	ESC_Handle_t temp;
-	temp.pHandle = pwm;
+	temp.pwm = pwm;
 	ESC_SetProtocol(&temp, protocolUs);
 	ESC_Write(&temp, 0);
 	return temp;
@@ -43,15 +43,16 @@ void ESC_SetProtocol(ESC_Handle_t* pEsc, float protocolUs){
 }
 
 void ESC_Start(ESC_Handle_t* pEsc){
+	pwmStart(pEsc->pwm);
 	ESC_Write(pEsc, 0);
 }
 
 void ESC_Write(ESC_Handle_t* pEsc, float value){
-	pwmWrite(pEsc->pHandle, (value * pEsc->protocolUs) + pEsc->protocolUs);
+	pwmWrite(pEsc->pwm, (value * pEsc->protocolUs) + pEsc->protocolUs);
 }
 
 float ESC_Read(ESC_Handle_t* pEsc){
-	return (pwmRead(pEsc->pHandle) - pEsc->protocolUs) / pEsc->protocolUs;
+	return (pwmRead(pEsc->pwm) - pEsc->protocolUs) / pEsc->protocolUs;
 }
 
 void ESC_Calibrate(ESC_Handle_t* pEsc){

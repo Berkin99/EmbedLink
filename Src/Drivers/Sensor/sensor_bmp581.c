@@ -95,6 +95,8 @@ int8_t sensorInitBMP581(void) {
     bmp5_get_osr_odr_press_config(&press_cfg, &bmp5dev);
 
     press_cfg.press_en = BMP5_ENABLE;
+    press_cfg.odr = BMP5_ODR_20_HZ;
+    press_cfg.osr_p = BMP5_OVERSAMPLING_64X;
     bmp5_set_osr_odr_press_config(&press_cfg, &bmp5dev);
 
     struct bmp5_iir_config iir_cfg = {

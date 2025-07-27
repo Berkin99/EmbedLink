@@ -59,15 +59,15 @@
 //#define MS5611_I2C             i2c1
 
 /// SPI /////////////////////////////////////////////////////
-#define ICM20948_SPI           spi1
-#define ICM20948_CS            PB0
+//#define ICM20948_SPI           spi1
+//#define ICM20948_CS            PB0
 
 #define BMI088_SPI             spi1
 #define BMI088_ACC_CS          PC4
 #define BMI088_GYR_CS          PC5
 #define RF24_SPI               spi1
-#define RF24_CE                PE5
-#define RF24_CS                PE6
+#define RF24_CE                PC14
+#define RF24_CS                PC15
 #define RF24_RX_ADDRESS        {0xE7, 0xE7, 0xE7, 0xE3, 0x04}
 #define RF24_TX_ADDRESS        {0xE7, 0xE7, 0xE7, 0xE3, 0x05}
 //#define MPU6500_SPI			 spi1

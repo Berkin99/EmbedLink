@@ -40,7 +40,7 @@
 #define ESC_PROTOCOL_ONESHOT42    42
 
 typedef struct {
-	pwm_t* pHandle;
+	pwm_t* pwm;
 	float  protocolUs;
 }ESC_Handle_t;
 

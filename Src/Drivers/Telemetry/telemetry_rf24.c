@@ -35,7 +35,6 @@
 #ifdef RF24_SPI
 #include "telemetry_rf24.h"
 #include "rf24.h"
-#include "event.h"
 #include "uart.h"
 #include "gpio.h"
 #include "spi.h"

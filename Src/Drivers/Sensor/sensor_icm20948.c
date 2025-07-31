@@ -40,30 +40,30 @@
 #include "icm20948.h"
 
 int8_t sensorInitICM20948(void){
-
+    return 0;    
 }
 
 int8_t sensorTestICM20948(void){
-
+    return 0;
 }
 
-void   sensorCalibrateICM20948(void){
+void sensorCalibrateICM20948(void){
 
 }
 
 int8_t sensorIsCalibratedICM20948(void){
-
+    return 0;
 }
 
 int8_t sensorAcquireICM20948(sense_t* plist, uint8_t n){
-
+    return 0;
 }
 
 int8_t sensorIsReadyICM20948(void){
-
+    return 0;
 }
 
-void   sensorWaitDataReadyICM20948(void){
+void sensorWaitDataReadyICM20948(void){
 
 }
 

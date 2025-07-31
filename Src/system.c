@@ -76,9 +76,11 @@ void systemTask(void* argv){
     ledseqRun(LED1, 1, SEQ_PROCESS_L);
 
     /* SPI Pins */
-    pinWrite(PC4, HIGH);
-    pinWrite(PC5, HIGH);
-    pinWrite(PB0, HIGH);
+    pinWrite(PC4,  HIGH);
+    pinWrite(PC5,  HIGH);
+    pinWrite(PB0,  HIGH);
+    pinWrite(PC14, HIGH);
+    pinWrite(PC15, HIGH);
 
     delay(600);
 
@@ -90,16 +92,15 @@ void systemTask(void* argv){
 
     sensorInit();
     sensorTest();
+    telemetryInit();
+    telemetryTest();
 
     estimatorInit();
 
-//    telemetryInit();
-//    telemetryTest();
 
     ledseqStop(LED1);
 
     sysInit = 2;
-
 
     ESC_Handle_t esc1 = ESC_NewHandle(&pwm1, ESC_PROTOCOL_STANDARD);
     ESC_Calibrate(&esc1);

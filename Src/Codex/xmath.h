@@ -33,6 +33,7 @@
 #include <math.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <string.h>
 #include "xmath_types.h"
 
 /* Clamp a f32 value between a min and max value */
@@ -58,16 +59,17 @@ static inline f32 radnf32(f32 radians){
 }
 
 /* Compare two floats for approximate equality with ulps threshold */
-static inline bool closeulpsf32(f32 a, f32 b, i32 ulps) {
+static inline bool closeulpsf32(float a, float b, int32_t ulps) {
     if ((a < 0.0f) != (b < 0.0f)) {
         if (a == b) {
             return true;
         }
         return false;
     }
-    i32 ia = *((i32 *)&a);
-    i32 ib = *((i32 *)&b);
-    return fabsf(ia - ib) <= ulps;
+    int32_t ia, ib;
+    memcpy(&ia, &a, sizeof(a));
+    memcpy(&ib, &b, sizeof(b));
+    return fabsf((float)(ia - ib)) <= (float)ulps;
 }
 
 static inline f32 deadbandf32(f32 val, f32 threshold){

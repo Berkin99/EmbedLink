@@ -88,7 +88,7 @@ uint8_t navigatorSize(void){
 int8_t navigatorGet(char* name, navigator_t** pnavigator){
     for(uint8_t i = 0; i<navLen; i++){
         if(strcmp(navList[i].Name, name) == 0){
-            *pnavigator = &navList[i];
+            *pnavigator = (navigator_t*)&navList[i];
             return OK;
         };
     }

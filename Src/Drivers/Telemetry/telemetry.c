@@ -86,7 +86,7 @@ int8_t telemetryIsReady(void){
 int8_t telemetryGet(char* name, telemetry_t** ptelemetry){
 	for(uint8_t i = 0; i<trxLen; i++){
 		if(strcmp(trxList[i].Name, name) == 0){
-			*ptelemetry = &trxList[i];
+			*ptelemetry = (telemetry_t*)&trxList[i];
 			return OK;
 		}
 	}

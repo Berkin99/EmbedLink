@@ -120,7 +120,7 @@ void _telemetryTaskRF24(void* argv){
 
 }
 
-int8_t telemetryReceiveRF24(uint8_t *pRxBuffer){
+int8_t telemetryReceiveRF24(uint8_t *pRxBuffer, uint16_t length){
 
 	if(!newData) return 0;
 	for(uint8_t i = 0; i < RF24_BUFFER_LEN; i++){
@@ -130,15 +130,15 @@ int8_t telemetryReceiveRF24(uint8_t *pRxBuffer){
 	return RF24_BUFFER_LEN;
 }
 
-int8_t telemetryTransmitRF24(const uint8_t *pTxData, uint8_t Length){
+int8_t telemetryTransmitRF24(const uint8_t *pTxData, uint16_t length){
 	if(!isInit) return E_CONF_FAIL;
 	if(pTxData == NULL) return E_NULL_PTR;
-	if(Length > RF24_MAX_PAYLOAD_LENGHT) return E_OVERFLOW;
+	if(length > RF24_MAX_PAYLOAD_LENGHT) return E_OVERFLOW;
 
 	rfData_t temp;
-	temp.size = Length;
+	temp.size = length;
 
-	memcpy(temp.buffer, pTxData, Length);
+	memcpy(temp.buffer, pTxData, length);
 
 	if (queueSend(txQueue, &temp, 0) == pdPASS) return OK;
 

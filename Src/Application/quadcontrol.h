@@ -27,15 +27,24 @@
  *
  */
 
-#ifndef CONTROL_ATTITUDE_H_
-#define CONTROL_ATTITUDE_H_
+#ifndef QUADCONTROL_H_
+#define QUADCONTROL_H_
 
+#include <stdint.h>
 #include "xmath3d.h"
+#include "kinematics.h"
+#include "control.h"
 #include "quadcopter.h"
 
-void        controlInitATTITUDE  (void);
-quadmotor_t controlTaskATTITUDE  (float cpow, vec_t crange);
-int8_t      controlReqATTITUDE   (void);
-void        controlResetATTITUDE (void);
+void        quadControlInit (void);
+quadmode_t  quadMode(quadmode_e modeid);
 
-#endif /* CONTROL_ATTITUDE_H_ */
+quadmotor_t quadIdle         (void);
+quadmotor_t quadReady        (void);
+quadmotor_t quadManual       (void);
+quadmotor_t quadManualHeight (void);
+quadmotor_t quadAutoNav      (void);
+quadmotor_t quadTakeOff      (void);
+quadmotor_t quadLand         (void);
+
+#endif /* QUADCONTROL_H_ */

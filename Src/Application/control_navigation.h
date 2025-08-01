@@ -27,15 +27,15 @@
  *
  */
 
-#ifndef CONTROL_ATTITUDE_H_
-#define CONTROL_ATTITUDE_H_
+#ifndef CONTROL_NAV_H_
+#define CONTROL_NAV_H_
 
+#include <stdint.h>
 #include "xmath3d.h"
-#include "quadcopter.h"
 
-void        controlInitATTITUDE  (void);
-quadmotor_t controlTaskATTITUDE  (float cpow, vec_t crange);
-int8_t      controlReqATTITUDE   (void);
-void        controlResetATTITUDE (void);
+void   controlInitNAV  (void);
+vec_t  controlTaskNAV  (vec_t target);
+int8_t controlReqNAV   (void);
+void   controlResetNAV (void);
 
-#endif /* CONTROL_ATTITUDE_H_ */
+#endif /* CONTROL_NAV_H_ */

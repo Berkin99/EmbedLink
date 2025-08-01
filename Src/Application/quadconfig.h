@@ -27,15 +27,21 @@
  *
  */
 
-#ifndef CONTROL_ATTITUDE_H_
-#define CONTROL_ATTITUDE_H_
+#ifndef QUADCONFIG_H_
+#define QUADCONFIG_H_
 
-#include "xmath3d.h"
-#include "quadcopter.h"
+/// QUADMODE ////////////////////////////////////////////////
+//#define QUAD_OPERATION quadCalibrate
+#define QUAD_OPERATION quadTask
+/////////////////////////////////////////////////////////////
 
-void        controlInitATTITUDE  (void);
-quadmotor_t controlTaskATTITUDE  (float cpow, vec_t crange);
-int8_t      controlReqATTITUDE   (void);
-void        controlResetATTITUDE (void);
+/// LED /////////////////////////////////////////////////////
+#define QLED     (LED1)
+/////////////////////////////////////////////////////////////
 
-#endif /* CONTROL_ATTITUDE_H_ */
+/// TASK ////////////////////////////////////////////////////
+#define QUAD_TASK_STACK      (6 * configMINIMAL_STACK_SIZE)
+#define QUAD_TASK_PRI        (6)
+/////////////////////////////////////////////////////////////
+
+#endif /* QUADCONFIG_H_ */

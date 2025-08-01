@@ -27,15 +27,27 @@
  *
  */
 
-#ifndef CONTROL_ATTITUDE_H_
-#define CONTROL_ATTITUDE_H_
+#ifndef WATHCHTIME_H_
+#define WATHCHTIME_H_
 
-#include "xmath3d.h"
-#include "quadcopter.h"
+#include <stdint.h>
+#include <stdarg.h>
 
-void        controlInitATTITUDE  (void);
-quadmotor_t controlTaskATTITUDE  (float cpow, vec_t crange);
-int8_t      controlReqATTITUDE   (void);
-void        controlResetATTITUDE (void);
+#include "uart.h"
+#include "rtos.h"
 
-#endif /* CONTROL_ATTITUDE_H_ */
+#define WATCHDEF(CHAR) \
+static uint32_t loop_time;\
+static uint32_t delta;\
+wtADD(CHAR, &delta);\
+loop_time = micros();\
+
+#define WATCHER() \
+delta = micros()-loop_time;\
+loop_time = micros();\
+
+void wtInit(void);
+void wtTask(void* argv);
+void wtADD(char chr, uint32_t* ptr);
+
+#endif

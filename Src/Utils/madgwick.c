@@ -1,5 +1,6 @@
 
 #include <math.h>
+#include <string.h>
 #include "xmath.h"
 #include "madgwick.h"
 
@@ -233,14 +234,17 @@ float madgwickGetAccZWithoutGravity(const float ax, const float ay, const float 
 // See: http://en.wikipedia.org/wiki/Fast_inverse_square_root
 float invSqrt(float x)
 {
-  float halfx = 0.5f * x;
-  float y = x;
-  long i = *((long*)&y);
-  i = 0x5F3759DF - (i >> 1);
-  y = *((float*)&i);
-  y = y * (1.5f - (halfx * y * y));
-  return y;
+    float halfx = 0.5f * x;
+    float y = x;
+    long i;
+
+    memcpy(&i, &y, sizeof(i));
+    i = 0x5F3759DF - (i >> 1);
+    memcpy(&y, &i, sizeof(y));
+    y = y * (1.5f - (halfx * y * y));
+    return y;
 }
+
 
 float madgwickGetAccZ(const float ax, const float ay, const float az)
 {

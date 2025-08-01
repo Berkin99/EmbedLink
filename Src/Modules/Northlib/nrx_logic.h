@@ -27,15 +27,30 @@
  *
  */
 
-#ifndef CONTROL_ATTITUDE_H_
-#define CONTROL_ATTITUDE_H_
+#ifndef NRX_LOGIC_H_
+#define NRX_LOGIC_H_
 
-#include "xmath3d.h"
-#include "quadcopter.h"
+#include <stdbool.h>
+#include <stdint.h>
 
-void        controlInitATTITUDE  (void);
-quadmotor_t controlTaskATTITUDE  (float cpow, vec_t crange);
-int8_t      controlReqATTITUDE   (void);
-void        controlResetATTITUDE (void);
+#include "nrx.h"
+#include "ntrp.h"
 
-#endif /* CONTROL_ATTITUDE_H_ */
+#define NRX_VARID_IS_VALID(varId) (varId.id != 0xffffu)
+
+typedef struct nrxVarId_s {
+  uint16_t id;
+  uint16_t index;
+} __attribute__((packed)) nrxVarId_t;
+
+struct nrx_s* nrxGetVar(uint16_t index);
+nrxVarId_t nrxGetVarId(const char* group, const char* name);
+
+int nrxGetType(uint16_t index);
+
+uint8_t nrxVarSize(int type);
+uint8_t nrxGroupSize(int index);
+
+void nrxLogicInit();
+
+#endif /* NRX_LOGIC_H_ */

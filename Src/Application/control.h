@@ -27,15 +27,40 @@
  *
  */
 
-#ifndef CONTROL_ATTITUDE_H_
-#define CONTROL_ATTITUDE_H_
+#ifndef CONTROL_H_
+#define CONTROL_H_
 
 #include "xmath3d.h"
-#include "quadcopter.h"
 
-void        controlInitATTITUDE  (void);
-quadmotor_t controlTaskATTITUDE  (float cpow, vec_t crange);
-int8_t      controlReqATTITUDE   (void);
-void        controlResetATTITUDE (void);
+typedef vec_t controlAttitude_t;	/* degrees/s */
+typedef vec_t controlVelocity_t;	/* m/s */
+typedef vec_t controlPosition_t;	/* meters */
+typedef vec_t controlRange_t;		/* [-1, 1] */
+typedef float controlPower_t;		/* [ 0, 1] */
 
-#endif /* CONTROL_ATTITUDE_H_ */
+typedef enum{
+	CONTROL_ATTITUDE,
+	CONTROL_VELOCITY,
+	CONTROL_POSITION,
+	CONTROL_RANGE,
+	CONTROL_POWER,
+}control_e;
+
+typedef struct{
+	control_e type;
+	union{
+		controlAttitude_t catt;
+		controlVelocity_t cvel;
+		controlPosition_t cpos;
+		controlPower_t    cpow;
+		vec_t			  ctrl;
+	};
+}control_t;
+
+typedef struct{
+	controlPower_t	  cpow;
+	controlRange_t    crange;
+	controlPosition_t cpos;
+}controller_t;
+
+#endif /* CONTROL_H_ */

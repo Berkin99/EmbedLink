@@ -123,11 +123,11 @@ void _telemetryTaskRF24(void* argv){
 int8_t telemetryReceiveRF24(uint8_t *pRxBuffer, uint16_t length){
 
 	if(!newData) return 0;
-	for(uint8_t i = 0; i < RF24_BUFFER_LEN; i++){
-		pRxBuffer[i] = rxBuffer[i];
-	}
+	if(length > RF24_BUFFER_LEN) length = RF24_BUFFER_LEN;
+	memcpy(pRxBuffer, rxBuffer, length);
+
 	newData = 0;
-	return RF24_BUFFER_LEN;
+	return length;
 }
 
 int8_t telemetryTransmitRF24(const uint8_t *pTxData, uint16_t length){

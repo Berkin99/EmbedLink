@@ -99,10 +99,10 @@
 //#define MEM_DEBUG
 
 /// NCOM ////////////////////////////////////////////////////
-//#define NC_MODULE              "RF24"
-//#define NC_NTRPPACKET
-//#define NC_RX_LED               LED1
-//#define NC_TX_LED               LED2
+#define NC_MODULE              "RF24"
+#define NC_NTRPPACKET
+#define NC_RX_LED               LED1
+#define NC_TX_LED               LED2
 //#define NC_NTRPMESSAGE
 //#define NC_ID                 'X'
 

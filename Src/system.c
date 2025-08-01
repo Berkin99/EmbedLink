@@ -45,6 +45,7 @@
 #include "ledseq.h"
 #include "led.h"
 #include "esc.h"
+#include "watchtime.h"
 
 static uint8_t sysInit = 0;
 
@@ -96,27 +97,15 @@ void systemTask(void* argv){
     telemetryTest();
 
     estimatorInit();
-
-
-    ledseqStop(LED1);
-
+    wtInit();
+    
+    /* SYSTEM READY FLAG */
     sysInit = 2;
-
-    ESC_Handle_t esc1 = ESC_NewHandle(&pwm1, ESC_PROTOCOL_STANDARD);
-    ESC_Calibrate(&esc1);
-
-    ESC_Write(&esc1, 0);
-    delay(3000);
-    ESC_Write(&esc1, 0.3f);
-    delay(3000);
-    ESC_Write(&esc1, 0.8f);
-    delay(3000);
-    ESC_Write(&esc1, 0);
+    ledseqStop(LED1);
     
     while(1){
         //serialPrint("0x%x", sysmem);
-
-        serialPrint("%.3f, -1.0, 1.0\n", xkinematicsState()->position.z);
+        //serialPrint("%.3f, -1.0, 1.0\n", xkinematicsState()->position.z);
         delay(10);
     }
 }

@@ -49,7 +49,7 @@ struct nrx_s{
 #define NRX_TYPE_INT   (0x00<<2)
 #define NRX_TYPE_FLOAT (0x01<<2)
 
-#define NRX_SIGNED 	(0x00<<3)
+#define NRX_SIGNED 	  (0x00<<3)
 #define NRX_UNSIGNED 	(0x01<<3)
 
 #define NRX_UINT8  (NRX_1BYTE  | NRX_TYPE_INT | NRX_UNSIGNED)

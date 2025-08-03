@@ -65,7 +65,7 @@ static uint8_t 	rxBuffer[RF24_BUFFER_LEN];
 static rfData_t txBuffer;
 queueAllocateStatic(txQueue, 6, sizeof(rfData_t))
 
-taskAllocateStatic(RF24,TRX_TASK_STACK,TRX_TASK_PRI)
+taskAllocateStatic(RF24, TRX_TASK_STACK, TRX_TASK_PRI)
 void _telemetryTaskRF24(void* argv);
 
 int8_t telemetryInitRF24(void){
@@ -102,20 +102,19 @@ void _telemetryTaskRF24(void* argv){
 
 	while(1){
 
-		if (!isListening){RF24_StartListening(&radio); isListening = 1;}
-
+		if (!isListening){RF24_StartListening(&radio); isListening = 1;}	
 		if (RF24_Available(&radio)){
 			RF24_Read(&radio, rxBuffer, RF24_BUFFER_LEN);
 			newData = 1;
-			xSemaphoreGive(rxSemaphore);
+			semaphoreGive(rxSemaphore);
 		}
 
-		while (queueReceive(txQueue, &txBuffer, 0) == pdPASS){
+		while (queueReceive(txQueue, &txBuffer, 0) == pdTRUE){
 			if(isListening){RF24_StopListening(&radio);isListening = 0;}
 			RF24_Write(&radio, txBuffer.buffer, txBuffer.size);
 		}
 
-		taskDelayUntil(&lastWakeTime, 4);
+		taskDelayUntil(&lastWakeTime, 1);
 	}
 
 }
@@ -150,7 +149,7 @@ int8_t telemetryIsReadyRF24(void){
 }
 
 void telemetryWaitDataReadyRF24(void){
-	xSemaphoreTake(rxSemaphore,portMAX_DELAY);
+	semaphoreTake(rxSemaphore, RTOS_MAX_DELAY);
 }
 
 #endif

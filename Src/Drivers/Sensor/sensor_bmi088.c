@@ -45,9 +45,9 @@
 #include "geoconfig.h"
 #include "filter.h"
 #include "kinematics.h"
-//#include "mem.h"
-//#include "memory.h"
-//#include "nrx.h"
+#include "mem.h"
+#include "memory.h"
+#include "nrx.h"
 
 /* BMI088 Settings */
 #define BMI088_ACC_FS_CFG           (24)
@@ -101,7 +101,7 @@ typedef struct {
 static sensor_data_bmi088_t accv, gyrv;
 static sense_t accs, gyrs;
 
-static uint32_t  idptr;
+//static uint32_t  idptr;
 static uint8_t   isInit;
 static int8_t    isReady;
 
@@ -186,6 +186,7 @@ void sensorTaskBMI088(void* argv){
     isReady = 1;
 
     while(1){
+
         if(_sensorAccData(&accv.data) == OK){
         	vec_t va = veltmul(kinematicsRotateFrame(accv.data, accv.rot), accv.scale);
 
@@ -345,23 +346,23 @@ void bmi08DelayUs(uint32_t period, void *intf_ptr){
     delayUs(period);
 }
 
-//NRX_GROUP_START(bmical)
-//NRX_ADD(NRX_FLOAT,  accScale.x, &accScale.x)
-//NRX_ADD(NRX_FLOAT,  accScale.y, &accScale.y)
-//NRX_ADD(NRX_FLOAT,  accScale.z, &accScale.z)
-//NRX_ADD(NRX_FLOAT,  accRot.x,   &accRot.x)
-//NRX_ADD(NRX_FLOAT,  accRot.y,   &accRot.y)
-//NRX_ADD(NRX_FLOAT,  accRot.z,   &accRot.z)
-//NRX_GROUP_STOP (bmical)
-//
-//MEM_GROUP_START(BMI088)
-//MEM_ADD(MEM_UINT32, idptr,    &idptr)
-//MEM_ADD(MEM_FLOAT,  accScale.x, &accScale.x)
-//MEM_ADD(MEM_FLOAT,  accScale.y, &accScale.y)
-//MEM_ADD(MEM_FLOAT,  accScale.z, &accScale.z)
-//MEM_ADD(MEM_FLOAT,  accRot.x,  &accRot.x)
-//MEM_ADD(MEM_FLOAT,  accRot.y,  &accRot.y)
-//MEM_ADD(MEM_FLOAT,  accRot.z,  &accRot.z)
-//MEM_GROUP_STOP (BMI088)
+// NRX_GROUP_START(bmical)
+// NRX_ADD(NRX_FLOAT,  accv.scale.x, &accv.scale.x)
+// NRX_ADD(NRX_FLOAT,  accv.scale.y, &accv.scale.y)
+// NRX_ADD(NRX_FLOAT,  accv.scale.z, &accv.scale.z)
+// NRX_ADD(NRX_FLOAT,  accv.rot.x,   &accv.rot.x)
+// NRX_ADD(NRX_FLOAT,  accv.rot.y,   &accv.rot.y)
+// NRX_ADD(NRX_FLOAT,  accv.rot.z,   &accv.rot.z)
+// NRX_GROUP_STOP (bmical)
+
+// MEM_GROUP_START(BMI088)
+// MEM_ADD(MEM_UINT32, idptr,    &idptr)
+// MEM_ADD(MEM_FLOAT,  accv.scale.x, &accv.scale.x)
+// MEM_ADD(MEM_FLOAT,  accv.scale.y, &accv.scale.y)
+// MEM_ADD(MEM_FLOAT,  accv.scale.z, &accv.scale.z)
+// MEM_ADD(MEM_FLOAT,  accv.rot.x,  &accv.rot.x)
+// MEM_ADD(MEM_FLOAT,  accv.rot.y,  &accv.rot.y)
+// MEM_ADD(MEM_FLOAT,  accv.rot.z,  &accv.rot.z)
+// MEM_GROUP_STOP (BMI088)
 
 #endif /* BMI088_SPI */

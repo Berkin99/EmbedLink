@@ -33,7 +33,6 @@
 #include <stdint.h>
 #include "xmath3d.h"
 #include "kinematics.h"
-#include "control.h"
 #include "quadcopter.h"
 
 void        quadControlInit (void);

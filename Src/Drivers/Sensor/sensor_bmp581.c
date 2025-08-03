@@ -40,9 +40,9 @@
 #include "i2c.h"
 #include "uart.h"
 #include "filter.h"
+#include "sensor_bmp581.h"
 
-#define sensorNameBMP581       "BMP581"
-#define sensorFreqBMP581       (100)    /* Hz */
+#define BMP581_I2C_ADDR        (0x46)
 
 static struct bmp5_dev bmp5dev;
 
@@ -137,6 +137,7 @@ void sensorTaskBMP581(void* argv) {
     bmp5_get_osr_odr_press_config(&press_cfg, &bmp5dev);
 
     while (1) {
+
         struct bmp5_sensor_data sensor_data = {0};
         if (bmp5_get_sensor_data(&sensor_data, &press_cfg, &bmp5dev) == 0) {
             bmp581_data.pressure = sensor_data.pressure / 100.0f;

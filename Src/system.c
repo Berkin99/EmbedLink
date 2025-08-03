@@ -34,6 +34,7 @@
 #include "adc.h"
 #include "gpio.h"
 #include "i2c.h"
+#include "irq.h"
 #include "pwm.h"
 #include "rtos.h"
 #include "spi.h"
@@ -46,9 +47,10 @@
 #include "led.h"
 #include "esc.h"
 #include "watchtime.h"
+#include "quadcopter.h"
+#include "northcom.h"
 
 static uint8_t sysInit = 0;
-
 static uint32_t sysmem;
 
 taskAllocateStatic(SYSTEM_TASK, SYSTEM_TASK_STACK, SYSTEM_TASK_PRI);
@@ -70,18 +72,12 @@ void systemTask(void* argv){
     i2cInit();
     pwmInit();
     spiInit();
-    uartInit(); 
+    uartInit();
+    irqInit();
 
     ledseqInit();
-    ledseqRun(LED2, 1, SEQ_HEARTBEAT);
     ledseqRun(LED1, 1, SEQ_PROCESS_L);
-
-    /* SPI Pins */
-    pinWrite(PC4,  HIGH);
-    pinWrite(PC5,  HIGH);
-    pinWrite(PB0,  HIGH);
-    pinWrite(PC14, HIGH);
-    pinWrite(PC15, HIGH);
+    ledseqRun(LED2, 1, SEQ_HEARTBEAT);
 
     delay(600);
 
@@ -91,21 +87,45 @@ void systemTask(void* argv){
     memoryTest();
     memoryDownload();
 
+    // ESC_Handle_t motor[4];
+    // motor[0] = ESC_NewHandle(&pwm1, ESC_PROTOCOL_STANDARD);
+    // motor[1] = ESC_NewHandle(&pwm2, ESC_PROTOCOL_STANDARD);
+    // motor[2] = ESC_NewHandle(&pwm3, ESC_PROTOCOL_STANDARD);
+    // motor[3] = ESC_NewHandle(&pwm4, ESC_PROTOCOL_STANDARD);
+    // for (int i = 0; i < 4; i++) ESC_Start(&motor[i]);
+    // ESC_MultiCalibrate(motor, 4);
+    // for (int i = 0; i < 4; i++) {
+    //     ESC_Write(&motor[i], 0.5);
+    //     delay(3000);
+    //     ESC_Write(&motor[i], 0);
+    //     delay(1000);
+    // }
+
     sensorInit();
     sensorTest();
     telemetryInit();
     telemetryTest();
-
     estimatorInit();
-    wtInit();
+    ncInit();
     
+    quadInit();
+    //wtInit();
+
     /* SYSTEM READY FLAG */
     sysInit = 2;
     ledseqStop(LED1);
-    
+
     while(1){
-        //serialPrint("0x%x", sysmem);
-        //serialPrint("%.3f, -1.0, 1.0\n", xkinematicsState()->position.z);
+        // serialPrint("[>] Rotation : %.2f    %.2f    %.2f\n", 
+        //     xkinematicsState()->rotation.x,
+        //     xkinematicsState()->rotation.y,
+        //     xkinematicsState()->rotation.z
+        // );    
+        // serialPrint("[>] IAttitude : %.2f    %.2f    %.2f\n", 
+        //     xkinematicsState()->iattitude.x,
+        //     xkinematicsState()->iattitude.y,
+        //     xkinematicsState()->iattitude.z
+        // );    
         delay(10);
     }
 }

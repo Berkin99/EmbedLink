@@ -1,3 +1,4 @@
+
 /*
  *       ______          __             ____    _       __
  *      / ____/___ ___  / /_  ___  ____/ / /   (_)___  / /__
@@ -27,40 +28,34 @@
  *
  */
 
-#ifndef CONTROL_H_
-#define CONTROL_H_
+#include "irq.h"
 
-#include "xmath3d.h"
+#include "system.h"
+#include "sysconfig.h"
 
-typedef vec_t controlAttitude_t;	/* degrees/s */
-typedef vec_t controlVelocity_t;	/* m/s */
-typedef vec_t controlPosition_t;	/* meters */
-typedef vec_t controlRange_t;		/* [-1, 1] */
-typedef float controlPower_t;		/* [ 0, 1] */
+irq_t irq1;
 
-typedef enum{
-	CONTROL_ATTITUDE,
-	CONTROL_VELOCITY,
-	CONTROL_POSITION,
-	CONTROL_RANGE,
-	CONTROL_POWER,
-}control_e;
+void irqInit(){
+    #ifdef HIRQ1
+    irq1.idx = HIRQ1;
+    irq1.signal = semaphoreCreate();
+    #endif
+}
 
-typedef struct{
-	control_e type;
-	union{
-		controlAttitude_t catt;
-		controlVelocity_t cvel;
-		controlPosition_t cpos;
-		controlPower_t    cpow;
-		vec_t			  ctrl;
-	};
-}control_t;
+int8_t irqWait(irq_t* irq, uint32_t timeout){
+    return semaphoreTake(irq->signal, timeout);
+}
 
-typedef struct{
-	controlPower_t	  cpow;
-	controlRange_t    crange;
-	controlPosition_t cpos;
-}controller_t;
+irq_t* HAL_GPIO_EXTI_Parent(uint16_t pin){
+	#ifdef HIRQ1
+	if(pin == irq1.idx) return &irq1;
+	#endif
+	return NULL;
+}
 
-#endif /* CONTROL_H_ */
+void HAL_GPIO_EXTI_Callback(uint16_t pin){
+    irq_t* parent = HAL_GPIO_EXTI_Parent(pin);
+    if(parent == NULL) return;
+    semaphoreGiveISR(parent->signal);
+}
+

@@ -47,9 +47,6 @@
 #include "kalman1D.h"
 #include "uart.h"
 
-
-#include "watchtime.h"
-
 #define ESTIMATOR_RATE			RATE_1000_HZ
 #define ESTIMATOR_TIMEOUT_MS	(1000)
 #define MADGWICK_UPDATE_RATE	RATE_1000_HZ
@@ -109,9 +106,7 @@ void estimatorTaskKF(void* argv){
 	uint32_t lastWakeTime = taskGetTickCount();
 	isReady = 1;
 
-	WATCHDEF('E');
 	while(1){
-		WATCHER();
 		_estimatorUpdateKF(estimatorTime);
 		estimatorTime++;
 		taskDelayUntil(&lastWakeTime, (1000 / ESTIMATOR_RATE));

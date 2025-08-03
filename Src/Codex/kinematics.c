@@ -31,6 +31,7 @@
 #include "kinematics.h"
 #include "matrix.h"
 #include "uart.h"
+#include "nrx.h"
 
 static kinematicsState_t _kinematics;
 
@@ -106,3 +107,9 @@ vec_t kinematicsRotateFrame(vec_t v, vec_t frame){
     vec_t retv = vnew(mv.mx[0][0], mv.mx[1][0], mv.mx[2][0]);
     return (retv);
 }
+
+NRX_GROUP_START(rotation)
+NRX_ADD(NRX_FLOAT, x, &_kinematics.rotation.x)
+NRX_ADD(NRX_FLOAT, y, &_kinematics.rotation.y)
+NRX_ADD(NRX_FLOAT, z, &_kinematics.rotation.z)
+NRX_GROUP_STOP(rotation)

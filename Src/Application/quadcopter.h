@@ -47,22 +47,15 @@ typedef union{
 }quadmotor_t;
 
 typedef enum{
-    QUAD_IDLE,
-    QUAD_READY,
-    QUAD_MANUAL,
-    QUAD_HEIGHT,
-    QUAD_AUTO,
-	QUAD_TAKEOFF,
-    QUAD_LAND,
+    QUAD_IDLE       = 0,
+    QUAD_READY      = 1,
+    QUAD_MANUAL     = 2,
+    QUAD_HEIGHT     = 3,
+    QUAD_AUTO       = 4,
+	QUAD_TAKEOFF    = 5,
+    QUAD_LAND       = 6,
     QUAD_MODE_COUNT,
 }quadmode_e;
-
-typedef enum{
-    QUAD_AUTO_POS,
-    QUAD_AUTO_LAND,
-    QUAD_AUTO_TAKEOFF,
-    QUAD_AUTO_MODE_COUNT,
-}quadmode_auto_t;
 
 typedef struct{
     quadmode_e  modeid;

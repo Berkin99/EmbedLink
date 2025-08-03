@@ -36,6 +36,9 @@
 #ifdef RF24_SPI
 #include "telemetry_rf24.h"
 #endif
+#ifdef RF52_SPI
+#include "telemetry_rf52.h"
+#endif
 #ifdef E32100_UART
 #include "telemetry_e32100.h"
 #endif
@@ -54,6 +57,9 @@
 static const telemetry_t trxList[] ={
 	#ifdef RF24_SPI
 		TRX_ADD(RF24)
+	#endif
+	#ifdef RF52_SPI
+		TRX_ADD(RF52)
 	#endif
 	#ifdef E32100_UART
 		TRX_ADD(E32100)
@@ -84,7 +90,7 @@ int8_t telemetryIsReady(void){
 }
 
 int8_t telemetryGet(char* name, telemetry_t** ptelemetry){
-	for(uint8_t i = 0; i<trxLen; i++){
+	for(uint8_t i = 0; i < trxLen; i++){
 		if(strcmp(trxList[i].Name, name) == 0){
 			*ptelemetry = (telemetry_t*)&trxList[i];
 			return OK;

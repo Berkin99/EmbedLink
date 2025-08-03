@@ -32,7 +32,7 @@
 #include "pid.h"
 #include "control_height.h"
 #include "kinematics.h"
-//#include "nrx.h"
+#include "nrx.h"
 
 #ifdef CONTROL_HEIGHT_VELOCITY
 /* Velocity PID */

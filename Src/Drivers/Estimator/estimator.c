@@ -73,7 +73,7 @@ void estimatorInit (void){
 	serialPrint("[>] Estimator waiting sensor & navigation...\n");
 	uint32_t i = 0;
 	while (++i < ESTIMATOR_INITIALIZE_TIMEOUT_MS){
-		if (i % 1000 == 0) serialPrint(" *\n");
+		if (i % 1000 == 0) serialPrint(" * ");
 		delay(1);
 		if(sensorIsReady()) break;
 	}
@@ -126,7 +126,7 @@ void estimatorStabilize(state_t* pState, uint32_t timeoutMs){
 	estimatorReset(pState);
 
 	while(timeoutMs > 0){
-		if(timeoutMs % 1000 == 0) serialPrint(" *\n");
+		if(timeoutMs % 1000 == 0) serialPrint(" * ");
 		estimatorIterate(pState);
 		delay(1);
 		timeoutMs--;

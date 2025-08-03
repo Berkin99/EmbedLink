@@ -27,18 +27,4 @@
  *
  */
 
-#ifndef QUADCAL_H_
-#define QUADCAL_H_
-
-#include "quadcopter.h"
-#include "esc.h"
-
-void   quadcalTask(void* argv);
-void   quadcalESC(quadcopter_t* pHandle);
-void   quadcalCOM(void);
-void   quadcalMotor(ESC_Handle_t* pMotor);
-void   quadcalMotors(quadcopter_t* pHandle);
-void   quadcalSensors(quadcopter_t* pHandle);
-int8_t quadcalIterate(void);
-
-#endif /* QUADCAL_H_ */
+#include "quadcom.h"

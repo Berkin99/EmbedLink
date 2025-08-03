@@ -27,18 +27,19 @@
  *
  */
 
-#ifndef QUADCAL_H_
-#define QUADCAL_H_
+#ifndef IRQ_H_
+#define IRQ_H_
 
-#include "quadcopter.h"
-#include "esc.h"
+#include "rtos.h"
 
-void   quadcalTask(void* argv);
-void   quadcalESC(quadcopter_t* pHandle);
-void   quadcalCOM(void);
-void   quadcalMotor(ESC_Handle_t* pMotor);
-void   quadcalMotors(quadcopter_t* pHandle);
-void   quadcalSensors(quadcopter_t* pHandle);
-int8_t quadcalIterate(void);
+typedef struct{
+    int idx;
+    semaphore_t signal;
+}irq_t;
 
-#endif /* QUADCAL_H_ */
+extern irq_t irq1;
+
+void irqInit(void);
+int8_t irqWait(irq_t* irq, uint32_t timeout);
+
+#endif

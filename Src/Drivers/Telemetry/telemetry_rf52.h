@@ -27,18 +27,20 @@
  *
  */
 
-#ifndef QUADCAL_H_
-#define QUADCAL_H_
+#ifndef TELEMETRY_RF52_H_
+#define TELEMETRY_RF52_H_
 
-#include "quadcopter.h"
-#include "esc.h"
+#include <stdint.h>
+#include "telemetry.h"
 
-void   quadcalTask(void* argv);
-void   quadcalESC(quadcopter_t* pHandle);
-void   quadcalCOM(void);
-void   quadcalMotor(ESC_Handle_t* pMotor);
-void   quadcalMotors(quadcopter_t* pHandle);
-void   quadcalSensors(quadcopter_t* pHandle);
-int8_t quadcalIterate(void);
+#define telemetryNameRF52    "RF52"
+#define telemetryTypeRF52    TRX_TRANSCEIVER
 
-#endif /* QUADCAL_H_ */
+int8_t telemetryInitRF52(void);
+int8_t telemetryTestRF52(void);
+int8_t telemetryReceiveRF52(uint8_t* pRxBuffer, uint16_t length);
+int8_t telemetryTransmitRF52(const uint8_t* pTxData, uint16_t length);
+int8_t telemetryIsReadyRF52(void);
+void   telemetryWaitDataReadyRF52(void);
+
+#endif /* TELEMETRY_RF52_H_ */

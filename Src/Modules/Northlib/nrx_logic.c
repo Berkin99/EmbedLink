@@ -30,10 +30,10 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdio.h>
-
-#include "nrx.h"
 #include "nrx_logic.h"
 #include "uart.h"
+
+//#define NRX_DEBUG
 
 static const uint8_t typeLength[] = {
 	[NRX_UINT8]  = 1,
@@ -106,11 +106,9 @@ uint8_t nrxGroupSize(int index){
 	return bytesize;
 }
 
-
 void nrxLogicInit(){
 	nrxs = &_nrx_start;
 	nrxsLen = &_nrx_stop - &_nrx_start;
-
 
 	/* Print the table */
 	#ifdef NRX_DEBUG

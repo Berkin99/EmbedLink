@@ -1,23 +1,30 @@
-/**
- *    __  __ ____ _  __ ____ ___ __  __
- *    \ \/ // __// |/ //  _// _ |\ \/ /
- *     \  // _/ /    /_/ / / __ | \  /
- *     /_//___//_/|_//___//_/ |_| /_/
+/*
+ *       ______          __             ____    _       __
+ *      / ____/___ ___  / /_  ___  ____/ / /   (_)___  / /__
+ *     / __/ / __ `__ \/ __ \/ _ \/ __  / /   / / __ \/ //_/
+ *    / /___/ / / / / / /_/ /  __/ /_/ / /___/ / / / / ,<
+ *   /_____/_/ /_/ /_/_.___/\___/\__,_/_____/_/_/ /_/_/|_|
  *
- *         Yeniay System Firmware
+ *  EmbedLink Firmware
+ *  Copyright (c) 2024 Yeniay RD, All rights reserved.
+ *  _________________________________________________________
  *
- *       Copyright (C) 2024 Yeniay
+ *  EmbedLink Firmware is free software: you can redistribute
+ *  it and/or  modify it under  the  terms of the  GNU Lesser
+ *  General Public License as  published by the Free Software
+ *  Foundation,  either version 3 of the License, or (at your
+ *  option) any later version.
  *
- * This  program  is  free software:   you
- * can  redistribute it  and/or  modify it
- * under  the  terms of  the  GNU  General
- * Public  License as  published  by   the
- * Free Software Foundation, in version 3.
+ *  EmbedLink  Firmware is  distributed  in the  hope that it
+ *  will be useful, but  WITHOUT  ANY  WARRANTY; without even
+ *  the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ *  PARTICULAR PURPOSE.  See  the GNU  Lesser  General Public
+ *  License for more details.
  *
- * You  should  have  received  a  copy of
- * the  GNU  General  Public License along
- * with this program. If not, see
- * <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU Lesser General
+ *  Public License along with EmbedLink Firmware. If not, see
+ *  <http://www.gnu.org/licenses/>.
+ *
  */
 
 #include <stdlib.h>
@@ -34,7 +41,8 @@
 #include "nrx_logic.h"
 #include "nrx.h"
 #include "led.h"
-#include "uavcom.h"
+#include "uart.h"
+#include "rc_interface.h"
 
 #ifndef NC_ID
 #define NC_ID 		'X'
@@ -45,14 +53,23 @@ static NTRP_Message_t      ncMessage;
 static uint8_t             isInit = 0;
 static uint32_t            lastDataTime = 0;
 
+ncRxHandler_t ncRxHandler = {
+	.NAK_Callback = RxNAK,
+	.ACK_Callback = RxACK,
+	.MSG_Callback = RxMSG,
+	.CMD_Callback = RxCMD,
+	.GET_Callback = RxGET,
+	.SET_Callback = RxSET
+};
+
 taskAllocateStatic(NCOM, NC_TASK_STACK, NC_TASK_PRI);
 void ncTask(void* argv);
 
 uint8_t ncInit(void){
 	if(isInit == 1) return E_OVERWRITE;
 	
+	RC_Init();
 	nrxLogicInit();
-	uavcomInit();
 
 	ncTRX = NULL;
 	#ifdef NC_MODULE
@@ -80,7 +97,9 @@ void ncTask(void* argv){
 	{
 		ncTRX->WaitDataReady();
 		if(ncTRX->Receive(rxBuffer, 32) > 0){
+			#ifdef NC_RX_LED
 			ledToggle(NC_RX_LED);
+			#endif
 			ncDataHandler(rxBuffer);
 		}
 	}
@@ -136,13 +155,13 @@ void ncDataHandler(const uint8_t* rxBuffer){
 
 void ncPacketHandler(NTRP_Packet_t* packet){
 	switch (packet->header) {
-		case NTRP_NAK:ncTransmitPacket(&ncMessage.packet, ncMessage.packetsize);break;
-		case NTRP_ACK:RxACK();break;
-		case NTRP_MSG:RxMSG(packet->data.bytes,packet->dataID);break;
-		case NTRP_CMD:RxCMD(packet->dataID,packet->data.bytes);break;
-		case NTRP_GET:RxGET(packet->dataID);break;
-		case NTRP_SET:RxSET(packet->dataID,packet->data.bytes);break;
-		default:break;
+		case NTRP_NAK:ncRxHandler.NAK_Callback(); break;
+		case NTRP_ACK:ncRxHandler.ACK_Callback(); break;
+		case NTRP_MSG:ncRxHandler.MSG_Callback(packet->data.bytes, packet->dataID);break;
+		case NTRP_CMD:ncRxHandler.CMD_Callback(packet->dataID, packet->data.bytes);break;
+		case NTRP_GET:ncRxHandler.GET_Callback(packet->dataID);break;
+		case NTRP_SET:ncRxHandler.SET_Callback(packet->dataID, packet->data.bytes);break;
+		default: break;
 	}
 }
 
@@ -166,9 +185,11 @@ void ncDebug(char* format, ...)
     }
 }
 
-void RxACK(void){
-	/* Rx Ack Event */
-	return;
+void TxNAK(void){
+	NTRP_Packet_t packet;
+	packet.header = NTRP_NAK;
+	packet.dataID = 1;
+	ncTransmitPacket(&packet, 2);
 }
 
 void TxACK(void){
@@ -176,18 +197,6 @@ void TxACK(void){
 	packet.header = NTRP_ACK;
 	packet.dataID = 1;
 	ncTransmitPacket(&packet, 2);
-}
-
-void RxMSG(const uint8_t* msg, uint8_t len){
-	static char temp [27];
-	uint8_t i;
-	for (i = 0; i < len;i++){
-		temp[i] = (char)msg[i];
-		if(i >= 26) break;
-	}
-	temp[i] = 0x00;
-	serialPrint("[>] NCOM Received: %s\n",temp);
-	TxACK();
 }
 
 void TxMSG(const char* msg){
@@ -203,18 +212,66 @@ void TxMSG(const char* msg){
 	ncTransmitPacket(&packet, i + 2);
 }
 
-void RxCMD(uint8_t cmdid, uint8_t* data){
+void TxCMD(uint8_t cmdid,const uint8_t* data){
+	NTRP_Packet_t packet;
+	packet.header = NTRP_CMD;
+	packet.dataID = cmdid;
 
+	for(uint8_t i = 0; i < 26; i++){
+		packet.data.bytes[i] = data[i];
+	}
+	ncTransmitPacket(&packet,28);
+}
+
+void TxGET(uint8_t dataid, void* bytes, uint8_t size){
+	return;
+}
+
+void TxSET(uint8_t dataid, void* bytes, uint8_t size){
+	NTRP_Packet_t packet;
+	packet.header = NTRP_SET;
+	packet.dataID = dataid;
+
+	for(uint8_t i = 0; i<size; i++){
+		packet.data.bytes[i] = ((uint8_t*)bytes)[i];
+	}
+
+	ncTransmitPacket(&packet, (size+2));
+}
+
+void RxNAK(void){
+	ncTransmitPacket(&ncMessage.packet, ncMessage.packetsize);
+	return;
+}
+
+void RxACK(void){
+	/* Rx Ack Event */
+	return;
+}
+
+void RxMSG(const uint8_t* msg, uint8_t len){
+	static char temp [27];
+	uint8_t i;
+	for (i = 0; i < len;i++){
+		temp[i] = (char)msg[i];
+		if(i >= 26) break;
+	}
+	temp[i] = 0x00;
+	serialPrint("[>] NCOM Received: %s\n",temp);
+	TxACK();
+}
+
+void RxCMD(uint8_t cmdid, uint8_t* data){
 	/* Command Modes */
-#define RC_CONTROLLER 		0x00
-#define NRX_CONTENT_ID 		0x01
-#define FUNC_CONTENT_ID 	0x02
-#define UAV_CONTROLLER 		40
+    #define RC_CONTROLLER 		0x00
+    #define NRX_CONTENT_ID 		0x01
+    #define FUNC_CONTENT_ID 	0x02
+    #define QUAD_CONTROLLER     40
 
 	switch (cmdid){
-	case (RC_CONTROLLER):{RC_Update(&ncRC, data);}break;
-	case (UAV_CONTROLLER):{uavcomUpdate(data);}break;
-	case (NRX_CONTENT_ID):{
+	case (RC_CONTROLLER):{RC_Update(data);}break;
+	//case (QUAD_CONTROLLER):{uavcomUpdate(data);}break;
+    case (NRX_CONTENT_ID):{
 		uint8_t arr[26] = {0};
 		struct nrx_s* val = nrxGetVar(data[0]);
 		if(val == NULL){TxACK();break;}
@@ -226,18 +283,37 @@ void RxCMD(uint8_t cmdid, uint8_t* data){
 	}break;
 	case (FUNC_CONTENT_ID):break;
 	default:break;
-	}
+	}  
 }
 
-void TxCMD(uint8_t cmdid,const uint8_t* data){
-	NTRP_Packet_t packet;
-	packet.header = NTRP_CMD;
-	packet.dataID = cmdid;
+void RxSET(uint8_t dataid, uint8_t* data)
+{
+	struct nrx_s* nrxptr = nrxGetVar(dataid);
+	if(nrxptr==NULL) return;
 
-	for(uint8_t i = 0; i < 26; i++){
-		packet.data.bytes[i] = data[i];
+	uint8_t byteindex = 0;
+	uint8_t isGroup = 0;
+	uint8_t datasize;
+	uint8_t* ptr;
+
+	if(nrxptr->type & (NRX_GROUP)){
+		if(!(nrxptr->type & (NRX_START))) return;
+		isGroup = 1;
+		nrxptr++;
 	}
-	ncTransmitPacket(&packet,28);
+
+	do {
+		if(nrxptr->type & (NRX_GROUP)) {isGroup = 0; break;}
+
+		datasize = nrxVarSize(nrxptr->type);
+		ptr = (uint8_t*) nrxptr->address;
+		for(uint8_t j = 0; j < datasize; j++){
+			*ptr = data[byteindex];
+			ptr++;
+			byteindex++;
+		}
+		nrxptr++;
+	} while (byteindex < 26 && isGroup);
 }
 
 void RxGET(uint8_t dataid){
@@ -276,46 +352,4 @@ void RxGET(uint8_t dataid){
 	} while (byteindex < 26 && isGroup);
 
 	ncTransmitPacket(&packet, (byteindex + 2));
-}
-
-void RxSET(uint8_t dataid, uint8_t* data)
-{
-	struct nrx_s* nrxptr = nrxGetVar(dataid);
-	if(nrxptr==NULL) return;
-
-	uint8_t byteindex = 0;
-	uint8_t isGroup = 0;
-	uint8_t datasize;
-	uint8_t* ptr;
-
-	if(nrxptr->type & (NRX_GROUP)){
-		if(!(nrxptr->type & (NRX_START))) return;
-		isGroup = 1;
-		nrxptr++;
-	}
-
-	do {
-		if(nrxptr->type & (NRX_GROUP)) {isGroup = 0; break;}
-
-		datasize = nrxVarSize(nrxptr->type);
-		ptr = (uint8_t*) nrxptr->address;
-		for(uint8_t j = 0; j < datasize; j++){
-			*ptr = data[byteindex];
-			ptr++;
-			byteindex++;
-		}
-		nrxptr++;
-	} while (byteindex < 26 && isGroup);
-}
-
-void TxSET(uint8_t dataid, void* bytes, uint8_t size){
-	NTRP_Packet_t packet;
-	packet.header = NTRP_SET;
-	packet.dataID = dataid;
-
-	for(uint8_t i = 0; i<size; i++){
-		packet.data.bytes[i] = ((uint8_t*)bytes)[i];
-	}
-
-	ncTransmitPacket(&packet, (size+2));
 }

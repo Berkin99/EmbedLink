@@ -48,10 +48,7 @@
 
 /// I2C /////////////////////////////////////////////////////
 #define BMP581_I2C              i2c1
-#define BMP581_I2C_ADDR         (0x46)
-
 #define E24AA_I2C               i2c1
-
 //#define BMP388_I2C             i2c2
 //#define BNO055_I2C             i2c2
 //#define HMC5883L_I2C           i2c1
@@ -59,9 +56,13 @@
 //#define MS5611_I2C             i2c1
 
 /// SPI /////////////////////////////////////////////////////
-//#define ICM20948_SPI           spi1
-//#define ICM20948_CS            PB0
-
+// #define RF52_SPI               spi3
+// #define RF52_CS                PD0
+// #define RF52_IRQ               irq1
+// #define ICM20948_SPI           spi1
+// #define ICM20948_CS            PB0
+// #define MPU6500_SPI			 spi1
+// #define MPU6500_CS             PA0
 #define BMI088_SPI             spi1
 #define BMI088_ACC_CS          PC4
 #define BMI088_GYR_CS          PC5
@@ -70,15 +71,15 @@
 #define RF24_CS                PC15
 #define RF24_RX_ADDRESS        {0xE7, 0xE7, 0xE7, 0xE3, 0x04}
 #define RF24_TX_ADDRESS        {0xE7, 0xE7, 0xE7, 0xE3, 0x05}
-//#define MPU6500_SPI			 spi1
-//#define MPU6500_CS             PA0
+
+#define SPI_CS_HIGH            {BMI088_ACC_CS, BMI088_GYR_CS, RF24_CE, RF24_CS}
 
 /// UART ////////////////////////////////////////////////////
-//#define E32100_UART            uart1
-//#define E32100_M0
-//#define E32100_M1
-//#define E32100_AUX
-//#define NEOM8N_UART            uart1
+// #define E32100_UART            uart1
+// #define E32100_M0
+// #define E32100_M1
+// #define E32100_AUX
+// #define NEOM8N_UART            uart1
 #define ZEDF9P_UART            uart1
 
 /// PWM /////////////////////////////////////////////////////s
@@ -93,36 +94,36 @@
 #define PWM4_CH                1
 
 /// ADC /////////////////////////////////////////////////////
-//#define ADC1_HANDLE            hadc1
+// #define ADC1_HANDLE            hadc1
 
 /// MEM /////////////////////////////////////////////////////
-//#define MEM_DEBUG
+// #define MEM_DEBUG
 
 /// NCOM ////////////////////////////////////////////////////
 #define NC_MODULE              "RF24"
 #define NC_NTRPPACKET
 #define NC_RX_LED               LED1
 #define NC_TX_LED               LED2
-//#define NC_NTRPMESSAGE
-//#define NC_ID                 'X'
+// #define NC_NTRPMESSAGE
+// #define NC_ID                 'X'
 
 /// RTOS ////////////////////////////////////////////////////
 #define SYSTEM_TASK_PRI         (2)
 #define LEDSEQ_TASK_PRI         (2)
-#define NC_TASK_PRI		        (3)
 #define SENS_TASK_PRI           (4)
 #define NAV_TASK_PRI            (4)
 #define TRX_TASK_PRI            (4)
-#define ESTIMATOR_TASK_PRI      (4)
+#define ESTIMATOR_TASK_PRI      (6)
+#define NC_TASK_PRI		        (6)
 #define CONTROL_TASK_PRI        (6)
 
 #define SYSTEM_TASK_STACK       (2 * RTOS_MIN_STACK)
 #define LEDSEQ_TASK_STACK       (1 * RTOS_MIN_STACK)
-#define NC_TASK_STACK	        (2 * RTOS_MIN_STACK)
 #define SENS_TASK_STACK         (4 * RTOS_MIN_STACK)
-#define NAV_TASK_STACK          (2 * RTOS_MIN_STACK)
-#define TRX_TASK_STACK          (2 * RTOS_MIN_STACK)
+#define NAV_TASK_STACK          (4 * RTOS_MIN_STACK)
+#define TRX_TASK_STACK          (4 * RTOS_MIN_STACK)
 #define ESTIMATOR_TASK_STACK    (4 * RTOS_MIN_STACK)
+#define NC_TASK_STACK	        (4 * RTOS_MIN_STACK)
 #define CONTROL_TASK_STACK      (4 * RTOS_MIN_STACK)
 
 /////////////////////////////////////////////////////////////

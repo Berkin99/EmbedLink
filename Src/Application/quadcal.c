@@ -35,6 +35,7 @@
 #include "sensor.h"
 #include "led.h"
 #include "ledseq.h"
+#include "rc_interface.h"
 
 void quadcalESC(quadcopter_t* pHandle){
     ledseqRun(QLED, 1, SEQ_PROCESS_L);
@@ -103,18 +104,18 @@ void quadcalSensors(quadcopter_t* pHandle){
 }
 
 int8_t quadcalIterate(void){
-	// int8_t out = 0;
-	// while(1){
-	// 	if(controller()->crange.z >  0.9f){out =  1; break;}
+	int8_t out = 0;
+	while(1){
+		if(rc.chZ.value >  0.9f){out =  1; break;}
 
-	// 	if(controller()->crange.z < -0.9f){out = -1; break;}
-	// 	delay(1);
-	// }
+		if(rc.chZ.value < -0.9f){out = -1; break;}
+		delay(1);
+	}
 
-	// while(1){
-	// 	if((controller()->crange.z < 0.2f) && (controller()->crange.z > -0.2f) ) break;
-	// 	delay(1);
-	// }
-	// TxMSG("[<]");
-	// return out;
+	while(1){
+		if((rc.chZ.value < 0.2f) && (rc.chZ.value > -0.2f) ) break;
+		delay(1);
+	}
+	TxMSG("[<]");
+	return out;
 }

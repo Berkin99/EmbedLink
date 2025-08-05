@@ -38,7 +38,6 @@
 #include "quadcopter.h"
 #include "quadcal.h"
 #include "xmath.h"
-#include "quadcontrol.h"
 #include "kinematics.h"
 #include "led.h"
 #include "uart.h"
@@ -58,8 +57,6 @@ static quadcopter_t self;
 taskAllocateStatic(QUAD, QUAD_TASK_STACK, QUAD_TASK_PRI);
 
 void quadInit(void){
-    quadSetMode(QUAD_IDLE);
-    quadControlInit();
     
     self.motor[0] = ESC_NewHandle(&pwm1, ESC_PROTOCOL_STANDARD);
     self.motor[1] = ESC_NewHandle(&pwm2, ESC_PROTOCOL_STANDARD);
@@ -67,13 +64,11 @@ void quadInit(void){
     self.motor[3] = ESC_NewHandle(&pwm4, ESC_PROTOCOL_STANDARD);
     
     for (int i = 0; i < 4; i++) ESC_Start(&self.motor[i]);
-    
-    quadStop(&self);
-
+    quadStop();
     taskCreateStatic(QUAD, QUAD_OPERATION, NULL);
 }
 
-void quadHealthCheck(quadcopter_t* pHandle){
+void quadHealthCheck(void){
     //if(!controllerIsValid() && pHandle->mode.modeid != QUAD_IDLE) quadSetMode(QUAD_IDLE);   /* Check last command time in ms */
     //if(fabsf(kinematicsState()->rotation.x) > 90 || fabsf(kinematicsState()->rotation.y) > 90) quadSetMode(QUAD_IDLE);
     //if(BATT_Voltage(&pHandle->battery) > 0.1f) quadSetMode(QUAD_IDLE);
@@ -84,9 +79,10 @@ void quadTask(void* argv){
     uint32_t waketimer = taskGetTickCount();
     /* Should Run at exact 250 Hz */
     while(1){
-        quadHealthCheck(&self);
-        quadmotor_t mout = self.mode.modeUpdate();
-        quadSetMotors(&self, mout);
+        if(!self.mode.modePermission(self.mode.modeid)) quadSetMode(QUAD_MODE_IDLE); /* Kill Switch */
+        quadHealthCheck();
+        quadmotor_t mout = self.mode.modeUpdate(&self.cmd);
+        quadSetMotors(mout);
         taskDelayUntil(&waketimer, 4);
     }
 }
@@ -94,46 +90,52 @@ void quadTask(void* argv){
 int8_t quadSetMode(quadmode_e mode){
     if(mode >= QUAD_MODE_COUNT) return E_OVERFLOW;
     /* Check mode transition map */
-    if(mode == QUAD_IDLE) ledSet(QLED, 0);
+    if(mode == QUAD_MODE_IDLE) ledSet(QLED, 0);
     else ledSet(QLED, 1);
 
     self.mode = quadMode(mode);
     return OK;
 }
 
-int8_t quadSetMotors(quadcopter_t* pHandle, quadmotor_t cmd){
-//    serialPrint("[>] ");
+int8_t quadSetMotors(quadmotor_t cmd){
+    #ifdef QUAD_DEBUG
+    serialPrint("[>] ");
     for (uint8_t i = 0; i < 4; i++) {
         if(cmd.m[i] > 1.001f || cmd.m[i] < -0.001f) return E_OVERFLOW;
         ESC_Write(&pHandle->motor[i], cmd.m[i]);
-        //serialPrint(" %.2f", cmd.m[i]);
+        serialPrint(" %.2f", cmd.m[i]);
     }
-//    serialPrint("\n");
+    serialPrint("\n");
+    #else
+    for (uint8_t i = 0; i < 4; i++) {
+        if(cmd.m[i] > 1.001f || cmd.m[i] < -0.001f) return E_OVERFLOW;
+        ESC_Write(&self.motor[i], cmd.m[i]);
+    }
+    #endif
     return OK;
 }
 
-void quadStop(quadcopter_t* pHandle){
+void quadStop(void){
     const quadmotor_t zero = {{0.0f, 0.0f, 0.0f, 0.0f}};
-    quadSetMotors(pHandle, zero);
-    pHandle->mode = quadMode(QUAD_IDLE);
+    quadSetMotors(zero);
+    quadSetMode(QUAD_MODE_IDLE);
 }
 
 void quadCalibrate(void* argv){
 
     systemWaitReady();
 
-    //    TxMSG("[>] ESC CAL:");
-    //    quadcalESC(&self);
+    TxMSG("[>] ESC CAL:");
+    quadcalESC(&self);
 
-    //	TxMSG("[>] NC CAL:");
-    //    if(quadcalIterate() > 0) quadcalCOM();
-    //    TxMSG("[>] MOTOR CAL:");
-    //    if(quadcalIterate() > 0) quadcalMotors(&self);
-    //    TxMSG("[>] SENSORS CAL:");
-    //    if(quadcalIterate() > 0) quadcalSensors(&self);
-    //    while(1){
-    //       TxMSG("[+] Calibration Complete");
-    //    	delay(5000);
-    //    }
-
+    TxMSG("[>] NC CAL:");
+    if(quadcalIterate() > 0) quadcalCOM();
+    TxMSG("[>] MOTOR CAL:");
+    if(quadcalIterate() > 0) quadcalMotors(&self);
+    TxMSG("[>] SENSORS CAL:");
+    if(quadcalIterate() > 0) quadcalSensors(&self);
+    while(1){
+        TxMSG("[+] Calibration Complete");
+        delay(5000);
+    }
 }

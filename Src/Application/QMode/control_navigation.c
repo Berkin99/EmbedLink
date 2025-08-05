@@ -53,7 +53,7 @@ void   controlInitNAV  (void){
 }
 
 /* Vector Output [-10 , 10] */
-vec_t  controlTaskNAV  (vec_t target){
+vec_t controlTaskNAV(vec_t target){
     /* World x and y vector */
     vec_t vector = vzero();
 
@@ -72,7 +72,7 @@ vec_t  controlTaskNAV  (vec_t target){
     return vector;
 }
 
-void   controlResetNAV (void){
+void controlResetNAV (void){
     for(uint8_t i = 0; i < 2; i++) {pidReset(&hpidNav[i]);}
 }
 

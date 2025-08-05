@@ -27,15 +27,13 @@
  *
  */
 
-#ifndef CONTROL_ATTITUDE_H_
-#define CONTROL_ATTITUDE_H_
+#ifndef CONTROL_HEIGHT_H_
+#define CONTROL_HEIGHT_H_
 
-#include "xmath3d.h"
-#include "quadcopter.h"
+#include <stdint.h>
 
-void        controlInitATTITUDE  (void);
-quadmotor_t controlTaskATTITUDE  (float cpow, vec_t crange);
-int8_t      controlReqATTITUDE   (void);
-void        controlResetATTITUDE (void);
+void   controlInitHEIGHT  (void);
+float  controlTaskHEIGHT  (float height);
+void   controlResetHEIGHT (void);
 
-#endif /* CONTROL_ATTITUDE_H_ */
+#endif /* CONTROL_HEIGHT_H_ */

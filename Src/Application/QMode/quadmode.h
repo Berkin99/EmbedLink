@@ -33,17 +33,55 @@
 #include <stdint.h>
 #include "xmath3d.h"
 #include "kinematics.h"
-#include "quadcopter.h"
 
-void        quadControlInit (void);
-quadmode_t  quadMode(quadmode_e modeid);
+typedef union{
+    float m[4];
+    struct{
+        float mFR;
+        float mRR;
+        float mRL;
+        float mFL;
+    };
+}quadmotor_t;
 
-quadmotor_t quadIdle         (void);
-quadmotor_t quadReady        (void);
-quadmotor_t quadManual       (void);
-quadmotor_t quadManualHeight (void);
-quadmotor_t quadAutoNav      (void);
-quadmotor_t quadTakeOff      (void);
-quadmotor_t quadLand         (void);
+typedef struct{
+    float craw[4];
+    float cpow;
+    vec_t crange;
+    vec_t cpos;
+    vec_t crot;
+}quadcmd_t;
+
+typedef enum{
+    QUAD_MODE_IDLE       = 0,
+    QUAD_MODE_READY      = 1,
+    QUAD_MODE_MANUAL     = 2,
+    QUAD_MODE_HEIGHT     = 3,
+    QUAD_MODE_AUTO       = 4,
+    QUAD_MODE_RAW        = 5,
+    QUAD_MODE_COUNT,
+}quadmode_e;
+
+typedef struct{
+    quadmode_e  modeid;
+    quadmotor_t (*modeUpdate)(quadcmd_t* pcmd);
+    int8_t      (*modePermission)(quadmode_e lmode);
+}quadmode_t;
+
+quadmode_t  quadMode   (quadmode_e modeid);
+
+quadmotor_t quadTask_IDLE   (quadcmd_t* pcmd);
+quadmotor_t quadTask_READY  (quadcmd_t* pcmd);
+quadmotor_t quadTask_MANUAL (quadcmd_t* pcmd);
+quadmotor_t quadTask_HEIGHT (quadcmd_t* pcmd);
+quadmotor_t quadTask_AUTO   (quadcmd_t* pcmd);
+quadmotor_t quadTask_RAW    (quadcmd_t* pcmd);
+
+int8_t quadPermission_IDLE    (quadmode_e lmode);
+int8_t quadPermission_READY   (quadmode_e lmode);
+int8_t quadPermission_MANUAL  (quadmode_e lmode);
+int8_t quadPermission_HEIGHT  (quadmode_e lmode);
+int8_t quadPermission_AUTO    (quadmode_e lmode);
+int8_t quadPermission_RAW     (quadmode_e lmode);
 
 #endif /* QUADCONTROL_H_ */

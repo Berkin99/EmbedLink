@@ -27,14 +27,14 @@
  *
  */
 
-#ifndef CONTROL_HEIGHT_H_
-#define CONTROL_HEIGHT_H_
+#ifndef CONTROL_NAV_H_
+#define CONTROL_NAV_H_
 
 #include <stdint.h>
+#include "xmath3d.h"
 
-void   controlInitHEIGHT  (void);
-float  controlTaskHEIGHT  (float height);
-int8_t controlReqHEIGHT   (void);
-void   controlResetHEIGHT (void);
+void   controlInitNAV  (void);
+vec_t  controlTaskNAV  (vec_t target);
+void   controlResetNAV (void);
 
-#endif /* CONTROL_HEIGHT_H_ */
+#endif /* CONTROL_NAV_H_ */

@@ -63,7 +63,6 @@ void navigatorTaskZEDF9P(void* argv);
 int8_t navigatorInitZEDF9P(void){
 	if(isInit) return E_OVERWRITE;
 	gps = UBLOX_Init((void*)&ZEDF9P_UART, _ubxUartWrite, _ubxUartRead, delay);
-
 	taskCreateStatic(ZEDF9P, navigatorTaskZEDF9P, NULL);
 	isInit = 1;
 	return OK;
@@ -75,7 +74,7 @@ void navigatorTaskZEDF9P(void* argv){
 
 	delay(UBLOX_INIT_INTERVAL);
 
-	uartSetBaudRate(&ZEDF9P_UART, 38400); 				/* 1-Change The STM32 Baudrate 38400 */
+	uartSetBaudRate(&ZEDF9P_UART, 38400); 				/* 1-Change The MCU Baudrate 38400 */
 														/* 2-Change The ZED F9P UART2 Baudrate 38400(Default) : [UBX-CFG-PRT] */
 	UBLOX_SetBaudRate(&gps, UBLOX_BAUD_RATE_115200); 	/* 3-Change The ZED F9P UART1 Baudrate 115200 : [UBX-CFG-PRT] */
 	uartSetBaudRate(&ZEDF9P_UART, 115200);	 	 	    /* 4-Change The STM32 Baudrate 115200 */
@@ -165,11 +164,13 @@ int8_t _navigatorStabilizeZEDF9P(int iter, location_t* pLocation){
 		int8_t status = _navigatorParseLocationZEDF9P(gpsBuffer, &temp);
 		
 		if(status > 0){
-			meanf64(stabilized.latitude, temp.latitude, i);
-			meanf64(stabilized.longitude, temp.longitude, i);
+			stabilized.latitude = meanf64(stabilized.latitude, temp.latitude, i);
+			stabilized.longitude = meanf64(stabilized.longitude, temp.longitude, i);
 		}
 		i++;
 	}
+
+	*pLocation = stabilized;
 
 	return 1;
 }

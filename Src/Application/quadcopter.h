@@ -34,37 +34,11 @@
 #include "kinematics.h"
 #include "esc.h"
 #include "battery.h"
-#include "xlist.h"
-
-typedef union{
-    float m[4];
-    struct{
-        float mFR;
-        float mRR;
-        float mRL;
-        float mFL;
-    };
-}quadmotor_t;
-
-typedef enum{
-    QUAD_IDLE       = 0,
-    QUAD_READY      = 1,
-    QUAD_MANUAL     = 2,
-    QUAD_HEIGHT     = 3,
-    QUAD_AUTO       = 4,
-	QUAD_TAKEOFF    = 5,
-    QUAD_LAND       = 6,
-    QUAD_MODE_COUNT,
-}quadmode_e;
+#include "quadmode.h"
 
 typedef struct{
-    quadmode_e  modeid;
-    xlist_t     demand;
-    quadmotor_t (*modeUpdate)(void);
-}quadmode_t;
-
-typedef struct{
-    quadmode_t   mode;
+    quadmode_t mode;
+    quadcmd_t  cmd;
     union{
         ESC_Handle_t motor[4];
         struct{
@@ -76,14 +50,13 @@ typedef struct{
     };
 }quadcopter_t;
 
-void quadInit(void);
-void quadTask(void* argv);
-void quadCalibrate(void* argv);
+void   quadInit(void);
+void   quadTask(void* argv);
+void   quadCalibrate(void* argv);
 
-void   quadHealthCheck(quadcopter_t* pHandle);
+void   quadHealthCheck(void);
 int8_t quadSetMode(quadmode_e mode);
-void   quadControlModeCallBack(void);
-int8_t quadSetMotors(quadcopter_t* pHandle, quadmotor_t cmd);
-void   quadStop(quadcopter_t* pHandle);
+int8_t quadSetMotors(quadmotor_t cmd);
+void   quadStop(void);
 
 #endif /* QUADCOPTER_H_ */

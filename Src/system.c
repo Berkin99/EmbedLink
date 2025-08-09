@@ -49,6 +49,9 @@
 #include "watchtime.h"
 #include "quadcopter.h"
 #include "northcom.h"
+#include "rccom.h"
+#include "kinematics.h"
+#include "navigation.h"
 
 static uint8_t sysInit = 0;
 static uint32_t sysmem;
@@ -87,46 +90,45 @@ void systemTask(void* argv){
     memoryTest();
     memoryDownload();
 
-    // ESC_Handle_t motor[4];
-    // motor[0] = ESC_NewHandle(&pwm1, ESC_PROTOCOL_STANDARD);
-    // motor[1] = ESC_NewHandle(&pwm2, ESC_PROTOCOL_STANDARD);
-    // motor[2] = ESC_NewHandle(&pwm3, ESC_PROTOCOL_STANDARD);
-    // motor[3] = ESC_NewHandle(&pwm4, ESC_PROTOCOL_STANDARD);
-    // for (int i = 0; i < 4; i++) ESC_Start(&motor[i]);
-    // ESC_MultiCalibrate(motor, 4);
-    // for (int i = 0; i < 4; i++) {
-    //     ESC_Write(&motor[i], 0.5);
-    //     delay(3000);
-    //     ESC_Write(&motor[i], 0);
-    //     delay(1000);
-    // }
-
     sensorInit();
     sensorTest();
     telemetryInit();
     telemetryTest();
+
+    // ESC_Handle_t m[4];
+    // m[0] = ESC_NewHandle(&pwm1, ESC_PROTOCOL_STANDARD);
+    // m[1] = ESC_NewHandle(&pwm2, ESC_PROTOCOL_STANDARD);
+    // m[2] = ESC_NewHandle(&pwm3, ESC_PROTOCOL_STANDARD);
+    // m[3] = ESC_NewHandle(&pwm4, ESC_PROTOCOL_STANDARD);
+    
+    // ESC_MultiCalibrate(m, 4);
+
+    // for (int i = 0; i < 4; i++){
+    //     delay(1000);
+    //     ESC_Write(&m[i], 0.2f);
+    //     delay(3000);
+    //     ESC_Write(&m[i], 0);
+    // }
+
+    // delay(4000);
+    
+    // for (int i = 0; i < 4; i++) ESC_Write(&m[i], 0.2f);
+
+    navigatorInit();
+    navigatorTest();
+    
     estimatorInit();
     ncInit();
     
     quadInit();
-    //wtInit();
+    rccomInit();
 
     /* SYSTEM READY FLAG */
     sysInit = 2;
     ledseqStop(LED1);
 
     while(1){
-        // serialPrint("[>] Rotation : %.2f    %.2f    %.2f\n", 
-        //     xkinematicsState()->rotation.x,
-        //     xkinematicsState()->rotation.y,
-        //     xkinematicsState()->rotation.z
-        // );    
-        // serialPrint("[>] IAttitude : %.2f    %.2f    %.2f\n", 
-        //     xkinematicsState()->iattitude.x,
-        //     xkinematicsState()->iattitude.y,
-        //     xkinematicsState()->iattitude.z
-        // );    
-        delay(10);
+        delay(1000);
     }
 }
 

@@ -27,4 +27,30 @@
  *
  */
 
-#include "quadcom.h"
+#ifndef RCCOM_H_
+#define RCCOM_H_
+
+/**
+ * @brief RCCOM Handles the mode management of the quadcopter
+ *        and handles the faults of the RC. Sets the command
+ *        values for the quadcopter.
+ * 
+ * @param crange [-1, 1] pitch, roll, yaw clockwise pozitive
+ * @param cpow   [0,  1]
+ */
+
+typedef enum {
+    RCCOM_STATE_IDLE = 0,
+    RCCOM_STATE_MANUAL = 1,
+    RCCOM_STATE_HEIGHT = 2,
+} rccomState_e;
+
+void rccomInit(void);
+void rccomTask(void* argv);
+void rccomUpdate(void);
+
+void rccomState_IDLE(void);
+void rccomState_MANUAL(void);
+void rccomState_HEIGHT(void);
+
+#endif /* RCCOM_H_ */

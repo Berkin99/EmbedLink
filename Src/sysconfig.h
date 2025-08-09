@@ -59,13 +59,17 @@
 // #define RF52_SPI               spi3
 // #define RF52_CS                PD0
 // #define RF52_IRQ               irq1
+// #define RF52_CHANNEL           60
+
 // #define ICM20948_SPI           spi1
 // #define ICM20948_CS            PB0
-// #define MPU6500_SPI			 spi1
+// #define MPU6500_SPI			  spi1
 // #define MPU6500_CS             PA0
+
 #define BMI088_SPI             spi1
 #define BMI088_ACC_CS          PC4
 #define BMI088_GYR_CS          PC5
+
 #define RF24_SPI               spi1
 #define RF24_CE                PC14
 #define RF24_CS                PC15

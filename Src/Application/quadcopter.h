@@ -50,13 +50,49 @@ typedef struct{
     };
 }quadcopter_t;
 
-void   quadInit(void);
+int8_t quadInit(void);
 void   quadTask(void* argv);
 void   quadCalibrate(void* argv);
-
 void   quadHealthCheck(void);
 int8_t quadSetMode(quadmode_e mode);
-int8_t quadSetMotors(quadmotor_t cmd);
+void   quadSetMotors(quadmotor_t cmd);
 void   quadStop(void);
+
+/**
+ * @brief MODE = [MANUAL]
+ * @param cpow : Total vertical thrust command [0, 1]
+ * 
+ * @param crange : Target rotation range:
+ * 
+ * @param x : Pitch target [-1, 1]
+ * @param y : Roll target  [-1, 1]
+ * @param z : Yaw target   [-1, 1]
+ * 
+ */
+void quadcmd_MANUAL(float cpow, vec_t crange);
+
+/**
+ * @brief MODE = [MANUAL]
+ * @param cpow : Total vertical thrust command [0, 1]
+ * 
+ * @param crange : Target rotation range:
+ * @x : Pitch target [-1, 1]
+ * @y : Roll target  [-1, 1]
+ * @z : Yaw target   [-1, 1]
+ * 
+ */
+void quadcmd_HEIGHT(float cpow, vec_t crange, float z);
+
+/**
+ * @param cpos : Target position relative the xkinematics in meters
+ */
+void quadcmd_AUTO(vec_t cpos, float yaw);
+
+/**
+ * @brief MODE = [RAW]
+ * @param craw : Raw Motor command [0, 1]
+ */
+void quadcmd_RAW(float craw[4]);
+
 
 #endif /* QUADCOPTER_H_ */

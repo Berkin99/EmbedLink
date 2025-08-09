@@ -45,11 +45,11 @@ typedef union{
 }quadmotor_t;
 
 typedef struct{
-    float craw[4];
-    float cpow;
-    vec_t crange;
-    vec_t cpos;
-    vec_t crot;
+    float craw[4];  /* [0, 1]  */
+    float cpow;     /* [0, 1]  */
+    vec_t crange;   /* [-1, 1] */
+    vec_t cpos;     /* Position in meters relative the xkin origin */
+    vec_t crot;     /* Rotation in euler angles */
 }quadcmd_t;
 
 typedef enum{
@@ -63,12 +63,14 @@ typedef enum{
 }quadmode_e;
 
 typedef struct{
-    quadmode_e  modeid;
+    quadmode_e  id;
     quadmotor_t (*modeUpdate)(quadcmd_t* pcmd);
     int8_t      (*modePermission)(quadmode_e lmode);
 }quadmode_t;
 
-quadmode_t  quadMode   (quadmode_e modeid);
+void quadModeInit(void);
+
+quadmode_t  quadMode   (quadmode_e id);
 
 quadmotor_t quadTask_IDLE   (quadcmd_t* pcmd);
 quadmotor_t quadTask_READY  (quadcmd_t* pcmd);

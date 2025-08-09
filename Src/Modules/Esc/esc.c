@@ -59,10 +59,14 @@ void ESC_Calibrate(ESC_Handle_t* pEsc){
 	ESC_Write(pEsc, 1);
 	delay(ESC_CALIBRATION_TIME_MS);
 	ESC_Write(pEsc, 0);
+	delay(ESC_CALIBRATION_TIME_MS);
 }
 
 void ESC_MultiCalibrate(ESC_Handle_t* pEsc, uint8_t length){
 	for(uint8_t i = 0; i < length; i++)	{ESC_Write(&pEsc[i], 1);}
+	for(uint8_t i = 0; i < length; i++)	{pwmStart(pEsc[i].pwm);}
+	for(uint8_t i = 0; i < length; i++)	{ESC_Write(&pEsc[i], 1);}
+	
 	delay(ESC_CALIBRATION_TIME_MS);
 	for(uint8_t i = 0; i < length; i++)	{ESC_Write(&pEsc[i], 0);}
 	delay(ESC_CALIBRATION_TIME_MS);

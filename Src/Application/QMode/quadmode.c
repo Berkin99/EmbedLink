@@ -37,9 +37,10 @@
 #include "control_attitude.h"
 #include "control_height.h"
 #include "control_navigation.h"
+#include "uart.h"
 
 #define QUAD_MODE_DEFINE(NAME) [QUAD_MODE_##NAME] = \
-	{	.modeid = QUAD_MODE_##NAME,					\
+	{	.id = QUAD_MODE_##NAME,					\
 		.modeUpdate = &quadTask_##NAME,				\
 		.modePermission = &quadPermission_##NAME 	\
 	}							\
@@ -53,8 +54,14 @@ static quadmode_t quadModes[] = {
 	QUAD_MODE_DEFINE(RAW)
 };
 
-quadmode_t quadMode(quadmode_e modeid){
-	return quadModes[modeid];
+void quadModeInit(void){
+	controlInitATTITUDE();
+	controlInitHEIGHT();
+	controlInitNAV();
+}
+
+quadmode_t quadMode(quadmode_e id){
+	return quadModes[id];
 }
 
 quadmotor_t quadTask_IDLE (quadcmd_t* pcmd){
@@ -83,7 +90,7 @@ quadmotor_t quadTask_HEIGHT(quadcmd_t* pcmd){
 }
 
 quadmotor_t quadTask_AUTO(quadcmd_t* pcmd){
-//	vec_t vnet = vrot2(controlTaskNAV(pctrl->cpos), -navigationState()->compass * DEG2RAD);
+//	vec_t vnet = vrot2(controlTaskNAV(pcmd->cpos), -navigationState()->compass * DEG2RAD);
     vec_t vnet = vrot2(controlTaskNAV(pcmd->cpos), -xkinematicsState()->rotation.z * DEG2RAD); /* NOCOMPASS POSITIONING */
 
 	vnet = vdiv(vnet, 10.0f);

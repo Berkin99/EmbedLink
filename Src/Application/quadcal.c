@@ -35,11 +35,11 @@
 #include "sensor.h"
 #include "led.h"
 #include "ledseq.h"
+#include "esc.h"
 #include "rc_interface.h"
 
 void quadcalESC(quadcopter_t* pHandle){
     ledseqRun(QLED, 1, SEQ_PROCESS_L);
-
 	ESC_MultiCalibrate(pHandle->motor, 4);
 	TxMSG("[+] ESC CALIBRATED");
 
@@ -89,16 +89,16 @@ void quadcalMotors(quadcopter_t* pHandle){
 }
 
 void quadcalSensors(quadcopter_t* pHandle){
-	int i = 0;
-	while(i < sensorGetSize()){
-		ncDebug("[>] %s CAL:", sensorName(i));
-		if(quadcalIterate() < 0){i++; continue;}
-        ledseqRun(QLED, 1, SEQ_PROCESS_L);
-		sensorCalibrate(i);
-	    ledseqStop(QLED);
-    	delay(100);
-		i++;
-	}
+	// uint8_t i = 0;
+	// while(i < sensorSize()){
+	// 	ncDebug("[>] %s CAL:", sensorName(i));
+	// 	if(quadcalIterate() < 0){i++; continue;}
+    //     ledseqRun(QLED, 1, SEQ_PROCESS_L);
+	// 	sensorCalibrate(i);
+	//     ledseqStop(QLED);
+    // 	delay(100);
+	// 	i++;
+	// }
 	TxMSG("[+] SENSORS CALIBRATED");
 	delay(100);
 }
@@ -107,7 +107,6 @@ int8_t quadcalIterate(void){
 	int8_t out = 0;
 	while(1){
 		if(rc.chZ.value >  0.9f){out =  1; break;}
-
 		if(rc.chZ.value < -0.9f){out = -1; break;}
 		delay(1);
 	}

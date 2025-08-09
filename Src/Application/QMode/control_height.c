@@ -43,7 +43,7 @@ static pid_t pid_vz = PID_VELOCITY;
 #else
 
 /* Height PID */
-#define PID_HEIGHT    {540, 1, 870}	    /* height PID Values    */
+#define PID_HEIGHT    {540, 1, 900}	    /* height PID Values    */
 #define HOWER_POWER   500 				/* Howering Power 12.0V */
 
 static  pidHandle_t hpidHeight;     	/* height PID Handle    */

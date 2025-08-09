@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#define RC_CONNECTION_LOST_TIME_MS 600
+#define RC_CONNECTION_LOST_TIME_MS 2000
 #define RC_CH_DEADBAND 10
 #define RC_CH_CENTER 127
 #define RC_CH_MAX 255

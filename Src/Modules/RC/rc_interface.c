@@ -52,7 +52,7 @@ void RC_Update(uint8_t raw[5]) {
 
     rc.lastUpdate = millis();
     
-    //serialPrint("[RC] %.2f, %.2f, %.2f, %.2f [%d]\n ", rc.chPOWER.value, rc.chX.value, rc.chY.value, rc.chZ.value, rc.state);
+    //serialPrint("[RC] %.2f, %.2f, %.2f, %.2f, %.2f [%d]\n ", rc.chPOWER.value, rc.chX.value, rc.chY.value, rc.chZ.value, rc.chCONF.value, rc.state);
 
     if (rc.chPOWER.value > 0.05f) return;
     

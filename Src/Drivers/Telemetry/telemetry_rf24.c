@@ -114,7 +114,7 @@ void _telemetryTaskRF24(void* argv){
 			RF24_Write(&radio, txBuffer.buffer, txBuffer.size);
 		}
 
-		taskDelayUntil(&lastWakeTime, 1);
+		taskDelayUntil(&lastWakeTime, 5);
 	}
 
 }

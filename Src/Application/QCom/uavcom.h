@@ -27,22 +27,42 @@
  *
  */
 
-#ifndef QUADCONFIG_H_
-#define QUADCONFIG_H_
+#ifndef UAVCOM_H_
+#define UAVCOM_H_
 
-/// QUADMODE ////////////////////////////////////////////////
-//#define QUAD_OPERATION quadCalibrate
-#define QUAD_OPERATION quadTask
-//#define QUAD_DEBUG
-/////////////////////////////////////////////////////////////
+#include "xmath3d.h"
 
-/// LED /////////////////////////////////////////////////////
-#define QLED     (LED1)
-/////////////////////////////////////////////////////////////
+/**
+ * @brief Autnomous UAV Commander
+ * 
+ * > Selects the mode of the uav
+ * > Operates the Arm-Takeoff-Land-Goto Commands
+ * > 
+ */
 
-/// TASK ////////////////////////////////////////////////////
-#define QUAD_TASK_STACK      (6 * configMINIMAL_STACK_SIZE)
-#define QUAD_TASK_PRI        (6)
-/////////////////////////////////////////////////////////////
+typedef enum{
+    UAVCOM_STATE_IDLE,
+    UAVCOM_STATE_READY,
+    UAVCOM_STATE_AUTO,
+    UAVCOM_STATE_TAKEOFF,
+    UAVCOM_STATE_LAND,    
+}uavcomState_e;
 
-#endif /* QUADCONFIG_H_ */
+void uavcomInit(void);
+void uavcomTask(void* argv);
+void uavcomUpdate(void);
+
+void uavcomArm(void);
+void uavcomDisarm(void);
+void uavcomTakeOff(float z);
+void uavcomLand(void);
+void uavcomPose(vec_t pos, float yaw);
+void uavcomKill(void);
+
+void uavcomState_IDLE(void);
+void uavcomState_READY(void);
+void uavcomState_AUTO(void);
+void uavcomState_TAKEOFF(void);
+void uavcomState_LAND(void);
+
+#endif

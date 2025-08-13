@@ -43,6 +43,7 @@ static const uint8_t typeLength[] = {
 	[NRX_INT16]  = 2,
 	[NRX_INT32]  = 4,
 	[NRX_FLOAT]  = 4,
+	[NRX_DOUBLE] = 8
 };
 
 static nrxVarId_t invalidVarId = {0xffffu, 0xffffu};

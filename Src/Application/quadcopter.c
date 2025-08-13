@@ -103,6 +103,10 @@ int8_t quadSetMode(quadmode_e mode){
     return OK;
 }
 
+quadmode_e quadGetMode(void){
+    return self.mode.id;
+}
+
 void quadSetMotors(quadmotor_t cmd){
     #ifdef QUAD_DEBUG
     serialPrint("[>] ");
@@ -139,6 +143,7 @@ void quadCalibrate(void* argv){
     if(quadcalIterate() > 0) quadcalMotors(&self);
     TxMSG("[>] SENSORS CAL:");
     if(quadcalIterate() > 0) quadcalSensors(&self);
+    
     while(1){
         TxMSG("[+] Calibration Complete");
         delay(5000);

@@ -39,10 +39,13 @@
 #include "rtos.h"
 #include "spi.h"
 #include "uart.h"
+
 #include "sensor.h"
 #include "estimator.h"
 #include "telemetry.h"
+#include "navigator.h"
 #include "memory.h"
+
 #include "ledseq.h"
 #include "led.h"
 #include "esc.h"
@@ -54,7 +57,6 @@
 #include "navigation.h"
 
 static uint8_t sysInit = 0;
-static uint32_t sysmem;
 
 taskAllocateStatic(SYSTEM_TASK, SYSTEM_TASK_STACK, SYSTEM_TASK_PRI);
 void systemTask(void* argv);
@@ -86,14 +88,19 @@ void systemTask(void* argv){
 
     serialPrint("[>] System Start\n");
 
+    quadInit();
+
     memoryInit();
     memoryTest();
-    memoryDownload();
+    memoryClear();
+    //memoryDownload();
 
     sensorInit();
     sensorTest();
     telemetryInit();
     telemetryTest();
+    navigatorInit();
+    navigatorTest();
 
     // ESC_Handle_t m[4];
     // m[0] = ESC_NewHandle(&pwm1, ESC_PROTOCOL_STANDARD);
@@ -102,33 +109,26 @@ void systemTask(void* argv){
     // m[3] = ESC_NewHandle(&pwm4, ESC_PROTOCOL_STANDARD);
     
     // ESC_MultiCalibrate(m, 4);
-
     // for (int i = 0; i < 4; i++){
     //     delay(1000);
     //     ESC_Write(&m[i], 0.2f);
     //     delay(3000);
     //     ESC_Write(&m[i], 0);
     // }
-
     // delay(4000);
-    
     // for (int i = 0; i < 4; i++) ESC_Write(&m[i], 0.2f);
-
-    navigatorInit();
-    navigatorTest();
     
     estimatorInit();
     ncInit();
-    
-    quadInit();
     rccomInit();
 
     /* SYSTEM READY FLAG */
     sysInit = 2;
     ledseqStop(LED1);
-
+    //vec_t* pos = (vec_t*)&xkinematicsState()->position.v;
     while(1){
-        delay(1000);
+        //serialPrint("Position : %.2f, %.2f, %.2f\n", pos->x, pos->y, pos->z);
+        delay(100);
     }
 }
 
@@ -140,7 +140,3 @@ void systemErrorCall(void){
     serialPrint("[E] System Hard Fault Error!\n");
     while(1);
 }
-
-MEM_GROUP_START(SYSTEM)
-MEM_ADD(MEM_UINT32,  sysmem,    &sysmem)
-MEM_GROUP_STOP(SYSTEM)

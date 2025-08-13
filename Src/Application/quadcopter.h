@@ -55,6 +55,7 @@ void   quadTask(void* argv);
 void   quadCalibrate(void* argv);
 void   quadHealthCheck(void);
 int8_t quadSetMode(quadmode_e mode);
+quadmode_e quadGetMode(void);
 void   quadSetMotors(quadmotor_t cmd);
 void   quadStop(void);
 

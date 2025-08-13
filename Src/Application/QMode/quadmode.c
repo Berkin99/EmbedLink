@@ -130,7 +130,7 @@ int8_t quadPermission_AUTO   (quadmode_e lmode){
 	int8_t permission = 
 	quadPermission_HEIGHT(QUAD_MODE_HEIGHT) &&
 	xkinematicsState()->position.stdDev.x >= 0.0f &&
-	xkinematicsState()->position.stdDev.y >= 0.0f ;	
+	xkinematicsState()->position.stdDev.y >= 0.0f;
 	return permission;
 }
 

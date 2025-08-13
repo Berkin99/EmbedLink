@@ -33,9 +33,10 @@
 #include "quadcopter.h"
 #include "pid.h"
 #include "control_attitude.h"
+#include "nrx.h"
 
 /* Attitude PID */
-#define POWER_MAX			800		//[0,1000] us
+#define POWER_MAX			900		//[0,1000] us
 #define ANGLE_MAX			30		//Degrees
 #define ANGLERATE_MAX		160		//Deg/s
 #define PID_ROLLPITCH 		{1.1,  0.01,  17.0}
@@ -90,7 +91,7 @@ quadmotor_t controlTaskATTITUDE (float cpow, vec_t crange){
 	mout.mFL  = cpow * POWER_MAX + pidOut[0] + pidOut[1] + pidOut[2]; // FL
 
 	for (uint8_t i = 0; i < 4; i++) {
-		mout.m[i] = clampf32(mout.m[i], 60, 1000); /* Keep Motors Running */
+		mout.m[i] = clampf32(mout.m[i], 100, 1000); /* Keep Motors Running */
 		mout.m[i] /= 1000.0f;
 	}
 	return mout;
@@ -99,3 +100,22 @@ quadmotor_t controlTaskATTITUDE (float cpow, vec_t crange){
 void controlResetATTITUDE (void){
 	for(uint8_t i = 0; i < 3; i++) pidReset(&hpidAtt[i]);
 }
+
+
+NRX_GROUP_START(pidpitch)
+NRX_ADD(NRX_FLOAT, kp, &hpidAtt[0].coefficient.kp)
+NRX_ADD(NRX_FLOAT, ki, &hpidAtt[0].coefficient.ki)
+NRX_ADD(NRX_FLOAT, kd, &hpidAtt[0].coefficient.kd)
+NRX_GROUP_STOP(pidpitch)
+
+NRX_GROUP_START(pidroll)
+NRX_ADD(NRX_FLOAT, kp, &hpidAtt[1].coefficient.kp)
+NRX_ADD(NRX_FLOAT, ki, &hpidAtt[1].coefficient.ki)
+NRX_ADD(NRX_FLOAT, kd, &hpidAtt[1].coefficient.kd)
+NRX_GROUP_STOP(pidroll)
+
+NRX_GROUP_START(pidyaw)
+NRX_ADD(NRX_FLOAT, kp, &hpidAtt[2].coefficient.kp)
+NRX_ADD(NRX_FLOAT, ki, &hpidAtt[2].coefficient.ki)
+NRX_ADD(NRX_FLOAT, kd, &hpidAtt[2].coefficient.kd)
+NRX_GROUP_STOP(pidyaw)

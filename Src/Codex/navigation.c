@@ -31,6 +31,7 @@
 #include <systime.h>
 #include "navigation.h"
 #include "geoconfig.h"
+#include "nrx.h"
 
 #define BASE_LATITUDE  (111000.0)
 #define BASE_LONGITUDE (2 * M_PI_F64 * EARTH_EQX_R / 360.0)
@@ -71,7 +72,7 @@ int8_t navigationIsValid(navigationState_t* self, navigation_e idx, uint32_t tim
 	switch (idx){
 		case NAV_LOCATION:	return (millis() - self->location.timestampMs < timeout_ms);
 		case NAV_ALTITUDE:	return (millis() - self->altitude.timestampMs < timeout_ms);
-		case NAV_COMPASS:	return (millis() - self->compass.timestampMs < timeout_ms);
+		case NAV_COMPASS:	return (millis() - self->compass.timestampMs  < timeout_ms);
 
 		default:break;
 	}
@@ -115,3 +116,13 @@ float navigationPressureToAltitude(float pressure /*, float temperature */){
 	if (pressure > 0){return ((powf((CONST_SEA_PRESSURE / pressure), CONST_PF) - 1.0f) * (FIX_TEMP + 273.15f)) / 0.0065f;}
 	return 0;
 }
+
+NRX_GROUP_START(location)
+NRX_ADD(NRX_DOUBLE, lat, &_navigation.location.latitude)
+NRX_ADD(NRX_DOUBLE, lon, &_navigation.location.longitude)
+NRX_GROUP_STOP(location)
+
+NRX_GROUP_START(origin)
+NRX_ADD(NRX_DOUBLE, lat, &_origin.location.latitude)
+NRX_ADD(NRX_DOUBLE, lon, &_origin.location.longitude)
+NRX_GROUP_STOP(origin)

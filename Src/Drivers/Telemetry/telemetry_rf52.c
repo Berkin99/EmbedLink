@@ -27,6 +27,7 @@
  *
  */
 
+#include <string.h>
 #include "sysconfig.h"
 #include "systime.h"
 
@@ -37,6 +38,7 @@
 #include "gpio.h"
 #include "uart.h"
 #include "spi.h"
+#include "irq.h"
 
 #define NRF52_INIT_ID       0xAA
 
@@ -44,20 +46,30 @@
 #define NRF52_CMD_TX_SET    0x32
 #define NRF52_CMD_CLEAR     0x33
 
-taskAllocateStatic(RF52, TRX_TASK_STACK, TRX_TASK_PRI)
-void   _telemetryTaskRF52(void* argv);
+static uint8_t     txReceive[33];
+static uint8_t     txBuffer [33];
+
+//taskAllocateStatic(RF52, TRX_TASK_STACK, TRX_TASK_PRI)
+//void   _telemetryTaskRF52(void* argv);
 int8_t rf52_spiReceive(uint8_t* pRxData, uint16_t length);
 int8_t rf52_spiTransmit(const uint8_t* pTxData, uint16_t length);
+int8_t rf52_spiTransmitReceive(uint8_t* pRxData, uint8_t* pTxData, uint16_t length);
 
 int8_t telemetryInitRF52(void){
     pinWrite(RF52_CS, HIGH);
-    delay(10);
+    delay(1000);
+    txBuffer[0] = NRF52_CMD_TX_SET;
+    txReceive[0] = NRF52_CMD_CLEAR;
 
     uint8_t rxBuffer[3];
     rf52_spiReceive(rxBuffer, 3);
-    serialPrint("[>] RF52 ID [0x%x][0x%x][0x%x]\n", rxBuffer[0],rxBuffer[1],rxBuffer[2]); 
+    serialPrint("[>] RF52 ID [0x%x][0x%x][0x%x]\n", rxBuffer[0],rxBuffer[1],rxBuffer[2]);
+
+    delay(10);
+    uint8_t txAddr[2] = {NRF52_CMD_ADR_SET, RF52_CHANNEL};
+    rf52_spiTransmit(txAddr, 2);
     
-    taskCreateStatic(RF52, _telemetryTaskRF52, NULL);
+    //taskCreateStatic(RF52, _telemetryTaskRF52, NULL);
     return OK;
 }
 
@@ -65,30 +77,25 @@ int8_t telemetryTestRF52(void){
     return OK;
 }
 
-void _telemetryTaskRF52(void* argv){
-
-    while (1){
-        delay(100);
-
-    }
-}
-
 int8_t telemetryReceiveRF52(uint8_t* pRxData, uint16_t length){
-
-    return OK;
+    rf52_spiTransmitReceive(pRxData, txReceive, length); 
+    return 32;
 }
 
 int8_t telemetryTransmitRF52(const uint8_t* pTxData, uint16_t length){
+    memcpy(&txBuffer[1], pTxData, 32);
+    rf52_spiTransmit(txBuffer, 32);
     return OK;
 }
 
 int8_t telemetryIsReadyRF52(void){
-    return 0;
+    return TRUE;
 }
 
-void   telemetryWaitDataReadyRF52(void){
-
+void telemetryWaitDataReadyRF52(void){
+    irqWait(&RF52_IRQ, RTOS_MAX_DELAY);
 }
+
 
 int8_t rf52_spiReceive(uint8_t* pRxData, uint16_t length){
     spiBeginTransaction(&RF52_SPI);
@@ -103,6 +110,15 @@ int8_t rf52_spiTransmit(const uint8_t* pTxData, uint16_t length){
     spiBeginTransaction(&RF52_SPI);
     pinWrite(RF52_CS, LOW);
     uint8_t pRxData[32];
+    int8_t rslt = spiTransmitReceive(&RF52_SPI, pRxData, pTxData, length);
+    pinWrite(RF52_CS, HIGH);
+    spiEndTransaction(&RF52_SPI);
+    return rslt;
+}
+
+int8_t rf52_spiTransmitReceive(uint8_t* pRxData, uint8_t* pTxData, uint16_t length){
+    spiBeginTransaction(&RF52_SPI);
+    pinWrite(RF52_CS, LOW);
     int8_t rslt = spiTransmitReceive(&RF52_SPI, pRxData, pTxData, length);
     pinWrite(RF52_CS, HIGH);
     spiEndTransaction(&RF52_SPI);

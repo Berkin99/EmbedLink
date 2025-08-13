@@ -33,10 +33,10 @@
 #include "control_navigation.h"
 #include "kinematics.h"
 #include "filter.h"
-//#include "nrx.h"
+#include "nrx.h"
 
 /* Navigation PID */
-#define PID_NAV    {1.4f, 0.0f, 4.0f}
+#define PID_NAV    {1.8f, 0.0f, 8.0f} // 1.4, 0.0, 4.0
 #define NAV_MAX    4.0f /* m/s */
 
 static pid_t pidNav = PID_NAV;
@@ -76,8 +76,8 @@ void controlResetNAV (void){
     for(uint8_t i = 0; i < 2; i++) {pidReset(&hpidNav[i]);}
 }
 
-// NRX_GROUP_START(pidnav)
-// NRX_ADD(NRX_FLOAT, kp, &pidNav.kp)
-// NRX_ADD(NRX_FLOAT, ki, &pidNav.ki)
-// NRX_ADD(NRX_FLOAT, kd, &pidNav.kd)
-// NRX_GROUP_STOP(pidnav)
+NRX_GROUP_START(pidnav)
+NRX_ADD(NRX_FLOAT, kp, &pidNav.kp)
+NRX_ADD(NRX_FLOAT, ki, &pidNav.ki)
+NRX_ADD(NRX_FLOAT, kd, &pidNav.kd)
+NRX_GROUP_STOP(pidnav)

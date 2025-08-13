@@ -108,8 +108,14 @@ vec_t kinematicsRotateFrame(vec_t v, vec_t frame){
     return (retv);
 }
 
-NRX_GROUP_START(rotation)
+NRX_GROUP_START(pos)
+NRX_ADD(NRX_FLOAT, x, &_kinematics.position.x)
+NRX_ADD(NRX_FLOAT, y, &_kinematics.position.y)
+NRX_ADD(NRX_FLOAT, z, &_kinematics.position.z)
+NRX_GROUP_STOP(pos)
+
+NRX_GROUP_START(rot)
 NRX_ADD(NRX_FLOAT, x, &_kinematics.rotation.x)
 NRX_ADD(NRX_FLOAT, y, &_kinematics.rotation.y)
 NRX_ADD(NRX_FLOAT, z, &_kinematics.rotation.z)
-NRX_GROUP_STOP(rotation)
+NRX_GROUP_STOP(rot)

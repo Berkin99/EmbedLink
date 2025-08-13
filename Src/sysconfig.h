@@ -56,27 +56,25 @@
 //#define MS5611_I2C             i2c1
 
 /// SPI /////////////////////////////////////////////////////
-// #define RF52_SPI               spi3
-// #define RF52_CS                PD0
-// #define RF52_IRQ               irq1
-// #define RF52_CHANNEL           60
+#define RF52_SPI               spi3
+#define RF52_CS                PD0
+#define RF52_IRQ               irq1
+#define RF52_CHANNEL           60
+#define BMI088_SPI             spi1
+#define BMI088_ACC_CS          PC4
+#define BMI088_GYR_CS          PC5
 
 // #define ICM20948_SPI           spi1
 // #define ICM20948_CS            PB0
 // #define MPU6500_SPI			  spi1
 // #define MPU6500_CS             PA0
+// #define RF24_SPI               spi1
+// #define RF24_CE                PC14
+// #define RF24_CS                PC15
+// #define RF24_RX_ADDRESS        {0xE7, 0xE7, 0xE7, 0xE3, 0x04}
+// #define RF24_TX_ADDRESS        {0xE7, 0xE7, 0xE7, 0xE3, 0x05}
 
-#define BMI088_SPI             spi1
-#define BMI088_ACC_CS          PC4
-#define BMI088_GYR_CS          PC5
-
-#define RF24_SPI               spi1
-#define RF24_CE                PC14
-#define RF24_CS                PC15
-#define RF24_RX_ADDRESS        {0xE7, 0xE7, 0xE7, 0xE3, 0x04}
-#define RF24_TX_ADDRESS        {0xE7, 0xE7, 0xE7, 0xE3, 0x05}
-
-#define SPI_CS_HIGH            {BMI088_ACC_CS, BMI088_GYR_CS, RF24_CE, RF24_CS}
+#define SPI_CS_HIGH            {BMI088_ACC_CS, BMI088_GYR_CS, RF52_CS}
 
 /// UART ////////////////////////////////////////////////////
 // #define E32100_UART            uart1
@@ -104,7 +102,7 @@
 // #define MEM_DEBUG
 
 /// NCOM ////////////////////////////////////////////////////
-#define NC_MODULE              "RF24"
+#define NC_MODULE              "RF52"
 #define NC_NTRPPACKET
 #define NC_RX_LED               LED1
 #define NC_TX_LED               LED2

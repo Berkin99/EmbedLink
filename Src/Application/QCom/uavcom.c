@@ -33,19 +33,23 @@
 #include "quadcopter.h"
 #include "rtos.h"
 #include "sysconfig.h"
+#include "systime.h"
 
 #define STATE_ENTER       0x01
 #define STATE_DURING      0x03
 #define STATE_EXIT        0x02
-#define STATE_CASE(state) (((self_state == state) << 1) | (target_state == state))
+
+#define STATE_CASE(state) (((uav_state == state) << 1) | (target_state == state))
 
 taskAllocateStatic(UAVCOM, CONTROL_TASK_STACK, CONTROL_TASK_PRI);
 
-static uavcomState_e self_state   = UAVCOM_STATE_IDLE;
+uavcomState_e uav_state   = UAVCOM_STATE_IDLE;
 static uavcomState_e next_state   = UAVCOM_STATE_IDLE;
 
 static uavcomState_e target_state = UAVCOM_STATE_IDLE;
 static vec_t cpos;
+static vec_t crot;
+static vec_t home;
 
 void uavcomInit(void){
     serialPrint("[>] UAVCOM Init : OK\n");
@@ -60,45 +64,61 @@ void uavcomTask(void* argv){
 }
 
 void uavcomUpdate(void){
-    next_state = self_state;
+
+    next_state = uav_state;
     
     uavcomState_IDLE();
     uavcomState_READY();
     uavcomState_AUTO();
+    uavcomState_MOVING();
     uavcomState_TAKEOFF();
     uavcomState_LAND();
 
-    self_state = next_state;
+    uav_state = next_state;
 }
 
-void uavcomArm(void){ target_state = UAVCOM_STATE_READY; }
+void uavcomArm(void){ 
+    target_state = UAVCOM_STATE_READY; 
+}
 
-void uavcomDisarm(void){ target_state = UAVCOM_STATE_IDLE; }
+void uavcomDisarm(void){
+    target_state = UAVCOM_STATE_IDLE; 
+}
+
+void uavcomMove(vec_t pos){
+    target_state = UAVCOM_STATE_MOVING;
+    cpos = pos;
+}
+
+void uavcomYaw(float yaw){
+    crot.z = yaw;
+}
 
 void uavcomTakeOff(float z){
-    cpos.z = z;
     target_state = UAVCOM_STATE_TAKEOFF;
+    cpos.z = z;
 }
 
-void uavcomLand(void);
-
-void uavcomPose(vec_t pos, float yaw){
-    quadcmd_AUTO(pos, yaw);
+void uavcomLand(void){
+    target_state = UAVCOM_STATE_LAND;
 }
 
-void uavcomKill(void){ self_state = UAVCOM_STATE_IDLE; }
+void uavcomHome(void){
+    //uavcomPose()
+}
+
+void uavcomKill(void){ 
+    quadSetMode(QUAD_MODE_IDLE);
+    uav_state = UAVCOM_STATE_IDLE; 
+}
 
 void uavcomState_IDLE(void){
     uint8_t statecase = STATE_CASE(UAVCOM_STATE_IDLE);
     switch (statecase){
         case STATE_ENTER:
-            /* code */
-        break;
-        case STATE_DURING:
-
-        break;
-        case STATE_EXIT:
-
+            quadSetMode(QUAD_MODE_IDLE);
+            next_state = UAVCOM_STATE_IDLE;
+            /* Entered */
         break;
     }
 }
@@ -107,13 +127,9 @@ void uavcomState_READY(void){
     uint8_t statecase = STATE_CASE(UAVCOM_STATE_READY);
     switch (statecase){
         case STATE_ENTER:
-            /* code */
-        break;
-        case STATE_DURING:
-
-        break;
-        case STATE_EXIT:
-
+            if(quadSetMode(QUAD_MODE_READY) != OK) return;
+            next_state = UAVCOM_STATE_READY;
+            /* Entered */
         break;
     }
 }
@@ -122,10 +138,39 @@ void uavcomState_AUTO(void){
     uint8_t statecase = STATE_CASE(UAVCOM_STATE_AUTO);
     switch (statecase){
         case STATE_ENTER:
-            /* code */
+            next_state = UAVCOM_STATE_AUTO;
+            /* Entered */
         break;
         case STATE_DURING:
+            quadcmd_AUTO(cpos, crot.z);
+        break;
+        case STATE_EXIT:
 
+        break;
+    }
+}
+
+void uavcomState_MOVING(void){
+    uint8_t statecase = STATE_CASE(UAVCOM_STATE_MOVING);
+    static uint8_t  arrived;
+    static uint32_t arrive_t;
+
+    switch (statecase){
+        case STATE_ENTER:
+            if(quadGetMode() != QUAD_MODE_AUTO){target_state = uav_state; return;}
+            next_state = UAVCOM_STATE_MOVING;
+            /* Entered */
+            arrived  = FALSE;
+            arrive_t = millis();
+        break;
+        case STATE_DURING:
+            quadcmd_AUTO(cpos, crot.z);
+            arrived = vdist(cpos, xkinematicsState()->position.v) < UAV_ARRIVAL_DISTANCE;
+            if(arrived)
+                if(millis() - arrive_t > UAV_ARRIVAL_COUNTER_MS) target_state = QUAD_MODE_AUTO;
+            else 
+                arrive_t = millis();
+            
         break;
         case STATE_EXIT:
 
@@ -139,24 +184,29 @@ void uavcomState_TAKEOFF(void){
     static float to_z, st_z, st_yaw;
     switch (statecase){
         case STATE_ENTER:
-            if(self_state != UAVCOM_STATE_READY) return;
-            if(quadSetMode(QUAD_MODE_AUTO) == OK) return;
+            if(uav_state != UAVCOM_STATE_READY) return;
+            if(quadSetMode(QUAD_MODE_AUTO) != OK) return;
             next_state = UAVCOM_STATE_TAKEOFF;
+            /* Entered */
             to_start = millis();
             to_z = cpos.z;
             st_z = xkinematicsState()->position.z;
             cpos = xkinematicsState()->position.v;
+            home = xkinematicsState()->position.v;
             st_yaw = xkinematicsState()->rotation.z;
+            
         break;
         case STATE_DURING:
-            float ivar = (float)(millis() - to_start) / 5000.0f;
+
+            float ivar = (float)(millis() - to_start) / 6000.0f;
             if (ivar > 1.0f) {
-                next_state = UAVCOM_STATE_AUTO;
+                target_state = UAVCOM_STATE_AUTO;
                 break;
             }
-            cpos.z = ivar * to_z  + (1.0f - ivar) * st_z;
 
+            cpos.z = ivar * to_z  + (1.0f - ivar) * st_z;
             quadcmd_AUTO(cpos, st_yaw);
+        
         break;
         case STATE_EXIT:
 
@@ -166,15 +216,31 @@ void uavcomState_TAKEOFF(void){
 
 void uavcomState_LAND(void){
     uint8_t statecase = STATE_CASE(UAVCOM_STATE_LAND);
+    
+    static uint32_t ld_start;
+    static float ld_z, st_z, st_yaw;
+
     switch (statecase){
         case STATE_ENTER:
-            /* code */
+            if(quadGetMode() != QUAD_MODE_AUTO){target_state = uav_state; return;}
+            next_state = UAVCOM_STATE_LAND;
+            ld_start = millis();
+            ld_z = -3.0f;
+            st_z = xkinematicsState()->position.z;
+            cpos = xkinematicsState()->position.v;
+            st_yaw = xkinematicsState()->rotation.z;
         break;
         case STATE_DURING:
-
+            float ivar = (float)(millis() - ld_start) / 8000.0f;
+            if(ivar > 1.0f){
+                target_state = UAVCOM_STATE_READY;
+                break;
+            }
+            cpos.z = ivar * ld_z  + (1.0f - ivar) * st_z;
+            quadcmd_AUTO(cpos, st_yaw);
         break;
         case STATE_EXIT:
-
+            quadSetMode(QUAD_MODE_READY);
         break;
     }
 }

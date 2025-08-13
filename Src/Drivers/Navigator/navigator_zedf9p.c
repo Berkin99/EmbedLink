@@ -80,6 +80,8 @@ void navigatorTaskZEDF9P(void* argv){
 	uartSetBaudRate(&ZEDF9P_UART, 115200);	 	 	    /* 4-Change The STM32 Baudrate 115200 */
 	UBLOX_LoadConfig (&gps);						    /* 5-GLL GSA GSV RMC VTG Message Frequency to 0Hz, GGA Message Frequency to 5Hz */
 
+	serialPrint("[+] ZEDF9P Stabilize\n ");
+
 	/* Start Location Stabilize */
 	location_t sloc = {0};
 	_navigatorStabilizeZEDF9P(100, &sloc);
@@ -87,9 +89,9 @@ void navigatorTaskZEDF9P(void* argv){
 
 	/* Navigation Origin Set */
 	xnavigationOrigin()->location = sloc;
-
+	
 	isReady = 1;
-	serialPrint("[+] ZEDF9P Location %.7f, %.7f\n", sloc.latitude, sloc.longitude);
+	serialPrint("\n[+] ZEDF9P Location %.7f, %.7f\n", sloc.latitude, sloc.longitude);
 
 	/* Navigator Loop */
 	while(1){
@@ -112,6 +114,7 @@ void   navigatorWaitDataReadyZEDF9P(void){while(!newData) delay(50);}
 
 uint16_t _navigationReadDataZEDF9P(uint8_t* pBuffer){
 	int16_t i = uartReadToIdle(&ZEDF9P_UART, pBuffer, 127);
+	//serialPrint("%s\n", pBuffer);
     if(i <= 0) return 0;
 	pBuffer[i + 1] = 0; /* Make a string */
 	return i;
@@ -159,15 +162,15 @@ int8_t _navigatorStabilizeZEDF9P(int iter, location_t* pLocation){
 	
 	while(i < iter){
 		location_t temp;
-		int16_t len = _navigationReadDataZEDF9P(gpsBuffer);
-		if(len < 5) return E_CONNECTION;
+		_navigationReadDataZEDF9P(gpsBuffer);
 		int8_t status = _navigatorParseLocationZEDF9P(gpsBuffer, &temp);
 		
 		if(status > 0){
 			stabilized.latitude = meanf64(stabilized.latitude, temp.latitude, i);
 			stabilized.longitude = meanf64(stabilized.longitude, temp.longitude, i);
+			i++;
 		}
-		i++;
+		delay(100);
 	}
 
 	*pLocation = stabilized;

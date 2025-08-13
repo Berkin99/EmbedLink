@@ -121,6 +121,7 @@ static inline vec_t vclamp(vec_t v, vec_t lower, vec_t upper) {
     return vmin(upper, vmax(v, lower));
 }
 
+/* B as Radians */
 static inline vec_t vrot2(vec_t v, f32 B) {
     return (vec_t){
         .x = cosf(B) * v.x - sinf(B) * v.y,

@@ -127,7 +127,7 @@ void _estimatorUpdateKF(uint32_t tick){
     if(RATE_DO_EXECUTE(MADGWICK_UPDATE_RATE, tick))   _estimatorMadgwickKF();
     //if(RATE_DO_EXECUTE(COMPASS_UPDATE_RATE,  tick)) _estimatorCompassKF();
 	if(RATE_DO_EXECUTE(KF_UPDATE_RATE,       tick))   _estimatorHeightKF();
-	//if(RATE_DO_EXECUTE(KF_POS_UPDATE_RATE,   tick)) _estimatorPositionKF();
+	if(RATE_DO_EXECUTE(KF_POS_UPDATE_RATE,   tick))   _estimatorPositionKF();
 }
 
 void _estimatorMadgwickKF(void){
@@ -164,8 +164,8 @@ void _estimatorMadgwickKF(void){
 void _estimatorHeightKF(void){
 	/* Kalman Filter */
 	xvec_t acc;
-	xvec_t velocity = xvzero();
-	xvec_t position = xvzero();
+	xvec_t velocity = xkinematicsState()->velocity;
+	xvec_t position = xkinematicsState()->position;
 
 	/* Height Estimate */
 	if(!xvtime(&state.pressure, ESTIMATOR_TIMEOUT_MS)) return;
@@ -216,44 +216,42 @@ void _estimatorHeightKF(void){
 // 	navigationAppend(&nav);
 // }
 
-// void _estimatorPositionKF(void){
-// 	static vec_t posDif;
-// 	static vec_t posLast;
-// 	static int    posCounter;
+void _estimatorPositionKF(void){
+	static vec_t posDif;
+	static vec_t posLast;
+	static int   posCounter;
 	
-// 	kinv_t     acc;
-// 	location_t loc;
-// 	compass_t  cmp;
-// 	kinv_t velocity = kinzero();
-// 	kinv_t position = kinzero();
+	xvec_t acc;
+	xvec_t velocity = xkinematicsState()->velocity;
+	xvec_t position = xkinematicsState()->position;
 
-// 	if(navigationLocation(&loc) <= 0 || navigationCompass(&cmp) <= 0) return;
-// 	if(kinematicsVector(STATE_ACCELERATION, &acc) <= 0) return;
+	if(!xnavigationIsValid(NAV_LOCATION, ESTIMATOR_TIMEOUT_MS)) return;
+	if(!xkinematicsIsValid(KINV_ACCELERATION, ESTIMATOR_TIMEOUT_MS)) return;
+	acc = xkinematicsGet(KINV_ACCELERATION);
+	
+	xvec_t pos;
+	xnavigationGetPosition(&pos.v);
+	posCounter++;
+	pos.v = vadd(pos.v, posDif);
+	if(posCounter >= 200){
+		posDif = vdiv(vsub(pos.v, posLast), 200);
+		posLast = pos.v;
+	}
 
-// 	kinv_t pos;
-// 	navigationLocationPos(&pos);
+	kalmanIterate(&hKalman[0], pos.x, acc.x);
+	position.x = hKalman[0].Xn.mx[0][0];
+	velocity.x = hKalman[0].Xn.mx[1][0];
 
-// 	posCounter++;
-// 	pos.vector = vadd(pos.vector, posDif);
-// 	if(posCounter >= 200){
-// 		posDif = vdiv(vsub(pos.vector, posLast), 200);
-// 		posLast = pos.vector;
-// 	}
+	kalmanIterate(&hKalman[1], pos.y, acc.y);
+	position.y = hKalman[1].Xn.mx[0][0];
+	velocity.y = hKalman[1].Xn.mx[1][0];
 
-// 	kalmanIterate(&hKalman[0], pos.x, acc.x);
-// 	position.x = hKalman[0].Xn.mx[0][0];
-// 	velocity.x = hKalman[0].Xn.mx[1][0];
+	velocity.stdDev = vnew(acc.stdDev.x, acc.stdDev.y, velocity.stdDev.z);
+	position.stdDev = vnew(1, 1, position.stdDev.z);
 
-// 	kalmanIterate(&hKalman[1], pos.y, acc.y);
-// 	position.y = hKalman[1].Xn.mx[0][0];
-// 	velocity.y = hKalman[1].Xn.mx[1][0];
-
-// 	velocity.stdDev = mkvec(acc.stdDev.x, acc.stdDev.y, 0);
-// 	position.stdDev = mkvec(1, 1, 0);
-
-// 	kinematicsAppend(STATE_POSITION, position);
-// 	kinematicsAppend(STATE_VELOCITY, velocity);
-// }
+	xkinematicsSet(KINV_POSITION, position);
+	xkinematicsSet(KINV_VELOCITY, velocity);
+}
 
 void _estimatorOriginSetKF(void){
 	/* Altitude Origin */

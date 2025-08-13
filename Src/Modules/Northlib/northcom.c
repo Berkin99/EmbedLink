@@ -92,6 +92,7 @@ void ncTask(void* argv){
 	static uint8_t rxBuffer[NTRP_MAX_MSG_SIZE];
 
 	while(!ncTRX->IsReady()) delay(10);
+	ncTRX->Receive(rxBuffer, 32);
 
 	while(1)
 	{
@@ -100,8 +101,9 @@ void ncTask(void* argv){
 			#ifdef NC_RX_LED
 			ledToggle(NC_RX_LED);
 			#endif
+			delay(1);
 			ncDataHandler(rxBuffer);
-		}
+		}	
 	}
 }
 
@@ -154,6 +156,7 @@ void ncDataHandler(const uint8_t* rxBuffer){
 }
 
 void ncPacketHandler(NTRP_Packet_t* packet){
+
 	switch (packet->header) {
 		case NTRP_NAK:ncRxHandler.NAK_Callback(); break;
 		case NTRP_ACK:ncRxHandler.ACK_Callback(); break;
@@ -278,7 +281,7 @@ void RxCMD(uint8_t cmdid, uint8_t* data){
 		arr[0] = data[0];
 		arr[1] = val->type;
 		strcpy((char*)&arr[2],val->name);
-		//serialPrint("[>] NRX:%d:%d:%s\n",arr[0],arr[1],(char*)&arr[2]); /* Debug */
+//		serialPrint("[>] NRX:%d:%d:%s\n",arr[0],arr[1],(char*)&arr[2]); /* Debug */
 		TxCMD(NRX_CONTENT_ID, arr);
 	}break;
 	case (FUNC_CONTENT_ID):break;

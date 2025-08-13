@@ -40,9 +40,10 @@
  */
 
 typedef enum {
-    RCCOM_STATE_IDLE = 0,
+    RCCOM_STATE_IDLE   = 0,
     RCCOM_STATE_MANUAL = 1,
     RCCOM_STATE_HEIGHT = 2,
+    RCCOM_STATE_NAV    = 3,
 } rccomState_e;
 
 void rccomInit(void);
@@ -52,5 +53,6 @@ void rccomUpdate(void);
 void rccomState_IDLE(void);
 void rccomState_MANUAL(void);
 void rccomState_HEIGHT(void);
+void rccomState_NAV(void);
 
 #endif /* RCCOM_H_ */

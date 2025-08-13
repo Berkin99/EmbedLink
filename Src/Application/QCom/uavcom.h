@@ -40,13 +40,19 @@
  * > 
  */
 
+#define UAV_ARRIVAL_DISTANCE    (1.0f) /* Meters */
+#define UAV_ARRIVAL_COUNTER_MS  (1000) /* Milliseconds */  
+
 typedef enum{
     UAVCOM_STATE_IDLE,
     UAVCOM_STATE_READY,
     UAVCOM_STATE_AUTO,
+    UAVCOM_STATE_MOVING,
     UAVCOM_STATE_TAKEOFF,
     UAVCOM_STATE_LAND,    
 }uavcomState_e;
+
+extern uavcomState_e uav_state;
 
 void uavcomInit(void);
 void uavcomTask(void* argv);
@@ -56,12 +62,16 @@ void uavcomArm(void);
 void uavcomDisarm(void);
 void uavcomTakeOff(float z);
 void uavcomLand(void);
-void uavcomPose(vec_t pos, float yaw);
+void uavcomMove(vec_t pos);
+void uavcomYaw(float yaw);
+
+void uavcomHome(void);
 void uavcomKill(void);
 
 void uavcomState_IDLE(void);
 void uavcomState_READY(void);
 void uavcomState_AUTO(void);
+void uavcomState_MOVING(void);
 void uavcomState_TAKEOFF(void);
 void uavcomState_LAND(void);
 

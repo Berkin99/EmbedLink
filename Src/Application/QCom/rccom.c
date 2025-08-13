@@ -62,21 +62,23 @@ void rccomTask(void* argv) {
 }
 
 void rccomUpdate(void){
+    RC_Validity();
+
     if (rc.state == RC_ARMED){
         switch ((int)rc.chCONF.value){
             case 0: target_state = RCCOM_STATE_MANUAL; break;
             case 2: target_state = RCCOM_STATE_HEIGHT; break;
+            case 3: target_state = RCCOM_STATE_NAV; break;
         }
     }
-
-    RC_Validity();
 
     next_state = self_state;
     
     rccomState_IDLE();
     rccomState_MANUAL();
     rccomState_HEIGHT();
-    
+    rccomState_NAV();
+
     self_state = next_state;
 }
 
@@ -134,6 +136,25 @@ void rccomState_HEIGHT(void) {
         case STATE_EXIT: break;
     }
 }
+
+void rccomState_NAV(void){
+    uint8_t statecase = STATE_CASE(RCCOM_STATE_NAV);
+
+    static vec_t t_pos;
+    switch (statecase) {
+        case STATE_ENTER:
+            if (quadSetMode(QUAD_MODE_AUTO) != OK){ serialPrint("[-] RCCOM NAV Failed\n"); return;} 
+            next_state = RCCOM_STATE_NAV;
+            serialPrint("[>] RCCOM NAV\n");
+            t_pos = xkinematicsState()->position.v;
+            break;
+        case STATE_DURING:
+            quadcmd_AUTO(t_pos, 0);
+            break;            
+        case STATE_EXIT: break;
+    }
+}
+
 
 void _rccallback(uint8_t event) {
     if (event == RC_EVENT_ARM) target_state = RCCOM_STATE_MANUAL;

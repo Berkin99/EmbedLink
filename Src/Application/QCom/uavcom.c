@@ -27,6 +27,7 @@
  *
  */
 
+#include <string.h>
 
 #include "uavcom.h"
 #include "northcom.h"
@@ -34,6 +35,8 @@
 #include "rtos.h"
 #include "sysconfig.h"
 #include "systime.h"
+#include "uart.h"
+#include "nrx.h"
 
 #define STATE_ENTER       0x01
 #define STATE_DURING      0x03
@@ -77,6 +80,24 @@ void uavcomUpdate(void){
     uav_state = next_state;
 }
 
+void uavcomParse(uint8_t* data){
+    uint8_t cmd = data[0];
+    vec_t pv;
+    for (int i = 0; i < 3; i++)
+        memcpy(&pv.axis[i], &data[(i * 4) + 1], 4);
+
+    switch (cmd){
+        case UAVCOM_CMD_ARM:     uavcomArm(); break;
+        case UAVCOM_CMD_DISARM:  uavcomDisarm(); break;
+        case UAVCOM_CMD_TAKEOFF: uavcomTakeOff(pv.axis[0]); break;
+        case UAVCOM_CMD_LAND:    uavcomLand(); break;
+        case UAVCOM_CMD_MOVE:    uavcomMove(pv); break;
+        case UAVCOM_CMD_YAW:     uavcomYaw(pv.axis[0]); break;
+        case UAVCOM_CMD_HOME:    uavcomHome(); break;
+        case UAVCOM_CMD_KILL:    uavcomKill(); break;
+    }
+}
+
 void uavcomArm(void){ 
     target_state = UAVCOM_STATE_READY; 
 }
@@ -104,11 +125,13 @@ void uavcomLand(void){
 }
 
 void uavcomHome(void){
-    //uavcomPose()
+    target_state = UAVCOM_STATE_MOVING;
+    cpos = home;
 }
 
 void uavcomKill(void){ 
     quadSetMode(QUAD_MODE_IDLE);
+    target_state = UAVCOM_STATE_IDLE;    
     uav_state = UAVCOM_STATE_IDLE; 
 }
 
@@ -118,6 +141,7 @@ void uavcomState_IDLE(void){
         case STATE_ENTER:
             quadSetMode(QUAD_MODE_IDLE);
             next_state = UAVCOM_STATE_IDLE;
+            serialPrint("[>] UAVCOM IDLE\n");
             /* Entered */
         break;
     }
@@ -129,6 +153,7 @@ void uavcomState_READY(void){
         case STATE_ENTER:
             if(quadSetMode(QUAD_MODE_READY) != OK) return;
             next_state = UAVCOM_STATE_READY;
+            serialPrint("[>] UAVCOM READY\n");
             /* Entered */
         break;
     }
@@ -139,6 +164,7 @@ void uavcomState_AUTO(void){
     switch (statecase){
         case STATE_ENTER:
             next_state = UAVCOM_STATE_AUTO;
+            serialPrint("[>] UAVCOM AUTO\n");
             /* Entered */
         break;
         case STATE_DURING:
@@ -162,15 +188,15 @@ void uavcomState_MOVING(void){
             /* Entered */
             arrived  = FALSE;
             arrive_t = millis();
+            serialPrint("[>] UAVCOM MOVING %.2f, %.2f, %.2f\n", cpos.x, cpos.y, cpos.z);
         break;
         case STATE_DURING:
             quadcmd_AUTO(cpos, crot.z);
             arrived = vdist(cpos, xkinematicsState()->position.v) < UAV_ARRIVAL_DISTANCE;
-            if(arrived)
-                if(millis() - arrive_t > UAV_ARRIVAL_COUNTER_MS) target_state = QUAD_MODE_AUTO;
-            else 
-                arrive_t = millis();
-            
+            if(arrived){
+                if(millis() - arrive_t > UAV_ARRIVAL_COUNTER_MS) target_state = UAVCOM_STATE_AUTO;
+            }
+            else arrive_t = millis();
         break;
         case STATE_EXIT:
 
@@ -194,7 +220,7 @@ void uavcomState_TAKEOFF(void){
             cpos = xkinematicsState()->position.v;
             home = xkinematicsState()->position.v;
             st_yaw = xkinematicsState()->rotation.z;
-            
+            serialPrint("[>] UAVCOM TAKEOFF %.2f\n", to_z);
         break;
         case STATE_DURING:
 
@@ -203,7 +229,6 @@ void uavcomState_TAKEOFF(void){
                 target_state = UAVCOM_STATE_AUTO;
                 break;
             }
-
             cpos.z = ivar * to_z  + (1.0f - ivar) * st_z;
             quadcmd_AUTO(cpos, st_yaw);
         
@@ -229,6 +254,8 @@ void uavcomState_LAND(void){
             st_z = xkinematicsState()->position.z;
             cpos = xkinematicsState()->position.v;
             st_yaw = xkinematicsState()->rotation.z;
+            serialPrint("[>] UAVCOM LAND\n");
+
         break;
         case STATE_DURING:
             float ivar = (float)(millis() - ld_start) / 8000.0f;
@@ -244,3 +271,20 @@ void uavcomState_LAND(void){
         break;
     }
 }
+
+// NRX_GROUP_START(uavcom)
+// NRX_ADD(NRX_UINT8, "state", &uav_state)
+// NRX_ADD(NRX_UINT8, "target", &target_state)
+// NRX_GROUP_STOP(uavcom)
+
+// NRX_GROUP_START(uavcpos)
+// NRX_ADD(NRX_FLOAT, "x", &cpos.x)
+// NRX_ADD(NRX_FLOAT, "y", &cpos.y)
+// NRX_ADD(NRX_FLOAT, "z", &cpos.z)
+// NRX_GROUP_STOP(uavcpos)
+
+// NRX_GROUP_START(uavcrot)
+// NRX_ADD(NRX_FLOAT, "x", &crot.x)
+// NRX_ADD(NRX_FLOAT, "y", &crot.y)
+// NRX_ADD(NRX_FLOAT, "z", &crot.z)
+// NRX_GROUP_STOP(uavcrot)

@@ -43,6 +43,7 @@
 #include "led.h"
 #include "uart.h"
 #include "rc_interface.h"
+#include "uavcom.h"
 
 #ifndef NC_ID
 #define NC_ID 		'X'
@@ -156,7 +157,6 @@ void ncDataHandler(const uint8_t* rxBuffer){
 }
 
 void ncPacketHandler(NTRP_Packet_t* packet){
-
 	switch (packet->header) {
 		case NTRP_NAK:ncRxHandler.NAK_Callback(); break;
 		case NTRP_ACK:ncRxHandler.ACK_Callback(); break;
@@ -269,11 +269,11 @@ void RxCMD(uint8_t cmdid, uint8_t* data){
     #define RC_CONTROLLER 		0x00
     #define NRX_CONTENT_ID 		0x01
     #define FUNC_CONTENT_ID 	0x02
-    #define QUAD_CONTROLLER     40
+    #define UAV_CONTROLLER      40
 
 	switch (cmdid){
 	case (RC_CONTROLLER):{RC_Update(data);}break;
-	//case (QUAD_CONTROLLER):{uavcomUpdate(data);}break;
+	case (UAV_CONTROLLER):{uavcomParse(data);}break;
     case (NRX_CONTENT_ID):{
 		uint8_t arr[26] = {0};
 		struct nrx_s* val = nrxGetVar(data[0]);

@@ -51,10 +51,12 @@
 #include "esc.h"
 #include "watchtime.h"
 #include "quadcopter.h"
-#include "northcom.h"
-#include "rccom.h"
 #include "kinematics.h"
 #include "navigation.h"
+
+#include "northcom.h"
+#include "rccom.h"
+#include "uavcom.h"
 
 static uint8_t sysInit = 0;
 
@@ -120,7 +122,8 @@ void systemTask(void* argv){
     
     estimatorInit();
     ncInit();
-    rccomInit();
+    //rccomInit();
+    uavcomInit();
 
     /* SYSTEM READY FLAG */
     sysInit = 2;

@@ -29,6 +29,7 @@
 
 #include <string.h>
 
+#include "navigation.h"
 #include "uavcom.h"
 #include "northcom.h"
 #include "quadcopter.h"
@@ -46,9 +47,11 @@
 
 taskAllocateStatic(UAVCOM, CONTROL_TASK_STACK, CONTROL_TASK_PRI);
 
-uavcomState_e uav_state   = UAVCOM_STATE_IDLE;
-static uavcomState_e next_state   = UAVCOM_STATE_IDLE;
+/* Status */
+uavcomState_e uav_state = UAVCOM_STATE_IDLE;
+static uavcomState_e next_state = UAVCOM_STATE_IDLE;
 
+/* Commands */
 static uavcomState_e target_state = UAVCOM_STATE_IDLE;
 static vec_t cpos;
 static vec_t crot;
@@ -81,20 +84,22 @@ void uavcomUpdate(void){
 }
 
 void uavcomParse(uint8_t* data){
-    uint8_t cmd = data[0];
-    vec_t pv;
-    for (int i = 0; i < 3; i++)
-        memcpy(&pv.axis[i], &data[(i * 4) + 1], 4);
+    uint8_t cmd;
+    vec_t cmdv;
+
+    cmd = data[0];
+    for (int i = 0; i < 3; i++) memcpy(&cmdv.axis[i], &data[(i * 4) + 1], 4);
 
     switch (cmd){
         case UAVCOM_CMD_ARM:     uavcomArm(); break;
         case UAVCOM_CMD_DISARM:  uavcomDisarm(); break;
-        case UAVCOM_CMD_TAKEOFF: uavcomTakeOff(pv.axis[0]); break;
+        case UAVCOM_CMD_TAKEOFF: uavcomTakeOff(cmdv.axis[0]); break;
         case UAVCOM_CMD_LAND:    uavcomLand(); break;
-        case UAVCOM_CMD_MOVE:    uavcomMove(pv); break;
-        case UAVCOM_CMD_YAW:     uavcomYaw(pv.axis[0]); break;
+        case UAVCOM_CMD_MOVE:    uavcomMove(cmdv); break;
+        case UAVCOM_CMD_YAW:     uavcomYaw(cmdv.axis[0]); break;
         case UAVCOM_CMD_HOME:    uavcomHome(); break;
         case UAVCOM_CMD_KILL:    uavcomKill(); break;
+        case UAVCOM_CMD_ORIGIN:  uavcomOrigin(&data[1]); break;
     }
 }
 
@@ -133,6 +138,13 @@ void uavcomKill(void){
     quadSetMode(QUAD_MODE_IDLE);
     target_state = UAVCOM_STATE_IDLE;    
     uav_state = UAVCOM_STATE_IDLE; 
+}
+
+void uavcomOrigin(uint8_t* data){
+    f64 loc[2];
+    for (int i = 0; i < 2; i++) memcpy(&loc[i], &data[i * sizeof(f64)], sizeof(f64));
+    xnavigationOrigin()->location.latitude = loc[0];
+    xnavigationOrigin()->location.longitude = loc[1];
 }
 
 void uavcomState_IDLE(void){
@@ -267,7 +279,7 @@ void uavcomState_LAND(void){
             quadcmd_AUTO(cpos, st_yaw);
         break;
         case STATE_EXIT:
-            quadSetMode(QUAD_MODE_READY);
+        
         break;
     }
 }
@@ -276,15 +288,3 @@ void uavcomState_LAND(void){
 // NRX_ADD(NRX_UINT8, "state", &uav_state)
 // NRX_ADD(NRX_UINT8, "target", &target_state)
 // NRX_GROUP_STOP(uavcom)
-
-// NRX_GROUP_START(uavcpos)
-// NRX_ADD(NRX_FLOAT, "x", &cpos.x)
-// NRX_ADD(NRX_FLOAT, "y", &cpos.y)
-// NRX_ADD(NRX_FLOAT, "z", &cpos.z)
-// NRX_GROUP_STOP(uavcpos)
-
-// NRX_GROUP_START(uavcrot)
-// NRX_ADD(NRX_FLOAT, "x", &crot.x)
-// NRX_ADD(NRX_FLOAT, "y", &crot.y)
-// NRX_ADD(NRX_FLOAT, "z", &crot.z)
-// NRX_GROUP_STOP(uavcrot)

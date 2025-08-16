@@ -59,7 +59,7 @@
 #define RF52_SPI               spi3
 #define RF52_CS                PD0
 #define RF52_IRQ               irq1
-#define RF52_CHANNEL           60
+#define RF52_CHANNEL           76
 #define BMI088_SPI             spi1
 #define BMI088_ACC_CS          PC4
 #define BMI088_GYR_CS          PC5

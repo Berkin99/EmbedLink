@@ -43,7 +43,7 @@
 /// LED /////////////////////////////////////////////////////
 #define LED1_PIN               PE10
 #define LED2_PIN               PE11
-//#define LED3_PIN               PD3
+#define LED3_PIN               PC13
 //#define LED4_PIN               PD4
 
 /// I2C /////////////////////////////////////////////////////
@@ -59,7 +59,7 @@
 #define RF52_SPI               spi3
 #define RF52_CS                PD0
 #define RF52_IRQ               irq1
-#define RF52_CHANNEL           76
+#define RF52_CHANNEL           84
 #define BMI088_SPI             spi1
 #define BMI088_ACC_CS          PC4
 #define BMI088_GYR_CS          PC5
@@ -104,7 +104,7 @@
 /// NCOM ////////////////////////////////////////////////////
 #define NC_MODULE              "RF52"
 #define NC_NTRPPACKET
-#define NC_RX_LED               LED1
+#define NC_RX_LED               LED3
 #define NC_TX_LED               LED2
 // #define NC_NTRPMESSAGE
 // #define NC_ID                 'X'

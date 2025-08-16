@@ -38,6 +38,7 @@
 #include "systime.h"
 #include "uart.h"
 #include "nrx.h"
+#include "estimator.h"
 
 #define STATE_ENTER       0x01
 #define STATE_DURING      0x03
@@ -58,11 +59,12 @@ static vec_t crot;
 static vec_t home;
 
 void uavcomInit(void){
-    serialPrint("[>] UAVCOM Init : OK\n");
     taskCreateStatic(UAVCOM, uavcomTask, NULL);
 }
 
 void uavcomTask(void* argv){
+    serialPrint("[>] UAVCOM Init : OK\n");
+    
     while (1){
         uavcomUpdate();
         delay(10);
@@ -145,6 +147,7 @@ void uavcomOrigin(uint8_t* data){
     for (int i = 0; i < 2; i++) memcpy(&loc[i], &data[i * sizeof(f64)], sizeof(f64));
     xnavigationOrigin()->location.latitude = loc[0];
     xnavigationOrigin()->location.longitude = loc[1];
+    estimatorOriginSet(); /* Updates the Z axis */
 }
 
 void uavcomState_IDLE(void){

@@ -50,11 +50,12 @@ static rccomState_e next_state   = RCCOM_STATE_IDLE;
 
 void rccomInit(void) {
     RC_SetCallback(_rccallback);
-    serialPrint("[>] RCCOM Init : OK\n");
     taskCreateStatic(RCCOM, rccomTask, NULL);
 }
 
 void rccomTask(void* argv) {
+    serialPrint("[>] RCCOM Init : OK\n");
+    
     while (1) {
         rccomUpdate();
         delay(10);

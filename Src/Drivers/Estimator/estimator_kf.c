@@ -63,7 +63,6 @@ void _estimatorMadgwickKF(void);
 void _estimatorCompassKF(void);
 void _estimatorHeightKF(void);
 void _estimatorPositionKF(void);
-void _estimatorOriginSetKF(void);
 void _estimatorUpdateKF(uint32_t tick);
 
 void estimatorTaskKF(void* argv);
@@ -99,9 +98,15 @@ void estimatorTaskKF(void* argv){
 	xkinematicsSet(KINV_IVELOCITY, state.ivelocity);
 	xkinematicsSet(KINV_IACCELERATION, state.iacceleration);
 	xkinematicsSet(KINV_IATTITUDE, state.iattitude);
-	
-	_estimatorOriginSetKF();
 
+	/* Origin Set */
+	estimatorOriginSetKF();
+	/* Z Accel Reference */
+	madgwickUpdateQ(state.iattitude.x, state.iacceleration.y, state.iacceleration.z,
+	state.iacceleration.x, state.iacceleration.y, state.iacceleration.z, (1.0f / MADGWICK_UPDATE_RATE));
+	madgwickSetBaseZAcc(madgwickGetAccZ(state.iacceleration.x, state.iacceleration.y, state.iacceleration.z));
+
+	
 	uint32_t estimatorTime = 0;
 	uint32_t lastWakeTime = taskGetTickCount();
 	isReady = 1;
@@ -253,7 +258,7 @@ void _estimatorPositionKF(void){
 	xkinematicsSet(KINV_VELOCITY, velocity);
 }
 
-void _estimatorOriginSetKF(void){
+void estimatorOriginSetKF(void){
 	/* Altitude Origin */
 	xf32_t altitude;
 	altitude.v = navigationPressureToAltitude(state.pressure.x);
@@ -264,11 +269,6 @@ void _estimatorOriginSetKF(void){
 	/* Compass Origin */
 	//_estimatorCompassKF();
 	//xnavigationOrigin()->compass = xnavigationState()->compass;
-
-	/* Z Accel Reference */
-	madgwickUpdateQ(state.iattitude.x, state.iacceleration.y, state.iacceleration.z,
-	state.iacceleration.x, state.iacceleration.y, state.iacceleration.z, (1.0f / MADGWICK_UPDATE_RATE));
-	madgwickSetBaseZAcc(madgwickGetAccZ(state.iacceleration.x, state.iacceleration.y, state.iacceleration.z));
 }
 
 int8_t estimatorIsReadyKF (void){

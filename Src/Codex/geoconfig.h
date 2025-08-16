@@ -31,7 +31,7 @@
 #define GEOCONFIG_H_
 
 #define GRAVITY 			 	9.81f
-#define CONST_SEA_PRESSURE 		1013.4f          /* Location based */
+#define CONST_SEA_PRESSURE 		1010.8f          /* Location based */
 #define CONST_PF 				0.1902630958f    /* (1/5.25588f) Pressure factor */
 #define CONST_PF2 				44330.0f
 #define FIX_TEMP 				25.0f            /* Fixed Temperature */

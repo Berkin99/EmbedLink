@@ -78,6 +78,7 @@ typedef struct{
 	int8_t  (*init)(void);
 	int8_t  (*test)(void);
 	int8_t  (*isReady)(void);
+	void    (*originSet)(void);
 }estimator_t;
 
 void   estimatorInit (void);
@@ -87,5 +88,6 @@ void   estimatorReset(state_t* pState);
 void   estimatorIterate(state_t* pState);
 void   estimatorUpdate(state_t* base, const state_t* update);
 void   estimatorStabilize(state_t* pState, uint32_t timeoutMs);
+void   estimatorOriginSet(void);
 
 #endif /* ESTIMATOR_H_ */

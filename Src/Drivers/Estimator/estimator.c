@@ -42,11 +42,12 @@
 #include "estimator_kf.h"
 #endif
 
-#define ESTIMATOR_SET(EST) {          \
-    .name = estimatorName##EST,       \
-    .init = estimatorInit##EST,       \
-    .test = estimatorTest##EST,       \
-    .isReady = estimatorIsReady##EST, \
+#define ESTIMATOR_SET(EST) {             \
+    .name = estimatorName##EST,          \
+    .init = estimatorInit##EST,          \
+    .test = estimatorTest##EST,          \
+    .isReady = estimatorIsReady##EST,    \
+	.originSet = estimatorOriginSet##EST \
 }
 
 static estimator_t estimators[] = {
@@ -142,3 +143,8 @@ void estimatorStabilize(state_t* pState, uint32_t timeoutMs){
 			pState->v[i].z);
 	}
 }
+
+void estimatorOriginSet(void){
+	estimator.originSet();
+}
+

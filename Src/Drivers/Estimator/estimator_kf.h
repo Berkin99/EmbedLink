@@ -38,5 +38,6 @@
 int8_t estimatorInitKF (void);
 int8_t estimatorTestKF (void);
 int8_t estimatorIsReadyKF (void);
+void   estimatorOriginSetKF(void);
 
 #endif /* ESTIMATOR_KF_H_ */

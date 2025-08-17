@@ -51,6 +51,10 @@
 #include "sensor_bmp581.h"
 #endif
 
+#ifdef ICP20100_I2C
+#include "sensor_icp20100.h"
+#endif
+
 #ifdef BNO055_I2C
 #include "sensor_bno055.h"
 #endif
@@ -86,6 +90,9 @@ static const sensor_t sensorList[] = {
 	#endif
 	#ifdef BMP581_I2C
 	SENS_ADD(BMP581)
+	#endif
+	#ifdef ICP20100_I2C
+	SENS_ADD(ICP20100)
 	#endif
 	#ifdef BNO055_I2C
 	SENS_ADD(BNO055)

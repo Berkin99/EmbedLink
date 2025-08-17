@@ -40,7 +40,7 @@
  * > 
  */
 
-#define UAV_ARRIVAL_DISTANCE    (3.0f) /* Meters */
+#define UAV_ARRIVAL_DISTANCE    (2.0f) /* Meters */
 #define UAV_ARRIVAL_COUNTER_MS  (2000) /* Milliseconds */  
 
 typedef enum{

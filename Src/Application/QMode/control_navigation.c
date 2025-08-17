@@ -36,9 +36,10 @@
 #include "nrx.h"
 
 /* Navigation PID */
-#define PID_NAV    {3.0f, 0.0f, 12.0f} // 1.4, 0.0, 4.0
-#define NAV_MAX    8.0f /* m/s */
+#define PID_NAV    {2.0f, 0.0f, 12.0f} // 1.4, 0.0, 4.0
+#define NAV_MAX    5.0f /* m/s */
 
+static float navmax = NAV_MAX;
 static pid_t pidNav = PID_NAV;
 static pidHandle_t hpidNav[2];
 
@@ -66,7 +67,7 @@ vec_t controlTaskNAV(vec_t target){
         vector.axis[i] -= xkinematicsState()->velocity.axis[i] * pidNav.kd;
 
         /* Constrain Max Min */
-        vector.axis[i] = clampf32(vector.axis[i], -NAV_MAX, NAV_MAX);
+        vector.axis[i] = clampf32(vector.axis[i], -navmax, navmax);
     }
 
     return vector;
@@ -80,4 +81,5 @@ NRX_GROUP_START(pidnav)
 NRX_ADD(NRX_FLOAT, kp, &pidNav.kp)
 NRX_ADD(NRX_FLOAT, ki, &pidNav.ki)
 NRX_ADD(NRX_FLOAT, kd, &pidNav.kd)
+NRX_ADD(NRX_FLOAT, max, &navmax)
 NRX_GROUP_STOP(pidnav)

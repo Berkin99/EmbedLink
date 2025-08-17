@@ -116,8 +116,8 @@ void   controlResetHEIGHT (void){
 #endif
 }
 
-// NRX_GROUP_START(pidheight)
-// NRX_ADD(NRX_FLOAT, kp, &pidHeight.kp)
-// NRX_ADD(NRX_FLOAT, ki, &pidHeight.ki)
-// NRX_ADD(NRX_FLOAT, kd, &pidHeight.kd)
-// NRX_GROUP_STOP(pidheight)
+NRX_GROUP_START(pidheight)
+NRX_ADD(NRX_FLOAT, kp, &pidHeight.kp)
+NRX_ADD(NRX_FLOAT, ki, &pidHeight.ki)
+NRX_ADD(NRX_FLOAT, kd, &pidHeight.kd)
+NRX_GROUP_STOP(pidheight)

@@ -32,8 +32,6 @@
 #include <system.h>
 #include <systime.h>
 
-#define ICM20948_SPI spi1
-
 #ifdef ICM20948_SPI
 
 #include "sensor_icm20948.h"

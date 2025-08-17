@@ -57,6 +57,7 @@
 #include "northcom.h"
 #include "rccom.h"
 #include "uavcom.h"
+#include "uavexe.h"
 
 static uint8_t sysInit = 0;
 
@@ -124,7 +125,8 @@ void systemTask(void* argv){
     ncInit();
     //rccomInit();
     uavcomInit();
-
+    uavexeInit();
+    
     /* SYSTEM READY FLAG */
     sysInit = 2;
     ledseqStop(LED1);

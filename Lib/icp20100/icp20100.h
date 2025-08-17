@@ -52,14 +52,20 @@ extern "C" {
 #define ICP20100_REG_DEVICE_ID              UINT8_C(0x0C)
 #define ICP20100_REG_IO_DRIVE_STRENGTH      UINT8_C(0x0D)
 #define ICP20100_REG_OTP_CONFIG1            UINT8_C(0xAC)
-#define ICP20100_REG_OTP_STATUS2            UINT8_C(0xBF)
 #define ICP20100_REG_MASTER_LOCK            UINT8_C(0xBE)
+#define ICP20100_REG_OTP_STATUS2            UINT8_C(0xBF)
 #define ICP20100_REG_MODE_SELECT            UINT8_C(0xC0)
 #define ICP20100_REG_INTERRUPT_STATUS       UINT8_C(0xC1)
 #define ICP20100_REG_INTERRUPT_MASK         UINT8_C(0xC2)
 #define ICP20100_REG_FIFO_CONFIG            UINT8_C(0xC3)
 #define ICP20100_REG_FIFO_FILL              UINT8_C(0xC4)
+#define ICP20100_REG_SPI_MODE               UINT8_C(0xC5)
+#define ICP20100_REG_PRESS_ABS_LSB          UINT8_C(0xC7)
+#define ICP20100_REG_PRESS_ABS_MSB          UINT8_C(0xC8)
+#define ICP20100_REG_PRESS_DELTA_LSB        UINT8_C(0xC9)
+#define ICP20100_REG_PRESS_DELTA_MSB        UINT8_C(0xCA)
 #define ICP20100_REG_DEVICE_STATUS          UINT8_C(0xCD)
+#define ICP20100_REG_I3C_INFO               UINT8_C(0xCE)
 #define ICP20100_REG_VERSION                UINT8_C(0xD3)
 #define ICP20100_REG_PRESS_DATA_0           UINT8_C(0xFA)
 #define ICP20100_REG_PRESS_DATA_1           UINT8_C(0xFB)
@@ -84,6 +90,10 @@ extern "C" {
 /** Bit masks and positions */
 #define ICP20100_BOOT_UP_STATUS_MASK        UINT8_C(0x01)
 #define ICP20100_POWER_MODE_MASK            UINT8_C(0x04)
+#define ICP20100_MEAS_CONFIG_MASK           UINT8_C(0xE0)
+#define ICP20100_FORCED_MEAS_TRIGGER_MASK   UINT8_C(0x10)
+#define ICP20100_MEAS_MODE_MASK             UINT8_C(0x08)
+#define ICP20100_FIFO_READOUT_MODE_MASK     UINT8_C(0x03)
 #define ICP20100_MASTER_LOCK_UNLOCK         UINT8_C(0x1F)
 #define ICP20100_OTP_ENABLE_MASK            UINT8_C(0x01)
 #define ICP20100_OTP_WRITE_SWITCH_MASK      UINT8_C(0x02)
@@ -91,7 +101,10 @@ extern "C" {
 #define ICP20100_OTP_BUSY_MASK              UINT8_C(0x01)
 #define ICP20100_FIFO_FLUSH_MASK            UINT8_C(0x80)
 #define ICP20100_FIFO_LEVEL_MASK            UINT8_C(0x1F)
+#define ICP20100_FIFO_EMPTY_MASK            UINT8_C(0x40)
+#define ICP20100_FIFO_FULL_MASK             UINT8_C(0x20)
 #define ICP20100_MODE_SYNC_STATUS_MASK      UINT8_C(0x01)
+#define ICP20100_PRESS_DATA_MASK            UINT8_C(0x0F)
 
 /** Measurement modes */
 #define ICP20100_MODE_0                     UINT8_C(0x00)
@@ -103,8 +116,6 @@ extern "C" {
 /** FIFO readout modes */
 #define ICP20100_FIFO_PRESSURE_FIRST        UINT8_C(0x00)
 #define ICP20100_FIFO_TEMP_ONLY             UINT8_C(0x01)
-#define ICP20100_FIFO_TEMP_FIRST            UINT8_C(0x02)
-#define ICP20100_FIFO_PRESSURE_ONLY         UINT8_C(0x03)
 
 /** Measurement modes */
 #define ICP20100_MEAS_MODE_FORCED           UINT8_C(0x00)
@@ -123,17 +134,33 @@ extern "C" {
 #define ICP20100_DRIVE_STRENGTH_1_2V_4MA    UINT8_C(0x05)
 #define ICP20100_DRIVE_STRENGTH_1_2V_6MA    UINT8_C(0x06)
 #define ICP20100_DRIVE_STRENGTH_1_2V_8MA    UINT8_C(0x07)
+#define ICP20100_DRIVE_STRENGTH_MASK        UINT8_C(0x07)
 
-/** Conversion constants */
-#define ICP20100_TEMP_SCALE_FACTOR          (0.00024795532f)
+/** Conversion constants - Following software_imp.md formulas */
+#define ICP20100_TEMP_SCALE_FACTOR          (65.0f / (1 << 18))
 #define ICP20100_TEMP_OFFSET                (25.0f)
-#define ICP20100_PRESS_SCALE_FACTOR         (0.3051757813f)
-#define ICP20100_PRESS_OFFSET               (70000.0f)
+#define ICP20100_PRESS_SCALE_FACTOR         (40.0f / (1 << 17))  /* Results in kPa */
+#define ICP20100_PRESS_OFFSET               (70.0f)               /* In kPa */
 
 /** Timing constants (in milliseconds/microseconds) */
 #define ICP20100_POWER_UP_TIME_MS           UINT8_C(4)
 #define ICP20100_OTP_WAIT_TIME_US           UINT8_C(10)
 #define ICP20100_OTP_BUSY_TIMEOUT_MS        UINT8_C(100)
+
+/** Interrupt bit masks */
+#define ICP20100_INT_FIFO_OVERFLOW_MASK     UINT8_C(0x01)
+#define ICP20100_INT_FIFO_UNDERFLOW_MASK    UINT8_C(0x02)
+#define ICP20100_INT_FIFO_WMK_HIGH_MASK     UINT8_C(0x04)
+#define ICP20100_INT_FIFO_WMK_LOW_MASK      UINT8_C(0x08)
+#define ICP20100_INT_PRESS_ABS_MASK         UINT8_C(0x20)
+#define ICP20100_INT_PRESS_DELTA_MASK       UINT8_C(0x40)
+
+/** Bit position definitions */
+#define ICP20100_MEAS_CONFIG_POS            UINT8_C(5)
+#define ICP20100_FORCED_MEAS_TRIGGER_POS    UINT8_C(4)
+#define ICP20100_MEAS_MODE_POS              UINT8_C(3)
+#define ICP20100_POWER_MODE_POS             UINT8_C(2)
+#define ICP20100_FIFO_READOUT_MODE_POS      UINT8_C(0)
 
 /****************************************************************************/
 /**\name        Type Definitions                                           */
@@ -209,7 +236,7 @@ struct icp20100_config {
  * @brief Sensor data structure
  */
 struct icp20100_data {
-    /*! Pressure in Pa */
+    /*! Pressure in kPa (following software_imp.md format) */
     float pressure;
     
     /*! Temperature in degree Celsius */
@@ -482,6 +509,19 @@ int8_t icp20100_read_fifo(struct icp20100_data *data, uint8_t length, struct icp
  * @retval ICP20100_E_COMM_FAIL -> Communication failure
  */
 int8_t icp20100_flush_fifo(struct icp20100_dev *dev);
+
+/*!
+ * @brief This API performs FIR filter settling procedure as described in software_imp.md
+ * When using modes 0-3 with FIR filter, first 14 samples should be discarded
+ *
+ * @param[in] dev : Structure instance of icp20100_dev
+ *
+ * @return Result of API execution status
+ * @retval ICP20100_OK -> Success
+ * @retval ICP20100_E_NULL_PTR -> Null pointer error
+ * @retval ICP20100_E_COMM_FAIL -> Communication failure
+ */
+int8_t icp20100_fir_filter_settling(struct icp20100_dev *dev);
 
 #ifdef __cplusplus
 }

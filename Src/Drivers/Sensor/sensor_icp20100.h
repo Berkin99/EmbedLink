@@ -35,7 +35,7 @@
 #include "sensor.h"
 
 #define sensorNameICP20100    "ICP20100"
-#define sensorFreqICP20100    (75)		/* Hz */
+#define sensorFreqICP20100    (100)		/* Hz */
 
 int8_t sensorInitICP20100(void);
 int8_t sensorTestICP20100(void);

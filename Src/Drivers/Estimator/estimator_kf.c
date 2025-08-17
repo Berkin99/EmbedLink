@@ -57,7 +57,7 @@
 static state_t 	  state;
 static uint8_t 	  isInit;
 static uint8_t 	  isReady;
-static kalman_t   hKalman[3];
+static kalman_t   hKalman[4];
 
 void _estimatorMadgwickKF(void);
 void _estimatorCompassKF(void);
@@ -71,9 +71,10 @@ taskAllocateStatic(ESTIMATOR_KF, ESTIMATOR_TASK_STACK, ESTIMATOR_TASK_PRI);
 int8_t estimatorInitKF (void){
 	if(isInit) return E_OVERWRITE;
 
-	kalmanInit(&hKalman[0], (1.0f / KF_POS_UPDATE_RATE),  0.2f,  0.8f);   /* Navigation X */
-	kalmanInit(&hKalman[1], (1.0f / KF_POS_UPDATE_RATE),  0.2f,  0.8f);   /* Navigation Y */
-	kalmanInit(&hKalman[2], (1.0f / KF_UPDATE_RATE),      5.0f,  0.1f);   /*  Pressure Z  */
+	kalmanInit(&hKalman[0], (1.0f / KF_POS_UPDATE_RATE),  0.2f,    0.9f);   /* Navigation X */
+	kalmanInit(&hKalman[1], (1.0f / KF_POS_UPDATE_RATE),  0.2f,    0.9f);   /* Navigation Y */
+	kalmanInit(&hKalman[2], (1.0f / KF_UPDATE_RATE),      0.01f,   5.0f);   /*  Position Z  */
+	kalmanInit(&hKalman[3], (1.0f / KF_UPDATE_RATE),      0.2f,    0.1f);   /*  Velocity Z  */
 
 	taskCreateStatic(ESTIMATOR_KF, estimatorTaskKF, NULL);
 	isInit = 1;
@@ -179,9 +180,11 @@ void _estimatorHeightKF(void){
 
 	vec_t zn;
 	zn.z = navigationPressureToAltitude(state.pressure.x) - xnavigationOrigin()->altitude.v;
-	kalmanIterate(&hKalman[2], zn.z, acc.z);
-	position.z   = hKalman[2].Xn.mx[0][0];
-	velocity.z   = hKalman[2].Xn.mx[1][0];
+	kalmanIterate(&hKalman[2], zn.z, acc.z); /* Position */
+	kalmanIterate(&hKalman[3], zn.z, acc.z); /* Velocity */
+
+    position.z   = hKalman[2].Xn.mx[0][0];
+	velocity.z   = hKalman[3].Xn.mx[1][0];
 
 	position.stdDev.z = 1.0f;
 	position.timestampMs = millis();
@@ -264,7 +267,6 @@ void estimatorOriginSetKF(void){
 	altitude.v = navigationPressureToAltitude(state.pressure.x);
 	altitude.timestampMs = millis();
 	altitude.stdDev = state.pressure.stdDev.x;
-	
 	xnavigationOrigin()->altitude = altitude;
 	/* Compass Origin */
 	//_estimatorCompassKF();

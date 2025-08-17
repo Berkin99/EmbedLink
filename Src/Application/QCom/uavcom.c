@@ -147,7 +147,8 @@ void uavcomOrigin(uint8_t* data){
     for (int i = 0; i < 2; i++) memcpy(&loc[i], &data[i * sizeof(f64)], sizeof(f64));
     xnavigationOrigin()->location.latitude = loc[0];
     xnavigationOrigin()->location.longitude = loc[1];
-    estimatorOriginSet(); /* Updates the Z axis */
+    xnavigationOrigin()->altitude = xnavigationState()->altitude;
+    //estimatorOriginSet(); /* Updates the Z axis */
 }
 
 void uavcomState_IDLE(void){
@@ -222,7 +223,7 @@ void uavcomState_MOVING(void){
 void uavcomState_TAKEOFF(void){
     uint8_t statecase = STATE_CASE(UAVCOM_STATE_TAKEOFF);
     static uint32_t to_start;
-    static float to_z, st_z, st_yaw;
+    static float to_z, to_t, st_z;
     switch (statecase){
         case STATE_ENTER:
             if(uav_state != UAVCOM_STATE_READY) return;
@@ -234,18 +235,18 @@ void uavcomState_TAKEOFF(void){
             st_z = xkinematicsState()->position.z;
             cpos = xkinematicsState()->position.v;
             home = xkinematicsState()->position.v;
-            st_yaw = xkinematicsState()->rotation.z;
+            to_t = to_z * 1300.0f;
             serialPrint("[>] UAVCOM TAKEOFF %.2f\n", to_z);
         break;
         case STATE_DURING:
 
-            float ivar = (float)(millis() - to_start) / 6000.0f;
+            float ivar = (float)(millis() - to_start) / to_t;
             if (ivar > 1.0f) {
                 target_state = UAVCOM_STATE_AUTO;
                 break;
             }
             cpos.z = ivar * to_z  + (1.0f - ivar) * st_z;
-            quadcmd_AUTO(cpos, st_yaw);
+            quadcmd_AUTO(cpos, crot.z);
         
         break;
         case STATE_EXIT:
@@ -258,28 +259,27 @@ void uavcomState_LAND(void){
     uint8_t statecase = STATE_CASE(UAVCOM_STATE_LAND);
     
     static uint32_t ld_start;
-    static float ld_z, st_z, st_yaw;
+    static float ld_z, ld_t, st_z;
 
     switch (statecase){
         case STATE_ENTER:
             if(quadGetMode() != QUAD_MODE_AUTO){target_state = uav_state; return;}
             next_state = UAVCOM_STATE_LAND;
             ld_start = millis();
-            ld_z = -3.0f;
-            st_z = xkinematicsState()->position.z;
-            cpos = xkinematicsState()->position.v;
-            st_yaw = xkinematicsState()->rotation.z;
+            ld_z =   -3.0f;
+            st_z =   xkinematicsState()->position.z;
+            cpos =   xkinematicsState()->position.v;
+            ld_t = (st_z * 1300.0f) + 3000.0f;
             serialPrint("[>] UAVCOM LAND\n");
-
         break;
         case STATE_DURING:
-            float ivar = (float)(millis() - ld_start) / 8000.0f;
+            float ivar = (float)(millis() - ld_start) / ld_t;
             if(ivar > 1.0f){
                 target_state = UAVCOM_STATE_READY;
                 break;
             }
             cpos.z = ivar * ld_z  + (1.0f - ivar) * st_z;
-            quadcmd_AUTO(cpos, st_yaw);
+            quadcmd_AUTO(cpos, crot.z);
         break;
         case STATE_EXIT:
         

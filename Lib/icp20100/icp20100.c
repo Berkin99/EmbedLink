@@ -257,28 +257,25 @@ static float convert_temperature(int32_t raw_temperature)
 static int8_t read_raw_data(int32_t *pressure_raw, int32_t *temperature_raw, struct icp20100_dev *dev)
 {
     int8_t rslt;
-    uint8_t data[3];
+    uint8_t data[6];
 
-    /* Read temperature data (3 bytes) */
-    rslt = dev->read(ICP20100_REG_TEMP_DATA_0, data, 3, dev->intf_ptr);
+    /* Perform single 6-byte burst read starting from pressure registers as per datasheet 
+     * "Pressure First" mode: PRESS_DATA_0, PRESS_DATA_1, PRESS_DATA_2, TEMP_DATA_0, TEMP_DATA_1, TEMP_DATA_2 */
+    rslt = dev->read(ICP20100_REG_PRESS_DATA_0, data, 6, dev->intf_ptr);
 
     if (rslt == ICP20100_OK)
     {
-        /* Combine 3 bytes into 20-bit value */
-        *temperature_raw = ((int32_t)data[0] << 16) |
-                          ((int32_t)data[1] << 8) |
-                          data[2];
+        /* Extract pressure data from first 3 bytes 
+         * data[0]=PRESS_DATA_0[7:0], data[1]=PRESS_DATA_1[15:8], data[2]=PRESS_DATA_2[19:16] */
+        *pressure_raw = ((int32_t)(data[2] & ICP20100_PRESS_DATA_MASK) << 16) |
+                       ((int32_t)data[1] << 8) |
+                       data[0];
 
-        /* Read pressure data (3 bytes) */
-        rslt = dev->read(ICP20100_REG_PRESS_DATA_0, data, 3, dev->intf_ptr);
-
-        if (rslt == ICP20100_OK)
-        {
-            /* Combine 3 bytes into 20-bit value */
-            *pressure_raw = ((int32_t)data[0] << 16) |
-                           ((int32_t)data[1] << 8) |
-                           data[2];
-        }
+        /* Extract temperature data from last 3 bytes 
+         * data[3]=TEMP_DATA_0[7:0], data[4]=TEMP_DATA_1[15:8], data[5]=TEMP_DATA_2[19:16] */
+        *temperature_raw = ((int32_t)(data[5] & ICP20100_PRESS_DATA_MASK) << 16) |
+                          ((int32_t)data[4] << 8) |
+                          data[3];
     }
 
     return rslt;
@@ -405,7 +402,7 @@ int8_t icp20100_set_config(const struct icp20100_config *config, struct icp20100
         if (config->meas_mode > ICP20100_MODE_4 ||
             config->meas_type > ICP20100_MEAS_MODE_CONTINUOUS ||
             config->power_mode > ICP20100_POWER_MODE_ACTIVE ||
-            config->fifo_mode > ICP20100_FIFO_PRESSURE_ONLY)
+            config->fifo_mode > ICP20100_FIFO_TEMP_ONLY)
         {
             rslt = ICP20100_E_INVALID_CONFIG;
         }
@@ -419,11 +416,11 @@ int8_t icp20100_set_config(const struct icp20100_config *config, struct icp20100
 
     if (rslt == ICP20100_OK)
     {
-        /* Configure measurement mode and settings */
-        reg_data = (config->meas_mode << 5) |
-                   (config->meas_type << 3) |
-                   (config->power_mode << 2) |
-                   config->fifo_mode;
+        /* Configure measurement mode and settings using proper bit positions */
+        reg_data = (config->meas_mode << ICP20100_MEAS_CONFIG_POS) |
+                   (config->meas_type << ICP20100_MEAS_MODE_POS) |
+                   (config->power_mode << ICP20100_POWER_MODE_POS) |
+                   (config->fifo_mode << ICP20100_FIFO_READOUT_MODE_POS);
         
         rslt = dev->write(ICP20100_REG_MODE_SELECT, &reg_data, 1, dev->intf_ptr);
     }
@@ -466,10 +463,10 @@ int8_t icp20100_get_config(struct icp20100_config *config, struct icp20100_dev *
         
         if (rslt == ICP20100_OK)
         {
-            config->meas_mode = (reg_data >> 5) & 0x07;
-            config->meas_type = (reg_data >> 3) & 0x01;
-            config->power_mode = (reg_data >> 2) & 0x01;
-            config->fifo_mode = reg_data & 0x03;
+            config->meas_mode = (reg_data & ICP20100_MEAS_CONFIG_MASK) >> ICP20100_MEAS_CONFIG_POS;
+            config->meas_type = (reg_data & ICP20100_MEAS_MODE_MASK) >> ICP20100_MEAS_MODE_POS;
+            config->power_mode = (reg_data & ICP20100_POWER_MODE_MASK) >> ICP20100_POWER_MODE_POS;
+            config->fifo_mode = (reg_data & ICP20100_FIFO_READOUT_MODE_MASK) >> ICP20100_FIFO_READOUT_MODE_POS;
         }
     }
 
@@ -480,7 +477,7 @@ int8_t icp20100_get_config(struct icp20100_config *config, struct icp20100_dev *
         
         if (rslt == ICP20100_OK)
         {
-            config->drive_strength = reg_data & 0x07;
+            config->drive_strength = reg_data & ICP20100_DRIVE_STRENGTH_MASK;
         }
     }
 
@@ -544,7 +541,7 @@ int8_t icp20100_trigger_measurement(struct icp20100_dev *dev)
     if (rslt == ICP20100_OK)
     {
         /* Set forced measurement trigger bit */
-        reg_data |= (1 << 4);
+        reg_data |= ICP20100_FORCED_MEAS_TRIGGER_MASK;
         rslt = dev->write(ICP20100_REG_MODE_SELECT, &reg_data, 1, dev->intf_ptr);
     }
 
@@ -654,13 +651,13 @@ int8_t icp20100_set_int_config(const struct icp20100_int_config *int_config, str
 
     if (rslt == ICP20100_OK)
     {
-        /* Configure interrupt mask register */
-        int_mask = (int_config->fifo_overflow_en ? 0 : (1 << 0)) |
-                   (int_config->fifo_underflow_en ? 0 : (1 << 1)) |
-                   (int_config->fifo_wmk_high_en ? 0 : (1 << 2)) |
-                   (int_config->fifo_wmk_low_en ? 0 : (1 << 3)) |
-                   (int_config->press_abs_en ? 0 : (1 << 5)) |
-                   (int_config->press_delta_en ? 0 : (1 << 6)) |
+        /* Configure interrupt mask register (1 = masked/disabled, 0 = enabled) */
+        int_mask = (int_config->fifo_overflow_en ? 0 : ICP20100_INT_FIFO_OVERFLOW_MASK) |
+                   (int_config->fifo_underflow_en ? 0 : ICP20100_INT_FIFO_UNDERFLOW_MASK) |
+                   (int_config->fifo_wmk_high_en ? 0 : ICP20100_INT_FIFO_WMK_HIGH_MASK) |
+                   (int_config->fifo_wmk_low_en ? 0 : ICP20100_INT_FIFO_WMK_LOW_MASK) |
+                   (int_config->press_abs_en ? 0 : ICP20100_INT_PRESS_ABS_MASK) |
+                   (int_config->press_delta_en ? 0 : ICP20100_INT_PRESS_DELTA_MASK) |
                    (1 << 7); /* Reserved bit set to 1 */
 
         rslt = dev->write(ICP20100_REG_INTERRUPT_MASK, &int_mask, 1, dev->intf_ptr);
@@ -783,58 +780,47 @@ int8_t icp20100_read_fifo(struct icp20100_data *data, uint8_t length, struct icp
         /* Read samples from FIFO */
         for (i = 0; i < samples_to_read; i++)
         {
-            /* Read 6 bytes (3 for pressure, 3 for temperature) */
-            rslt = dev->read(ICP20100_REG_PRESS_DATA_0, fifo_data, 6, dev->intf_ptr);
+            /* Determine starting register and bytes to read based on FIFO mode */
+            uint8_t start_register;
+            uint8_t bytes_to_read;
+            
+            if (dev->config.fifo_mode == ICP20100_FIFO_PRESSURE_FIRST)
+            {
+                start_register = ICP20100_REG_PRESS_DATA_0;
+                bytes_to_read = 6; /* Pressure + Temperature */
+            }
+            else /* TEMP_ONLY */
+            {
+                start_register = ICP20100_REG_TEMP_DATA_0;
+                bytes_to_read = 3; /* Temperature only */
+            }
+            
+            rslt = dev->read(start_register, fifo_data, bytes_to_read, dev->intf_ptr);
             
             if (rslt != ICP20100_OK)
             {
                 break;
             }
 
-            /* Parse data based on FIFO mode */
+            /* Parse data based on FIFO mode - following software_imp.md burst read format
+             * FIFO data auto-increments from PRESS_DATA_0 to TEMP_DATA_2 and wraps around */
             if (dev->config.fifo_mode == ICP20100_FIFO_PRESSURE_FIRST)
             {
-                /* Pressure first mode: PRESS[0-2], TEMP[0-2] */
-                data[i].pressure_raw = ((int32_t)fifo_data[0] << 16) |
+                /* Pressure first mode: PRESS_DATA_0, PRESS_DATA_1, PRESS_DATA_2, TEMP_DATA_0, TEMP_DATA_1, TEMP_DATA_2 */
+                data[i].pressure_raw = ((int32_t)(fifo_data[2] & ICP20100_PRESS_DATA_MASK) << 16) |
                                        ((int32_t)fifo_data[1] << 8) |
-                                       fifo_data[2];
-                data[i].temperature_raw = ((int32_t)fifo_data[3] << 16) |
+                                       fifo_data[0];
+                data[i].temperature_raw = ((int32_t)(fifo_data[5] & ICP20100_PRESS_DATA_MASK) << 16) |
                                           ((int32_t)fifo_data[4] << 8) |
-                                          fifo_data[5];
-            }
-            else if (dev->config.fifo_mode == ICP20100_FIFO_TEMP_FIRST)
-            {
-                /* Temperature first mode: TEMP[0-2], PRESS[0-2] */
-                data[i].temperature_raw = ((int32_t)fifo_data[0] << 16) |
-                                          ((int32_t)fifo_data[1] << 8) |
-                                          fifo_data[2];
-                data[i].pressure_raw = ((int32_t)fifo_data[3] << 16) |
-                                       ((int32_t)fifo_data[4] << 8) |
-                                       fifo_data[5];
-            }
-            else if (dev->config.fifo_mode == ICP20100_FIFO_PRESSURE_ONLY)
-            {
-                /* Pressure only mode: PRESS[0-2] */
-                rslt = dev->read(ICP20100_REG_TEMP_DATA_0, fifo_data, 3, dev->intf_ptr);
-                if (rslt == ICP20100_OK)
-                {
-                    data[i].pressure_raw = ((int32_t)fifo_data[0] << 16) |
-                                           ((int32_t)fifo_data[1] << 8) |
-                                           fifo_data[2];
-                    data[i].temperature_raw = 0; /* No temperature data */
-                }
+                                          fifo_data[3];
             }
             else /* TEMP_ONLY */
             {
-                /* Temperature only mode: TEMP[0-2] */
-                rslt = dev->read(ICP20100_REG_TEMP_DATA_0, fifo_data, 3, dev->intf_ptr);
-                if (rslt == ICP20100_OK)
-                {
-                    data[i].temperature_raw = ((int32_t)fifo_data[0] << 16) |
-                                              ((int32_t)fifo_data[1] << 8) |
-                                              fifo_data[2];
-                    data[i].pressure_raw = 0; /* No pressure data */
-                }
+                /* Temperature only mode: TEMP_DATA_0, TEMP_DATA_1, TEMP_DATA_2 */
+                data[i].temperature_raw = ((int32_t)(fifo_data[2] & ICP20100_PRESS_DATA_MASK) << 16) |
+                                          ((int32_t)fifo_data[1] << 8) |
+                                          fifo_data[0];
+                data[i].pressure_raw = 0; /* No pressure data */
             }
 
             if (rslt == ICP20100_OK)
@@ -1015,8 +1001,8 @@ static int8_t otp_prepare_device(struct icp20100_dev *dev)
     int8_t rslt;
     uint8_t reg_data;
 
-    /* Enable power mode */
-    reg_data = ICP20100_POWER_MODE_MASK;
+    /* Enable power mode (set bit 2 to 1 for active mode) */
+    reg_data = (ICP20100_POWER_MODE_ACTIVE << ICP20100_POWER_MODE_POS);
     rslt = dev->write(ICP20100_REG_MODE_SELECT, &reg_data, 1, dev->intf_ptr);
     
     if (rslt == ICP20100_OK)
@@ -1224,6 +1210,84 @@ static int8_t otp_finalize_sequence(struct icp20100_dev *dev)
                 rslt = dev->write(ICP20100_REG_MODE_SELECT, &reg_data, 1, dev->intf_ptr);
             }
         }
+    }
+
+    return rslt;
+}
+
+/*!
+ * @brief This API performs FIR filter settling procedure as described in software_imp.md
+ */
+int8_t icp20100_fir_filter_settling(struct icp20100_dev *dev)
+{
+    int8_t rslt;
+    uint8_t reg_data;
+    uint8_t int_status;
+    uint16_t timeout_count = 0;
+    const uint16_t max_timeout = 10000; /* 10 second timeout */
+
+    /* Check for null pointer in the device structure */
+    rslt = null_ptr_check(dev);
+
+    if (rslt == ICP20100_OK)
+    {
+        /* Step 1: Configure FIFO high watermark to 14 samples */
+        reg_data = (14 << 4); /* FIFO_WM_HIGH = 14 */
+        rslt = dev->write(ICP20100_REG_FIFO_CONFIG, &reg_data, 1, dev->intf_ptr);
+    }
+
+    if (rslt == ICP20100_OK)
+    {
+        /* Step 2: Unmask the watermark high interrupt */
+        rslt = dev->read(ICP20100_REG_INTERRUPT_MASK, &reg_data, 1, dev->intf_ptr);
+        if (rslt == ICP20100_OK)
+        {
+            reg_data &= ~ICP20100_INT_FIFO_WMK_HIGH_MASK; /* Unmask (enable) interrupt */
+            rslt = dev->write(ICP20100_REG_INTERRUPT_MASK, &reg_data, 1, dev->intf_ptr);
+        }
+    }
+
+    if (rslt == ICP20100_OK)
+    {
+        /* Step 3: Wait for the interrupt to occur (indicating 14 samples collected) */
+        do {
+            rslt = dev->read(ICP20100_REG_INTERRUPT_STATUS, &int_status, 1, dev->intf_ptr);
+            
+            if (rslt != ICP20100_OK)
+            {
+                break;
+            }
+
+            if (int_status & ICP20100_INT_FIFO_WMK_HIGH_MASK)
+            {
+                /* Step 4: Clear the interrupt */
+                reg_data = ICP20100_INT_FIFO_WMK_HIGH_MASK;
+                rslt = dev->write(ICP20100_REG_INTERRUPT_STATUS, &reg_data, 1, dev->intf_ptr);
+                break; /* Interrupt occurred, filter settled */
+            }
+
+            dev->delay_us(1000, dev->intf_ptr); /* 1ms delay */
+            timeout_count++;
+
+        } while (timeout_count < max_timeout);
+
+        if (timeout_count >= max_timeout)
+        {
+            rslt = ICP20100_E_COMM_FAIL;
+        }
+    }
+
+    if (rslt == ICP20100_OK)
+    {
+        /* Step 5: Stop measurement */
+        reg_data = 0x00;
+        rslt = dev->write(ICP20100_REG_MODE_SELECT, &reg_data, 1, dev->intf_ptr);
+    }
+
+    if (rslt == ICP20100_OK)
+    {
+        /* Step 6: Flush the FIFO */
+        rslt = icp20100_flush_fifo(dev);
     }
 
     return rslt;

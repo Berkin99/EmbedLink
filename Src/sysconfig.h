@@ -49,6 +49,7 @@
 /// I2C /////////////////////////////////////////////////////
 #define BMP581_I2C              i2c1
 #define E24AA_I2C               i2c1
+#define ICP20100_I2C            i2c1
 //#define BMP388_I2C             i2c2
 //#define BNO055_I2C             i2c2
 //#define HMC5883L_I2C           i2c1
@@ -59,7 +60,7 @@
 #define RF52_SPI               spi3
 #define RF52_CS                PD0
 #define RF52_IRQ               irq1
-#define RF52_CHANNEL           84
+#define RF52_CHANNEL           72
 #define BMI088_SPI             spi1
 #define BMI088_ACC_CS          PC4
 #define BMI088_GYR_CS          PC5

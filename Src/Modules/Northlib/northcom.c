@@ -276,7 +276,7 @@ void RxCMD(uint8_t cmdid, uint8_t* data){
 	switch (cmdid){
 	case (RC_CONTROLLER):{RC_Update(data);}break;
 	case (UAVCOM_PACKET):{uavcomParse(data);}break;
-	case (UAVEXE_PACKET):{uavexeCmdParse(data);}break;
+	case (UAVEXE_PACKET):{uavexeParse(data);}break;
     case (NRX_CONTENT_ID):{
 		uint8_t arr[26] = {0};
 		struct nrx_s* val = nrxGetVar(data[0]);

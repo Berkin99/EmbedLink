@@ -57,60 +57,63 @@ void uavexeTask(void* argv){
     serialPrint("[>] UAVEXE Init : OK\n");
     while (1){
         /* code */
-        if(l_flag){
-            uint8_t data[32];
-            int8_t rslt = xqueueDequeue(&q_fid, data);
-            if(rslt){
-                uavexeFidParse(data);
-            }
-            else{
-                l_flag = 0;
-            }
+        if(l_flag){ /* Launch Flag */
+            uint8_t fid_p[UAVEXE_FID_P_LEN];
+            int8_t rslt = xqueueDequeue(&q_fid, fid_p);
+            
+            if(rslt) uavexeCMD_PARSE(fid_p);
+            else     l_flag = 0;
         }
         delay(10);
     }
 }
 
+
 /**
- *  @brief EXEPACK : [CMD_ID,  FPACK <17 byte>]    : 18byte
- *  @brief FPACK   : {FUNC_ID, argument <16 byte>] : 17byte
+ *  @brief CMD_P   : [CMD_ID, FID_P <25 byte>]    : 26byte
+ *  @brief FID_P   : {FID_ID, argument <24 byte>] : 25byte
  */
-void uavexeCmdParse(uint8_t* data){
-    uint8_t cmd = data[0];
+void uavexeParse(uint8_t* cmd_p){
+    uint8_t cmd = cmd_p[0];
     switch (cmd){
         case UAVEXE_CMD_PARSE:
-            uavexeFidParse(&data[1]);
+            uavexeCMD_PARSE(&cmd_p[1]);
         break;
         case UAVEXE_CMD_SET:
-            uavexeFidSet(&data[1]);
+            uavexeCMD_SET(&cmd_p[1]);
+        break;
+        case UAVEXE_CMD_LAUNCH:
+            uavexeCMD_LAUNCH();
         break;
     }
 }
 
-void uavexeFidParse(uint8_t* data){
+void uavexeCMD_PARSE(uint8_t* fid_p){
     /* FID PACK EXECUTE */
-    uint8_t fid = data[0];
+    uint8_t fid = fid_p[0];
 
     switch (fid){
         case UAVEXE_FID_DELAY:
-            exe_DELAY((void*)&data[1]);
+            exe_DELAY((void*)&fid_p[1]);
         break;
         case UAVEXE_FID_UAVCMD:
-            exe_UAVCMD((void*)&data[1]);
+            exe_UAVCMD((void*)&fid_p[1]);
         break;
         case UAVEXE_FID_PRINT:
-            exe_PRINT((void*)&data[1]);
+            exe_PRINT((void*)&fid_p[1]);
         break;
     }
 }
 
-void uavexeFidSet(uint8_t* data){
+void uavexeCMD_SET(uint8_t* fid_p){
     /* FID PACK Set */
-    xqueueEnqueue(&q_fid, data);
+    serialPrint("[>] UAVEXE CMD SET [FID] %d\n", fid_p[0]);
+    xqueueEnqueue(&q_fid, fid_p);
 }
 
-void uavexeLaunch(uint8_t* data){
-
+void uavexeCMD_LAUNCH(void){
+    serialPrint("[>] UAVEXE LAUNCH\n");
+    l_flag = 1;
 }
 
 void exe_DELAY(void* data){

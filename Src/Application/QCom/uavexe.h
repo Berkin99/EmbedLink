@@ -32,12 +32,12 @@
 
 #include <stdint.h>
 
-#define UAVEXE_CMD_P_LEN (18)
-#define UAVEXE_FID_P_LEN (17)
+#define UAVEXE_CMD_P_LEN (26)
+#define UAVEXE_FID_P_LEN (25)
 
 /**
- *  @brief CMD_P   : [CMD_ID, FID_P <17 byte>]    : 18byte
- *  @brief FID_P   : {FID_ID, argument <16 byte>] : 17byte
+ *  @brief CMD_P   : [CMD_ID, FID_P <25 byte>]    : 26byte
+ *  @brief FID_P   : {FID_ID, argument <24 byte>] : 25byte
  */
 
 typedef enum{
@@ -54,11 +54,10 @@ typedef enum{
 
 void uavexeInit(void);
 void uavexeTask(void* argv);
-void uavexeCmdParse(uint8_t* data);
+void uavexeParse(uint8_t* cmd_p);
 
-void uavexeFidParse(uint8_t* data);
-void uavexeFidSet(uint8_t* data);
-
-void uavexeLaunch(uint8_t* data);
+void uavexeCMD_PARSE(uint8_t* fid_p);
+void uavexeCMD_SET(uint8_t* fid_p);
+void uavexeCMD_LAUNCH(void);
 
 #endif

@@ -296,7 +296,7 @@ void uavcomState_LAND(void){
         cpos  = xkinematicsState()->position.v;
 
         phase1_dur = (st_z * 1000.0f) + 1000.0f;
-        phase2_dur = 6000.0f;
+        phase2_dur = 3000.0f;
 
         serialPrint("[>] UAVCOM LAND\n");
         break;
@@ -312,11 +312,11 @@ void uavcomState_LAND(void){
         else if (elapsed < phase1_dur + phase2_dur){
             /* Phase 2: */
             float t = clampf32((elapsed - phase1_dur) / phase2_dur, 0.0f, 1.0f);
-            cpos.z = lerpf32(0.5f, -1.0f, t);
+            cpos.z = lerpf32(0.5f, -3.0f, t);
         }
         else {
             /* Land Complete */
-            cpos.z = -2.3f;
+            cpos.z = -3.0f;
             target_state = UAVCOM_STATE_READY;
             break;
         }

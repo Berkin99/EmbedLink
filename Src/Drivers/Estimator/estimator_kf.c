@@ -73,8 +73,8 @@ int8_t estimatorInitKF (void){
 
 	kalmanInit(&hKalman[0], (1.0f / KF_POS_UPDATE_RATE),  0.2f,    0.9f);   /* Navigation X */
 	kalmanInit(&hKalman[1], (1.0f / KF_POS_UPDATE_RATE),  0.2f,    0.9f);   /* Navigation Y */
-	kalmanInit(&hKalman[2], (1.0f / KF_UPDATE_RATE),      0.01f,   5.0f);   /*  Position Z  */
-	kalmanInit(&hKalman[3], (1.0f / KF_UPDATE_RATE),      0.2f,    0.1f);   /*  Velocity Z  */
+	kalmanInit(&hKalman[2], (1.0f / KF_UPDATE_RATE),      0.01f,   3.0f);   /*  Position Z  */
+	kalmanInit(&hKalman[3], (1.0f / KF_UPDATE_RATE),      0.3f,    0.1f);   /*  Velocity Z  */
 
 	taskCreateStatic(ESTIMATOR_KF, estimatorTaskKF, NULL);
 	isInit = 1;

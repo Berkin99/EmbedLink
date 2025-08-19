@@ -27,19 +27,18 @@
  *
  */
 
-#ifndef UAVCOM_H_
-#define UAVCOM_H_
+#ifndef QUADCAL_H_
+#define QUADCAL_H_
 
-#include <stdint.h>
+#include "quadcopter.h"
+#include "esc.h"
 
-void uavcomInit(void);
-void uavcomUpdate(uint8_t *pBuffer);
+void   quadcalTask(void* argv);
+void   quadcalESC(quadcopter_t* pHandle);
+void   quadcalCOM(void);
+void   quadcalMotor(ESC_Handle_t* pMotor);
+void   quadcalMotors(quadcopter_t* pHandle);
+void   quadcalSensors(quadcopter_t* pHandle);
+int8_t quadcalIterate(void);
 
-void uavIDLE(void);
-void uavMANUAL(void);
-void uavHEIGHT(void);
-void uavAUTO(void);
-void uavTAKEOFF(void);
-void uavLAND(void);
-
-#endif /* UAVCOM_H_ */
+#endif /* QUADCAL_H_ */

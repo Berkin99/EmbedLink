@@ -30,8 +30,9 @@
 #ifndef XQUEUE_H_
 #define XQUEUE_H_
 
-#include <sysdefs.h>
 #include <stdint.h>
+#include <stddef.h>
+#include "sysdefs.h"
 
 #define XQUEUE_INIT_CAPACITY 4
 

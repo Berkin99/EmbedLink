@@ -27,12 +27,16 @@
  *
  */
 
+#include "uart.h"
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include "system.h"
+#include <string.h>
+#include <stdlib.h>
+#include <ctype.h>
 #include "sysconfig.h"
-#include "uart.h"
+#include "system.h"
 
 #ifdef HAL_UART_MODULE_ENABLED
 
@@ -108,7 +112,7 @@ int8_t uartWrite (uart_t* uart, const uint8_t* pTxData, uint16_t len){
     int8_t status = HAL_UART_Transmit_IT(uart->handle, pTxData, len);
     int8_t rslt = OK;
     if(status != HAL_OK) rslt = E_CONNECTION;
-    else if(semaphoreTake(uart->rxCplt, UART_TIMEOUT) != RTOS_OK) rslt = E_TIMEOUT;
+    else if(semaphoreTake(uart->txCplt, UART_TIMEOUT) != RTOS_OK) rslt = E_TIMEOUT;
     mutexGive(uart->mutex);
     return rslt;
 }
@@ -137,6 +141,83 @@ void serialPrint (const char* format, ...){
 
 	uartWrite(&SERIAL_UART, (uint8_t*)buffer, len);
 }
+
+int32_t serialScan(const char *format, ...) {
+    char buffer[128];
+    uint16_t idx = 0;
+    uint8_t ch;
+    int32_t result = 0;
+
+    // Read input line (simple, no line editing)
+    while (idx < sizeof(buffer) - 1) {
+        if (uartRead(&SERIAL_UART, &ch, 1) < 0) continue;
+
+        if (ch == '\r') continue;
+        if (ch == '\n') break;
+        buffer[idx++] = ch;
+    }
+    buffer[idx] = '\0';
+    serialPrint("%s\n", buffer); // Echo
+
+    if (idx == 0) return 0;
+
+    va_list args;
+    va_start(args, format);
+
+    const char *f = format;
+    char *s = buffer;
+    while (*f) {
+        while (isspace((unsigned char)*f)) ++f;
+        while (isspace((unsigned char)*s)) ++s;
+
+        if (*f == '%') {
+            ++f;
+            if (*f == 'd') {
+                int *iptr = va_arg(args, int *);
+                char *endptr;
+                *iptr = strtol(s, &endptr, 10);
+                if (endptr == s) break; // Not matched
+                s = endptr;
+                ++result;
+            } else if (*f == 'f') {
+                float *fptr = va_arg(args, float *);
+                char *endptr;
+                *fptr = strtof(s, &endptr);
+                if (endptr == s) break;
+                s = endptr;
+                ++result;
+            } else if (*f == 'u') {
+                unsigned *uptr = va_arg(args, unsigned *);
+                char *endptr;
+                *uptr = strtoul(s, &endptr, 10);
+                if (endptr == s) break;
+                s = endptr;
+                ++result;
+            } else if (*f == 's') {
+                char *strptr = va_arg(args, char *);
+                int n = 0;
+                while (*s && !isspace((unsigned char)*s)) {
+                    strptr[n++] = *s++;
+                }
+                strptr[n] = '\0';
+                ++result;
+            } else if (*f == 'c') {
+                char *cptr = va_arg(args, char *);
+                if (*s) {
+                    *cptr = *s++;
+                    ++result;
+                } else {
+                    break;
+                }
+            }
+        }
+        ++f;
+    }
+
+    va_end(args);
+    return result;
+}
+
 #endif
 
 uart_t* HAL_UART_Parent(UART_HandleTypeDef* huart){

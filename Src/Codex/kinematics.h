@@ -45,8 +45,11 @@
 #define KINEMATICS_H_
 
 #include <stdint.h>
-#include <sysdefs.h>
-#include <xmathf.h>
+
+#include "sysdefs.h"
+#include "xmathf.h"
+
+#define KINEMATICS_TIMEOUT_MS   (1000)
 
 typedef enum{
     KINV_POSITION,              /* meters */
@@ -61,13 +64,11 @@ typedef enum{
     KINV_TYPECOUNT
 }kinematics_e;
 
-typedef xv3f32_t kinv_t;
-
-typedef kinv_t position_t;
-typedef kinv_t rotation_t;
-typedef kinv_t velocity_t;
-typedef kinv_t acceleration_t;
-typedef kinv_t attitude_t;
+typedef xvec_t position_t;
+typedef xvec_t rotation_t;
+typedef xvec_t velocity_t;
+typedef xvec_t acceleration_t;
+typedef xvec_t attitude_t;
 
 typedef union{
     struct
@@ -82,18 +83,21 @@ typedef union{
         acceleration_t iacceleration;  	/* Acceleration  */
         attitude_t iattitude;      		/* Angular speed */
     };
-    kinv_t kinv[KINV_TYPECOUNT];
+    xvec_t kinv[KINV_TYPECOUNT];
 }kinematicsState_t;
 
 void   kinematicsReset(kinematicsState_t *self);
-kinv_t kinematicsGet(kinematicsState_t *self, kinematics_e idx);
-void   kinematicsSet(kinematicsState_t *self, kinematics_e idx, kinv_t data);
+xvec_t kinematicsGet(kinematicsState_t *self, kinematics_e idx);
+void   kinematicsSet(kinematicsState_t *self, kinematics_e idx, xvec_t data);
 int8_t kinematicsIsValid(kinematicsState_t *self, kinematics_e idx, uint32_t timeout_ms);
+vec_t  kinematicsRotateFrame(vec_t v, vec_t frame);
 
 void   xkinematicsReset(void);
-kinv_t xkinematicsGet(kinematics_e idx);
-void   xkinematicsSet(kinematics_e idx, kinv_t data);
+xvec_t xkinematicsGet(kinematics_e idx);
+void   xkinematicsSet(kinematics_e idx, xvec_t data);
 int8_t xkinematicsIsValid(kinematics_e idx, uint32_t timeout_ms);
+void   xkinematicsStateUpdate(kinematicsState_t* pState);
 const  kinematicsState_t* xkinematicsState(void);
+void   xkinematicsPrint(kinematics_e idx);
 
 #endif /* KINEMATICS_H_ */

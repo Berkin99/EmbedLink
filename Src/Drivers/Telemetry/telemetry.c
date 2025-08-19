@@ -28,13 +28,16 @@
  */
 
 #include <string.h>
-#include <sysconfig.h>
 #include <stdio.h>
+#include "sysconfig.h"
 #include "uart.h"
 #include "telemetry.h"
 
 #ifdef RF24_SPI
 #include "telemetry_rf24.h"
+#endif
+#ifdef RF52_SPI
+#include "telemetry_rf52.h"
 #endif
 #ifdef E32100_UART
 #include "telemetry_e32100.h"
@@ -54,6 +57,9 @@
 static const telemetry_t trxList[] ={
 	#ifdef RF24_SPI
 		TRX_ADD(RF24)
+	#endif
+	#ifdef RF52_SPI
+		TRX_ADD(RF52)
 	#endif
 	#ifdef E32100_UART
 		TRX_ADD(E32100)
@@ -84,9 +90,9 @@ int8_t telemetryIsReady(void){
 }
 
 int8_t telemetryGet(char* name, telemetry_t** ptelemetry){
-	for(uint8_t i = 0; i<trxLen; i++){
+	for(uint8_t i = 0; i < trxLen; i++){
 		if(strcmp(trxList[i].Name, name) == 0){
-			*ptelemetry = &trxList[i];
+			*ptelemetry = (telemetry_t*)&trxList[i];
 			return OK;
 		}
 	}
@@ -103,7 +109,7 @@ int8_t telemetryReceive(char* name, uint8_t* pRxData, uint16_t length){
 	return ptrx->Receive(pRxData, length);
 }
 
-int8_t telemetryTransmit(char* name, const uint8_t* pTxData, uint8_t Length){
+int8_t telemetryTransmit(char* name, const uint8_t* pTxData, uint16_t Length){
 	telemetry_t* ptrx;
 	if(telemetryGet(name, &ptrx) != OK) return E_NOT_FOUND;
 	return ptrx->Transmit(pTxData, Length);

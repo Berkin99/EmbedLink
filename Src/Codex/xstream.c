@@ -27,8 +27,9 @@
  *
  */
 
+#include "xstream.h"
+
 #include <string.h>
-#include <xstream.h>
 
 size_t xstreamFind(xstream_t* self, char* target, uint16_t targetLen) {
     if (self == NULL || self->available == NULL || self->read == NULL) {

@@ -27,13 +27,16 @@
  *
  */
 
-#include "system.h"
 #include "spi.h"
+
+#include "system.h"
+#include "sysconfig.h"
 #include "rtos.h"
+#include "gpio.h"
 
 #ifdef HAL_SPI_MODULE_ENABLED
 
-#define SPI_TIMEOUT (100)
+#define SPI_TIMEOUT (1000)
 
 spi_t spi1;
 spi_t spi2;
@@ -57,6 +60,12 @@ void spiInit(void){
 	spi3.mutex  = mutexCreate();
 	spi3.rxCplt = semaphoreCreate();
 	spi3.txCplt = semaphoreCreate();
+	#endif
+	#ifdef SPI_CS_HIGH
+	pin_t spis[] = SPI_CS_HIGH;
+	for(int i = 0; i < (sizeof(spis) / sizeof(pin_t)); i++){
+		pinWrite(spis[i], HIGH);
+	}
 	#endif
 }
 

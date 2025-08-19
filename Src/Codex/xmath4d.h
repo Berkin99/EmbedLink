@@ -4,8 +4,8 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <sysdefs.h>
-#include <xmath_types.h>
-#include <xmath3d.h>
+#include "xmath_types.h"
+#include "xmath3d.h"
 
 /* 4. Quaternions */
 typedef struct {
@@ -56,9 +56,9 @@ static inline quat_t qeye(void) {
     return quatnew(0, 0, 0, 1);
 }
 
-/** 
- * @brief Construct a quaternion from an axis and angle of rotation. 
- *        Does not assume axis is normalized 
+/**
+ * @brief Construct a quaternion from an axis and angle of rotation.
+ *        Does not assume axis is normalized
  */
 static inline quat_t qaxisangle(vec_t axis, f32 angle) {
     f32 scale = sinf(angle / 2) / vmag(axis);
@@ -78,7 +78,7 @@ static inline quat_t qnormalize(quat_t q);
  * and the rotation axis is orthogonal to the plane defined by a and b,
  * and the rotation is less than 180 degrees.
  * Assumes a and b are unit vectors.
- * Does not handle degenerate case where a = -b. Returns all-zero quaternion 
+ * Does not handle degenerate case where a = -b. Returns all-zero quaternion
  */
 static inline quat_t qvectovec(vec_t a, vec_t b) {
     vec_t const cross = vcross(a, b);
@@ -142,16 +142,16 @@ static inline quat_t rpy2quat_small(vec_t rpy) {
 
 /* Conversions to other parameterizations of 3D rotations */
 
-/* Convert quaternion to (roll, pitch, yaw) Euler angles using Tait-Bryan convention
-   (yaw, then pitch about new pitch axis, then roll about new roll axis) */
-static inline vec_t quat2rpy(quat_t q) {
-    /* from https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles */
-    vec_t v;
-    v.x = atan2f(2.0f * (q.w * q.x + q.y * q.z), 1 - 2 * (fsqr(q.x) + fsqr(q.y))); /* roll */
-    v.y = asinf(2.0f * (q.w * q.y - q.x * q.z)); /* pitch */
-    v.z = atan2f(2.0f * (q.w * q.z + q.x * q.y), 1 - 2 * (fsqr(q.y) + fsqr(q.z))); /* yaw */
-    return v;
-}
+// /* Convert quaternion to (roll, pitch, yaw) Euler angles using Tait-Bryan convention
+//    (yaw, then pitch about new pitch axis, then roll about new roll axis) */
+// static inline vec_t quat2rpy(quat_t q) {
+//     /* from https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles */
+//     vec_t v;
+//     v.x = atan2f(2.0f * (q.w * q.x + q.y * q.z), 1 - 2 * (fsqr(q.x) + fsqr(q.y))); /* roll */
+//     v.y = asinf(2.0f * (q.w * q.y - q.x * q.z)); /* pitch */
+//     v.z = atan2f(2.0f * (q.w * q.z + q.x * q.y), 1 - 2 * (fsqr(q.y) + fsqr(q.z))); /* yaw */
+//     return v;
+// }
 
 /* Compute the axis of a quaternion's axis-angle decomposition. */
 static inline vec_t quat2axis(quat_t q) {
@@ -304,4 +304,4 @@ static inline void qstoref(quat_t q, f32 *f) {
 }
 
 #endif
- 
+

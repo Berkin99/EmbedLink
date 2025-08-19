@@ -45,4 +45,4 @@ int8_t sensorAcquireHMC5883L(sense_t* plist, uint8_t n);
 int8_t sensorIsReadyHMC5883L(void);
 void   sensorWaitDataReadyHMC5883L(void);
 
-#endif /* SENSOR_6500_H_ */
+#endif /* SENSOR_HMC5883L_H_ */

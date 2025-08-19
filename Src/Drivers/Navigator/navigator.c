@@ -45,7 +45,6 @@
 	.Init = &navigatorInit##NAME,\
 	.Test = &navigatorTest##NAME,\
 	.Calibrate = &navigatorCalibrate##NAME,\
-	.Acquire = &navigatorAcquire##NAME,\
 	.IsReady = &navigatorIsReady##NAME,\
 	.WaitDataReady = &navigatorWaitDataReady##NAME,\
 },
@@ -82,16 +81,16 @@ int8_t navigatorIsReady(void){
     return TRUE;
 }
 
+uint8_t navigatorSize(void){
+    return navLen;
+}
+
 int8_t navigatorGet(char* name, navigator_t** pnavigator){
     for(uint8_t i = 0; i<navLen; i++){
         if(strcmp(navList[i].Name, name) == 0){
-            *pnavigator = &navList[i];
+            *pnavigator = (navigator_t*)&navList[i];
             return OK;
         };
     }
     return E_NOT_FOUND;
-}
-
-uint8_t navigatorSize(void){
-    return navLen;
 }

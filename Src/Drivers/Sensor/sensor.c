@@ -28,6 +28,8 @@
  */
 
 #include <string.h>
+
+#include "rtos.h"
 #include "sysconfig.h"
 #include "systime.h"
 #include "uart.h"
@@ -36,15 +38,31 @@
 #ifdef MPU6500_SPI
 #include "sensor_mpu6500.h"
 #endif
+
 #ifdef BMI088_SPI
 #include "sensor_bmi088.h"
 #endif
+
+#ifdef ICM20948_SPI
+#include "sensor_icm20948.h"
+#endif
+
+#ifdef BMP581_I2C
+#include "sensor_bmp581.h"
+#endif
+
+#ifdef ICP20100_I2C
+#include "sensor_icp20100.h"
+#endif
+
 #ifdef BNO055_I2C
 #include "sensor_bno055.h"
 #endif
+
 #ifdef BMP388_I2C
 #include "sensor_bmp388.h"
 #endif
+
 #ifdef HMC5883L_I2C
 #include "sensor_hmc5883l.h"
 #endif
@@ -67,6 +85,15 @@ static const sensor_t sensorList[] = {
 	#ifdef BMI088_SPI
 	SENS_ADD(BMI088)
 	#endif
+	#ifdef ICM20948_SPI
+	SENS_ADD(ICM20948)
+	#endif
+	#ifdef BMP581_I2C
+	SENS_ADD(BMP581)
+	#endif
+	#ifdef ICP20100_I2C
+	SENS_ADD(ICP20100)
+	#endif
 	#ifdef BNO055_I2C
 	SENS_ADD(BNO055)
 	#endif
@@ -80,7 +107,16 @@ static const sensor_t sensorList[] = {
 
 static const uint8_t sensorLen = sizeof(sensorList)/sizeof(sensor_t);
 
+static uint8_t qReady;
+static queue_t qSense;
+queueAllocateStatic(qSense, SENSE_QUEUE_SIZE, sizeof(sense_t))
+
 void sensorInit(void){
+
+	/* Queue Create */
+	qSense = queueCreateStatic(qSense);
+	qReady = 1;
+
 	for(uint8_t i = 0; i < sensorLen; i++){
 		if(sensorList[i].Init() == OK) serialPrint("[+] Sensor %s init OK\n",sensorList[i].Name);
 		else serialPrint("[-] Sensor %s init ERROR\n",sensorList[i].Name);
@@ -106,9 +142,25 @@ uint8_t sensorSize(void){
 int8_t sensorGet(const char* name, sensor_t** psensor){
 	for(uint8_t i = 0; i < sensorLen; i++){
 		if(strcmp(sensorList[i].Name,name) == 0){
-			*psensor = &sensorList[i];
+			*psensor = &(((sensor_t*)sensorList)[i]);
 			return OK;
 		}
 	}
 	return E_NOT_FOUND;
+}
+
+int8_t sensorEnqueue(const sense_t* pSense, int8_t isISR){
+	if(!qReady) return ERROR;
+	int8_t result;
+    if (isISR) result = queueSendISR(qSense, pSense);
+    else result = queueSend(qSense, pSense, 0);
+    return result;
+}
+
+int8_t sensorDequeue(sense_t* pSense, uint32_t portDelay){
+	if(!qReady) return ERROR;
+
+	if (queueReceive(qSense, pSense, portDelay) == RTOS_TRUE) return TRUE;
+
+	return FALSE;
 }

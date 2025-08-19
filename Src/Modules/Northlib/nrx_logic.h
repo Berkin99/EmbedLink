@@ -32,6 +32,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+
 #include "nrx.h"
 #include "ntrp.h"
 
@@ -52,4 +53,4 @@ uint8_t nrxGroupSize(int index);
 
 void nrxLogicInit();
 
-#endif /* nrx_LOGIC_H_ */
+#endif /* NRX_LOGIC_H_ */

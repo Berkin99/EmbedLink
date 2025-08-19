@@ -27,9 +27,10 @@
  *
  */
 
-#include "systime.h"
-#include "system.h"
 #include "i2c.h"
+
+#include "system.h"
+#include "systime.h"
 
 #ifdef HAL_I2C_MODULE_ENABLED
 

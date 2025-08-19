@@ -55,5 +55,6 @@ int8_t   uartWrite       (uart_t* uart, const uint8_t* pTxData, uint16_t len);
 int8_t   uartPrint       (uart_t* uart, const char* format, ...);
 
 void 	 serialPrint     (const char* format, ...);
+int32_t  serialScan      (const char *format, ...);
 
 #endif /* UART_H_ */

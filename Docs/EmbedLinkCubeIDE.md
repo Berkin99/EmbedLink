@@ -30,10 +30,11 @@
 * SerialWire
 
 #### Software:
-* FreeRTOS > CMSIS_V2 > Newlib
+* FreeRTOS > CMSIS_V2
 * USB Device
 
 ### 1.2 Clock Configuration MHz
+* HSE  26
 * CPU  200
 * TIM  200
 * SPI  32
@@ -48,6 +49,37 @@
 * Properties/C Build/Settings/MCU Settings > enable newlib float : OK
 * extern and define on the @main.h : OK
 * Call systemLaunch in @main.c : OK
-* Start system timer HAL_TIM_Base_Start() in TIM config end @main.c : OK
+* Start system timer HAL_TIM_Base_Start(&htim2) in TIM config end @main.c : OK
 * Linker List .mem. .nrx.
 * Configure the sysconfig.h
+
+  /* The program code and other data goes into FLASH */
+  .text :
+  {
+    . = ALIGN(4);
+    *(.text)           /* .text sections (code) */
+    *(.text*)          /* .text* sections (code) */
+    *(.glue_7)         /* glue arm to thumb code */
+    *(.glue_7t)        /* glue thumb to arm code */
+    *(.eh_frame)
+
+    KEEP (*(.init))
+    KEEP (*(.fini))
+
+    /* Parameters */
+    . = ALIGN(4);
+    _nrx_start = .;
+    KEEP(*(.nrx))
+    KEEP(*(.nrx.*))
+    _nrx_stop = .;
+
+    /* Parameters */
+    . = ALIGN(4);
+    _mem_start = .;
+    KEEP(*(.mem))
+    KEEP(*(.mem.*))
+    _mem_stop = .;
+
+    . = ALIGN(4);
+    _etext = .;        /* define a global symbols at end of code */
+  } >FLASH

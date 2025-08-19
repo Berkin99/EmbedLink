@@ -33,9 +33,10 @@
 #include <stdint.h>
 #include "kinematics.h"
 #include "navigation.h"
+#include "sensor.h"
 
 #define ESTIMATOR_INITIALIZE_TIMEOUT_MS    10000
-#define ESTIMATOR_STABILIZE_MS			   2000
+#define ESTIMATOR_STABILIZE_MS			   5000
 
 /* ESTIMATOR TYPE */
 #define ESTIMATOR_KALMAN
@@ -51,22 +52,42 @@
 #define ESTIMATOR_FREQ_HZ RATE_1000_HZ
 #define RATE_DO_EXECUTE(RATE_HZ, TICK) ((TICK % (ESTIMATOR_FREQ_HZ / RATE_HZ)) == 0)
 
+#define STATE_TYPECOUNT SENSE_TYPECOUNT
+
+typedef union{
+	struct 
+	{
+		xvec_t position;
+		xvec_t rotation;
+		xvec_t velocity;
+		xvec_t acceleration;
+		xvec_t attitude;
+		xvec_t irotation;
+		xvec_t ivelocity;
+		xvec_t iacceleration;
+		xvec_t iattitude;
+		xvec_t magnetization;
+		xvec_t pressure;
+		xvec_t temperature;
+	};
+	xvec_t v[STATE_TYPECOUNT];
+}state_t;
+
 typedef struct{
 	char*   name;
 	int8_t  (*init)(void);
 	int8_t  (*test)(void);
 	int8_t  (*isReady)(void);
-	const kinematicsState_t* (*state)(void);
+	void    (*originSet)(void);
 }estimator_t;
 
-void estimatorInit (void);
-void estimatorTest (void);
+void   estimatorInit (void);
+void   estimatorTest (void);
 int8_t estimatorIsReady(void);
-
-void estimatorStabilize(kinematicsState_t* pState, uint32_t tim);
-void estimatorUpdate(kinematicsState_t* pState, uint8_t* pChecklist);
-
-int8_t estimatorEnqueue(const measurement_t* pMeasurement, int8_t isISR);
-int8_t estimatorDequeue(measurement_t* pMeasurement, uint32_t portDelay);
+void   estimatorReset(state_t* pState);
+void   estimatorIterate(state_t* pState);
+void   estimatorUpdate(state_t* base, const state_t* update);
+void   estimatorStabilize(state_t* pState, uint32_t timeoutMs);
+void   estimatorOriginSet(void);
 
 #endif /* ESTIMATOR_H_ */

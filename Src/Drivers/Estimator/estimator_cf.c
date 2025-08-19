@@ -210,7 +210,7 @@ void _estimatorBarometerCF(void){
 		dAtt += 1;
 		float alpha = dAtt * dAtt;
 		alpha -= 1;
-		alpha = constrainFloat(alpha, 0.0f, 5.0f);
+		alpha = clampf32(alpha, 0.0f, 5.0f);
 		alpha /= 5.0f;
 		navstate.altitude = (1.0f - alpha) * navstate.altitude +
 		(alpha) * barfast;

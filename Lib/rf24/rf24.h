@@ -25,7 +25,7 @@
 #include <stdint.h>
 
 #define RF24_MAX_PAYLOAD_LENGHT     32
-#define RF24_CS_DELAY_MS            5
+#define RF24_CS_DELAY_US            5
 
 typedef enum{
     RF24_PA_MIN = 0,

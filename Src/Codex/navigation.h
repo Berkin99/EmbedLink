@@ -31,8 +31,9 @@
 #define NAVIGATION_H_
 
 #include <stdint.h>
-#include <sysdefs.h>
-#include <xmathf.h>
+
+#include "sysdefs.h"
+#include "xmathf.h"
 
 typedef enum{
 	NAV_LOCATION,
@@ -71,25 +72,24 @@ typedef struct{
 }navigationState_t;
 
 void   navigationReset(navigationState_t* self);
-void   navigationSetLocation(navigationState_t* self, location_t* location);
-void   navigationSetAltitude(navigationState_t* self, altitude_t* altitude);
-void   navigationSetCompass(navigationState_t* self, compass_t* compass);
-void   navigationSetUnixtime(navigationState_t* self, unixtime_t* unixtime);
+void   navigationSetLocation(navigationState_t* self, location_t location);
+void   navigationSetAltitude(navigationState_t* self, altitude_t altitude);
+void   navigationSetCompass(navigationState_t* self, compass_t compass);
+void   navigationSetUnixtime(navigationState_t* self, unixtime_t unixtime);
 int8_t navigationIsValid(navigationState_t* self, navigation_e idx, uint32_t timeout_ms);
 
+/* XNAVIGATION */
+navigationState_t* xnavigationState(void);
 void   xnavigationReset(void);
-void   xnavigationGetLocation(location_t* location);
-void   xnavigationGetAltitude(altitude_t* altitude);
-void   xnavigationGetCompass(compass_t* compass);
-void   xnavigationGetUnixtime(unixtime_t* unixtime);
-void   xnavigationSetLocation(location_t* location);
-void   xnavigationSetAltitude(altitude_t* altitude);
-void   xnavigationSetCompass(compass_t* compass);
-void   xnavigationSetUnixtime(unixtime_t* unixtime);
+void   xnavigationSetLocation(location_t location);
+void   xnavigationSetAltitude(altitude_t altitude);
+void   xnavigationSetCompass(compass_t compass);
+void   xnavigationSetUnixtime(unixtime_t unixtime);
 int8_t xnavigationIsValid(navigation_e idx, uint32_t timeout_ms);
 void   xnavigationUnitLocation(const location_t* loc);
-void   xnavigationGetOrigin(navigationState_t* pBuf);
-void   xnavigationSetOrigin(navigationState_t navigation);
+
+/* ORIGIN */
+navigationState_t* xnavigationOrigin(void);
 void   xnavigationCalibrateOrigin(vec_t position);
 int8_t xnavigationGetPosition(vec_t* pos);
 

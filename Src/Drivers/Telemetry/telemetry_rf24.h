@@ -38,8 +38,8 @@
 
 int8_t telemetryInitRF24(void);
 int8_t telemetryTestRF24(void);
-int8_t telemetryReceiveRF24(uint8_t* pRxBuffer);
-int8_t telemetryTransmitRF24(const uint8_t* pTxData, uint8_t Length);
+int8_t telemetryReceiveRF24(uint8_t* pRxBuffer, uint16_t length);
+int8_t telemetryTransmitRF24(const uint8_t* pTxData, uint16_t length);
 int8_t telemetryIsReadyRF24(void);
 void   telemetryWaitDataReadyRF24(void);
 

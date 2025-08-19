@@ -40,7 +40,6 @@ typedef struct {
     int8_t      (*Init)(void);
     int8_t      (*Test)(void);
     void        (*Calibrate)(vec_t Correction);
-    int8_t      (*Acquire)(navigation_t* plist, uint8_t n);
     int8_t      (*IsReady)(void);
     void        (*WaitDataReady)(void);
 }navigator_t;
@@ -48,7 +47,7 @@ typedef struct {
 void    navigatorInit(void);
 void    navigatorTest(void);
 int8_t  navigatorIsReady(void);
-int8_t  navigatorGet(char* name, navigation_t** pnavigator);
 uint8_t navigatorSize(void);
+int8_t  navigatorGet(char* name, navigator_t** pnavigator);
 
 #endif /* NAVIGATOR_H_ */

@@ -27,10 +27,11 @@
  *
  */
 
+#include "xlist.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <xlist.h>
 
 static void* xlistResize(xlist_t* self, size_t new_size) {
     return realloc(self->array, new_size * self->item_size);

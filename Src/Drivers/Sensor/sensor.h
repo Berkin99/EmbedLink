@@ -34,9 +34,10 @@
 #include <system.h>
 #include <xmathf.h>
 
-#define SENSE_AXIS_X    (1U << 0)
-#define SENSE_AXIS_Y    (1U << 1)
-#define SENSE_AXIS_Z    (1U << 2)
+#define SENSE_AXIS_X     (1U << 0)
+#define SENSE_AXIS_Y     (1U << 1)
+#define SENSE_AXIS_Z     (1U << 2)
+#define SENSE_QUEUE_SIZE (16)
 
 typedef enum{
     SENSE_POSITION,
@@ -50,12 +51,13 @@ typedef enum{
     SENSE_IATTITUDE,
     SENSE_MAGNETIZATION,
     SENSE_PRESSURE,
-    SENSE_TEMPERATURE
+    SENSE_TEMPERATURE,
+    SENSE_TYPECOUNT
 }sense_e;
 
 typedef struct{
     sense_e  type;
-    xv3f32_t xvec;
+    xvec_t   xvec;
 }sense_t;
 
 typedef struct {
@@ -74,5 +76,7 @@ void    sensorTest(void);
 int8_t  sensorIsReady(void);
 uint8_t sensorSize(void);
 int8_t  sensorGet(const char* name, sensor_t** psensor);
+int8_t  sensorEnqueue(const sense_t* pSense, int8_t isISR);
+int8_t  sensorDequeue(sense_t* pSense, uint32_t portDelay);
 
 #endif /* SENSOR_H_ */

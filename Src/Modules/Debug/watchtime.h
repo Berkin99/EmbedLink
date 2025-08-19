@@ -27,16 +27,27 @@
  *
  */
 
-#ifndef GEOCONFIG_H_
-#define GEOCONFIG_H_
+#ifndef WATHCHTIME_H_
+#define WATHCHTIME_H_
 
-#define GRAVITY 			 	9.81f
-#define CONST_SEA_PRESSURE 		1013.4f          /* Location based */
-#define CONST_PF 				0.1902630958f    /* (1/5.25588f) Pressure factor */
-#define CONST_PF2 				44330.0f
-#define FIX_TEMP 				25.0f            /* Fixed Temperature */
-#define MAGNETIC_DECLINATION 	(6.18f)          /* Magnetic north and Geographic north difference, Location based */
-#define EARTH_EQX_R 			6371000          /* Equator radius in meters */
-#define EARTH_POLAR_R 			6357000          /* Polar radius in meters*/
+#include <stdint.h>
+#include <stdarg.h>
 
-#endif /* GEOCONFIG_H_ */
+#include "uart.h"
+#include "rtos.h"
+
+#define WATCHDEF(CHAR) \
+static uint32_t loop_time;\
+static uint32_t delta;\
+wtADD(CHAR, &delta);\
+loop_time = micros();\
+
+#define WATCHER() \
+delta = micros()-loop_time;\
+loop_time = micros();\
+
+void wtInit(void);
+void wtTask(void* argv);
+void wtADD(char chr, uint32_t* ptr);
+
+#endif

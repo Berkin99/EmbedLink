@@ -27,9 +27,10 @@
  *
  */
 
-#include "system.h"
-#include "sysconfig.h"
 #include "pwm.h"
+
+#include "sysconfig.h"
+#include "system.h"
 
 #ifdef HAL_TIM_MODULE_ENABLED
 

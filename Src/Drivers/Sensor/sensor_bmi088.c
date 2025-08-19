@@ -30,7 +30,7 @@
 #include <sysdefs.h>
 #include <sysconfig.h>
 #include <systime.h>
-#include <rtos.h>
+#include "rtos.h"
 
 #ifdef   BMI088_SPI
 
@@ -44,7 +44,7 @@
 #include "spi.h"
 #include "geoconfig.h"
 #include "filter.h"
-#include "estimator.h"
+#include "kinematics.h"
 #include "mem.h"
 #include "memory.h"
 #include "nrx.h"
@@ -101,7 +101,7 @@ typedef struct {
 static sensor_data_bmi088_t accv, gyrv;
 static sense_t accs, gyrs;
 
-static uint32_t  idptr;
+//static uint32_t  idptr;
 static uint8_t   isInit;
 static int8_t    isReady;
 
@@ -116,22 +116,27 @@ void    _sensorVarianceBMI088 (vec_t accMean, vec_t gyrMean, vec_t * accVar, vec
 int8_t sensorInitBMI088(void){
     if(isInit) return E_OVERWRITE;
 
-    uint8_t rslt;
- 
     pinWrite(bmi08AccCsPin, HIGH);
     pinWrite(bmi08GyrCsPin, HIGH);
 
     delay(100);
 
+    sensorTestBMI088();
+
     /* INITIALIZE BMI088 */
     bmi08a_set_power_mode(&bmi08dev);     /* ACCEL ACTIVATE */
     if(bmi08a_init(&bmi08dev) != BMI08_OK ){ serialPrint("[-] BMI088 ACC init err\n"); return ERROR; }
-    bmi08a_set_meas_conf(&bmi08dev);     /* ACCEL SET CONFIGS */
+    bmi08xa_set_meas_conf(&bmi08dev);     /* ACCEL SET CONFIGS */
     if(_sensorAccData(&accv.data) != OK) serialPrint("[-] BMI088 ACC config err\n");     /* ACCEL TEST */
+    delay(100);
+
     bmi08g_set_power_mode(&bmi08dev);     /* GYRO ACTIVATE */
     if( bmi08g_init(&bmi08dev) != BMI08_OK ){ serialPrint("[-] BMI088 GYR init err\n"); return ERROR; }
     bmi08g_set_meas_conf(&bmi08dev);     /* GYRO SET CONFIGS */
     if(_sensorGyrData(&gyrv.data) != OK) serialPrint("[-] BMI088 GYR config err\n");     /* GYRO TEST */
+    delay(100);
+
+    //serialPrint("[>] BMI088 ACC :   %.2f    %.2f    %.2f", accv.data.x, accv.data.y, accv.data.z);
 
     /* LPF INITIALIZE */
     for (uint8_t i = 0; i < 3; i++) {
@@ -146,7 +151,7 @@ int8_t sensorInitBMI088(void){
 }
 
 int8_t sensorTestBMI088(void){
-    bmi08a_get_regs(BMI08_REG_ACCEL_CHIP_ID, &bmi08dev.accel_chip_id, 1, &bmi08dev);
+    bmi08a_get_set_regs(BMI08_REG_ACCEL_CHIP_ID, &bmi08dev.accel_chip_id, 1, &bmi08dev, GET_FUNC);
     bmi08g_get_regs(BMI08_REG_GYRO_CHIP_ID,  &bmi08dev.gyro_chip_id,  1, &bmi08dev);
 
     if ((bmi08dev.gyro_chip_id == BMI08_GYRO_CHIP_ID) && (bmi08dev.accel_chip_id == BMI088_ACCEL_CHIP_ID)){
@@ -159,9 +164,11 @@ void sensorTaskBMI088(void* argv){
 
     delay(500);
 
+    /* SIGN THE TYPE */
     accs.type = SENSE_IACCELERATION;
     gyrs.type = SENSE_IATTITUDE;
     
+    /* Mean Calculation */
     _sensorMeanBMI088(&accv.mean, &gyrv.mean);
 
     /* Calculated STDDEV */
@@ -179,23 +186,24 @@ void sensorTaskBMI088(void* argv){
     isReady = 1;
 
     while(1){
+
         if(_sensorAccData(&accv.data) == OK){
-            vec_t va = veltmul(kinematicsRotateFrame(accv.data, accv.rot), accv.scale);
+        	vec_t va = veltmul(kinematicsRotateFrame(accv.data, accv.rot), accv.scale);
 
             for (uint8_t i = 0; i < 3; ++i) {
                 accs.xvec.axis[i] = lpf2pApply(&accv.lpfdata[i], va.axis[i]);
             }
             accs.xvec.timestampMs = millis();
-            estimatorEnqueue(&accs, 0);
+            sensorEnqueue(&accs, 0);
         }
         if(_sensorGyrData(&gyrv.data) == OK){
             vec_t vg = vsub(gyrv.data, gyrv.mean);
             
             for (uint8_t i = 0; i < 3; i++) {
-                gyrv.xvec.axis[i] = lpf2pApply(&gyrv.lpfdata[i], vg.axis[i]);
+                gyrs.xvec.axis[i] = lpf2pApply(&gyrv.lpfdata[i], vg.axis[i]);
             }
             gyrs.xvec.timestampMs = millis();
-            estimatorEnqueue(&gyrs, 0);
+            sensorEnqueue(&gyrs, 0);
         }
         taskDelayUntil(&xLastWakeTime, (1000 / sensorFreqBMI088));
     }
@@ -216,18 +224,18 @@ void sensorCalibrateBMI088(void){
 	float loopy = 0;
 
 	while(loopy < 1000){
-		if(kinematicsState()->rotation.x > 85 && kinematicsState()->rotation.x < 95){
+		if(xkinematicsState()->rotation.x > 85 && xkinematicsState()->rotation.x < 95){
 			tempaccy = vmean(tempaccy, accv.data, loopy);
 			loopy++;
 		}
 		delay(4);
 	}
 
-	while(kinematicsState()->rotation.x > 5) delay(4);
+	while(xkinematicsState()->rotation.x > 5) delay(4);
 
 	while(loopx < 1000){
-		if(kinematicsState()->rotation.y < -85 && kinematicsState()->rotation.y > -95){
-			tempaccx = vmean(tempaccx, accData, loopx);
+		if(xkinematicsState()->rotation.y < -85 && xkinematicsState()->rotation.y > -95){
+			tempaccx = vmean(tempaccx, accv.data, loopx);
 			loopx++;
 		}
 		delay(4);
@@ -236,8 +244,8 @@ void sensorCalibrateBMI088(void){
 	accv.scale.y = GRAVITY / tempaccy.y;
 	accv.scale.x = GRAVITY / tempaccx.x;
 
-	idptr = (uint32_t)SYS_ID(sensorNameBMI088);
-    memoryMemUpload(sensorNameBMI088, NULL);
+	//idptr = (uint32_t)SYS_ID(sensorNameBMI088);
+    //memoryMemUpload(sensorNameBMI088, NULL);
 }
 
 void _sensorMeanBMI088(vec_t* accMean, vec_t* gyrMean){
@@ -283,7 +291,7 @@ void _sensorVarianceBMI088(vec_t accMean, vec_t gyrMean, vec_t * accVar, vec_t* 
 
 int8_t sensorIsCalibratedBMI088(void){
     /* Check the memory */
-    if(idptr == SYS_ID(sensorNameBMI088)) return TRUE;
+    //if(idptr == SYS_ID(sensorNameBMI088)) return TRUE;
     return FALSE;
 }
 
@@ -295,13 +303,13 @@ int8_t sensorIsReadyBMI088(void){
     return isReady;
 }
 
-void sensorWaitDataReadyBMI088(void){while()}
+void sensorWaitDataReadyBMI088(void){while(1);}
 
 uint8_t _sensorAccData(vec_t* data){
     /* Output as G values ((9,81m)/s^2)*/
     struct bmi08_sensor_data bmi08AccData;
     int8_t rslt = bmi08a_get_data(&bmi08AccData, &bmi08dev);
-    *data = vscl(mkvec(bmi08AccData.y, bmi08AccData.x * -1, bmi08AccData.z), BMI088_G_PER_LSB * GRAVITY);
+    *data = vscl(vnew(bmi08AccData.y, bmi08AccData.x * -1, bmi08AccData.z), BMI088_G_PER_LSB * GRAVITY);
     return (rslt == BMI08_OK) ? OK : E_ERROR;
 }
 
@@ -309,16 +317,16 @@ uint8_t _sensorGyrData(vec_t* data){
     /* Output as deg/s values (deg/s)*/
     struct bmi08_sensor_data bmi08GyrData;
     int8_t rslt = bmi08g_get_data(&bmi08GyrData, &bmi08dev);
-    *data = vscl(mkvec(bmi08GyrData.y, bmi08GyrData.x * -1, bmi08GyrData.z), BMI088_DEG_PER_LSB);
+    *data = vscl(vnew(bmi08GyrData.y, bmi08GyrData.x * -1, bmi08GyrData.z), BMI088_DEG_PER_LSB);
     return (rslt == BMI08_OK) ? OK : E_ERROR;
 }
 
 BMI08_INTF_RET_TYPE bmi08SpiRead(uint8_t reg_addr, uint8_t *reg_data, uint32_t len, void *intf_ptr){
     spiBeginTransaction(&BMI088_SPI);
-    pinWrite(*(pin_t*)intf_ptr), LOW);
+    pinWrite(*((pin_t*)intf_ptr), LOW);
     spiTransmit(&BMI088_SPI, &reg_addr, 1);
     int8_t result = spiReceive(&BMI088_SPI, reg_data, (uint16_t)len);
-    pinWrite(*(pin_t*)intf_ptr, HIGH);
+    pinWrite(*((pin_t*)intf_ptr), HIGH);
     spiEndTransaction(&BMI088_SPI);
     return result;
 }
@@ -338,23 +346,23 @@ void bmi08DelayUs(uint32_t period, void *intf_ptr){
     delayUs(period);
 }
 
-NRX_GROUP_START(bmical)
-NRX_ADD(NRX_FLOAT,  accScale.x, &accScale.x)
-NRX_ADD(NRX_FLOAT,  accScale.y, &accScale.y)
-NRX_ADD(NRX_FLOAT,  accScale.z, &accScale.z)
-NRX_ADD(NRX_FLOAT,  accRot.x,   &accRot.x)
-NRX_ADD(NRX_FLOAT,  accRot.y,   &accRot.y)
-NRX_ADD(NRX_FLOAT,  accRot.z,   &accRot.z)
-NRX_GROUP_STOP (bmical)
+// NRX_GROUP_START(bmical)
+// NRX_ADD(NRX_FLOAT,  accv.scale.x, &accv.scale.x)
+// NRX_ADD(NRX_FLOAT,  accv.scale.y, &accv.scale.y)
+// NRX_ADD(NRX_FLOAT,  accv.scale.z, &accv.scale.z)
+// NRX_ADD(NRX_FLOAT,  accv.rot.x,   &accv.rot.x)
+// NRX_ADD(NRX_FLOAT,  accv.rot.y,   &accv.rot.y)
+// NRX_ADD(NRX_FLOAT,  accv.rot.z,   &accv.rot.z)
+// NRX_GROUP_STOP (bmical)
 
-MEM_GROUP_START(BMI088)
-MEM_ADD(MEM_UINT32, idptr,    &idptr)
-MEM_ADD(MEM_FLOAT,  accScale.x, &accScale.x)
-MEM_ADD(MEM_FLOAT,  accScale.y, &accScale.y)
-MEM_ADD(MEM_FLOAT,  accScale.z, &accScale.z)
-MEM_ADD(MEM_FLOAT,  accRot.x,  &accRot.x)
-MEM_ADD(MEM_FLOAT,  accRot.y,  &accRot.y)
-MEM_ADD(MEM_FLOAT,  accRot.z,  &accRot.z)
-MEM_GROUP_STOP (BMI088)
+// MEM_GROUP_START(BMI088)
+// MEM_ADD(MEM_UINT32, idptr,    &idptr)
+// MEM_ADD(MEM_FLOAT,  accv.scale.x, &accv.scale.x)
+// MEM_ADD(MEM_FLOAT,  accv.scale.y, &accv.scale.y)
+// MEM_ADD(MEM_FLOAT,  accv.scale.z, &accv.scale.z)
+// MEM_ADD(MEM_FLOAT,  accv.rot.x,  &accv.rot.x)
+// MEM_ADD(MEM_FLOAT,  accv.rot.y,  &accv.rot.y)
+// MEM_ADD(MEM_FLOAT,  accv.rot.z,  &accv.rot.z)
+// MEM_GROUP_STOP (BMI088)
 
 #endif /* BMI088_SPI */

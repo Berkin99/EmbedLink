@@ -30,62 +30,98 @@
 #include <systime.h>
 #include "kinematics.h"
 #include "matrix.h"
+#include "uart.h"
+#include "nrx.h"
 
 static kinematicsState_t _kinematics;
 
 void kinematicsReset(kinematicsState_t *self){
-    for (size_t i = 0; i < KINV_TYPECOUNT; i++) self->kinv[i] = xvzero();
+    for (uint8_t i = 0; i < KINV_TYPECOUNT; i++) self->kinv[i] = xvzero();
 }
 
-void kinematicsSet(kinematicsState_t *self, kinematics_e idx, kinv_t data){
+void kinematicsSet(kinematicsState_t *self, kinematics_e idx, xvec_t data){
     self->kinv[idx] = data;
 }
 
-kinv_t kinematicsGet(kinematicsState_t *self, kinematics_e idx){
+xvec_t kinematicsGet(kinematicsState_t *self, kinematics_e idx){
     return self->kinv[idx];
 }
 
-int8_t kinematicIsValid(kinematicsState_t *self, kinematics_e idx, uint32_t timeout_ms){
+int8_t kinematicsIsValid(kinematicsState_t *self, kinematics_e idx, uint32_t timeout_ms){
     return xvtime(&self->kinv[idx], timeout_ms);
 }
 
 void xkinematicsReset(void){kinematicsReset(&_kinematics);}
 
-void xkinematicsSet(kinematics_e idx, kinv_t data){kinematicsSet(&_kinematics, idx, data);}
+void xkinematicsSet(kinematics_e idx, xvec_t data){kinematicsSet(&_kinematics, idx, data);}
 
-kinv_t xkinematicsGet(kinematics_e idx){return kinematicsGet(&_kinematics, idx);}
+xvec_t xkinematicsGet(kinematics_e idx){return kinematicsGet(&_kinematics, idx);}
 
-int8_t xkinematicsIsValid(kinematics_e idx, uint32_t timeout_ms){return kinematicIsValid(&_kinematics, idx, timeout_ms);}
+int8_t xkinematicsIsValid(kinematics_e idx, uint32_t timeout_ms){return kinematicsIsValid(&_kinematics, idx, timeout_ms);}
+
+void   xkinematicsStateUpdate(kinematicsState_t* pState){
+	for (uint8_t i = 0; i < KINV_TYPECOUNT; i++) {
+        xkinematicsSet(i, pState->kinv[i]);
+	}    
+}
 
 const kinematicsState_t* xkinematicsState(void){
     return (const kinematicsState_t*) &_kinematics;
 }
 
-// vec_t kinematicsRotateFrame(vec_t v, vec_t frame){
-//     matrix_t R =  mnew(3, 3);
-//     matrix_t mv = mnew(3, 1);
+void xkinematicsPrint(kinematics_e idx){
+    serialPrint("%.3f      %.3f     %.3f\n",
+        _kinematics.kinv[idx].x,
+        _kinematics.kinv[idx].y,
+        _kinematics.kinv[idx].z
+    );
+}
 
-//     mv.mx[0][0] = v.x;
-//     mv.mx[1][0] = v.y;
-//     mv.mx[2][0] = v.z;
 
-//     float sx = sinf(frame.x * DEG2RAD);
-//     float cx = cosf(frame.x * DEG2RAD);
-//     float sy = sinf(frame.y * DEG2RAD);
-//     float cy = cosf(frame.y * DEG2RAD);
-//     float sz = sinf(frame.z * DEG2RAD);
-//     float cz = cosf(frame.z * DEG2RAD);
+vec_t kinematicsRotateFrame(vec_t v, vec_t frame){
+    matrix_t R =  mnew(3, 3);
+    matrix_t mv = mnew(3, 1);
 
-//     R.mx[0][0] = cy * cz;
-//     R.mx[0][1] = sx * sy * cz - cx * sz;
-//     R.mx[0][2] = cx * sy * cz + sx * sz;
-//     R.mx[1][0] = cy * sz;
-//     R.mx[1][1] = sx * sy * sz + cx * cz;
-//     R.mx[1][2] = cx * sy * sz - sx * cz;
-//     R.mx[2][0] = -sy;
-//     R.mx[2][1] = sx * cy;
-//     R.mx[2][2] = cx * cy;
+    mv.mx[0][0] = v.x;
+    mv.mx[1][0] = v.y;
+    mv.mx[2][0] = v.z;
 
-//     mv = mdot(R, mv);
-//     return mkvec(mv.mx[0][0], mv.mx[1][0], mv.mx[2][0]);
-// }
+    float sx = sinf(frame.x * DEG2RAD);
+    float cx = cosf(frame.x * DEG2RAD);
+    float sy = sinf(frame.y * DEG2RAD);
+    float cy = cosf(frame.y * DEG2RAD);
+    float sz = sinf(frame.z * DEG2RAD);
+    float cz = cosf(frame.z * DEG2RAD);
+
+    R.mx[0][0] = cy * cz;
+    R.mx[0][1] = sx * sy * cz - cx * sz;
+    R.mx[0][2] = cx * sy * cz + sx * sz;
+    R.mx[1][0] = cy * sz;
+    R.mx[1][1] = sx * sy * sz + cx * cz;
+    R.mx[1][2] = cx * sy * sz - sx * cz;
+    R.mx[2][0] = -sy;
+    R.mx[2][1] = sx * cy;
+    R.mx[2][2] = cx * cy;
+
+    mv = mdot(R, mv);
+    vec_t retv = vnew(mv.mx[0][0], mv.mx[1][0], mv.mx[2][0]);
+    return (retv);
+}
+
+NRX_GROUP_START(pos)
+NRX_ADD(NRX_FLOAT, x, &_kinematics.position.x)
+NRX_ADD(NRX_FLOAT, y, &_kinematics.position.y)
+NRX_ADD(NRX_FLOAT, z, &_kinematics.position.z)
+NRX_GROUP_STOP(pos)
+
+NRX_GROUP_START(rot)
+NRX_ADD(NRX_FLOAT, x, &_kinematics.rotation.x)
+NRX_ADD(NRX_FLOAT, y, &_kinematics.rotation.y)
+NRX_ADD(NRX_FLOAT, z, &_kinematics.rotation.z)
+NRX_GROUP_STOP(rot)
+
+NRX_GROUP_START(vel)
+NRX_ADD(NRX_FLOAT, x, &_kinematics.velocity.x)
+NRX_ADD(NRX_FLOAT, y, &_kinematics.velocity.y)
+NRX_ADD(NRX_FLOAT, z, &_kinematics.velocity.z)
+NRX_GROUP_STOP(vel)

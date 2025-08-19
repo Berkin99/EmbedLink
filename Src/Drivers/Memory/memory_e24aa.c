@@ -1,23 +1,30 @@
-/**
- *    __  __ ____ _  __ ____ ___ __  __
- *    \ \/ // __// |/ //  _// _ |\ \/ /
- *     \  // _/ /    /_/ / / __ | \  /
- *     /_//___//_/|_//___//_/ |_| /_/
+/*
+ *       ______          __             ____    _       __
+ *      / ____/___ ___  / /_  ___  ____/ / /   (_)___  / /__
+ *     / __/ / __ `__ \/ __ \/ _ \/ __  / /   / / __ \/ //_/
+ *    / /___/ / / / / / /_/ /  __/ /_/ / /___/ / / / / ,<
+ *   /_____/_/ /_/ /_/_.___/\___/\__,_/_____/_/_/ /_/_/|_|
  *
- *         Yeniay System Firmware
+ *  EmbedLink Firmware
+ *  Copyright (c) 2024 Yeniay RD, All rights reserved.
+ *  _________________________________________________________
  *
- *       Copyright (C) 2024 Yeniay
+ *  EmbedLink Firmware is free software: you can redistribute
+ *  it and/or  modify it under  the  terms of the  GNU Lesser
+ *  General Public License as  published by the Free Software
+ *  Foundation,  either version 3 of the License, or (at your
+ *  option) any later version.
  *
- * This  program  is  free software:   you
- * can  redistribute it  and/or  modify it
- * under  the  terms of  the  GNU  General
- * Public  License as  published  by   the
- * Free Software Foundation, in version 3.
+ *  EmbedLink  Firmware is  distributed  in the  hope that it
+ *  will be useful, but  WITHOUT  ANY  WARRANTY; without even
+ *  the implied warranty of MERCHANTABILITY or FITNESS FOR A
+ *  PARTICULAR PURPOSE.  See  the GNU  Lesser  General Public
+ *  License for more details.
  *
- * You  should  have  received  a  copy of
- * the  GNU  General  Public License along
- * with this program. If not, see
- * <http://www.gnu.org/licenses/>.
+ *  You should have received a copy of the GNU Lesser General
+ *  Public License along with EmbedLink Firmware. If not, see
+ *  <http://www.gnu.org/licenses/>.
+ *
  */
 
 #include <sysdefs.h>
@@ -39,12 +46,13 @@ static uint8_t devAddr;
 
 int8_t memoryInitE24AA(void){
 
-	if(isInit) return SYS_E_OVERWRITE;
+	if(isInit) return E_OVERWRITE;
 
 	devAddr = E24AA_I2C_ADDRESS;
 
 	isInit = 1;
 	return memoryReadE24AA(0, &isInit, 1);
+
 }
 
 int8_t memoryTestE24AA(void){
@@ -57,7 +65,7 @@ int8_t memoryReadE24AA(memory_t key, uint8_t* pRxData, int8_t len){
 //	serialPrint("[R %ld, %d]", key, len);
 
 	key += E24AA_MEMORY_OFFSET;
-	if(key > E24AA_MAX_MEMORY) return SYS_E_OVERFLOW;
+	if(key > E24AA_MAX_MEMORY) return E_OVERFLOW;
 	int8_t status;
 	uint8_t mem[2];
 	mem[0] = (uint8_t) (key >> 8);
@@ -70,8 +78,8 @@ int8_t memoryReadE24AA(memory_t key, uint8_t* pRxData, int8_t len){
 //	}
 //	serialPrint("\n");
 
-	if(status == HAL_OK) return SYS_OK;
-	return SYS_E_COMM_FAIL;
+	if(status == HAL_OK) return OK;
+	return E_CONNECTION;
 }
 
 int8_t memoryWriteE24AA(memory_t key, uint8_t* pTxData, int8_t len){
@@ -83,14 +91,14 @@ int8_t memoryWriteE24AA(memory_t key, uint8_t* pTxData, int8_t len){
 //	serialPrint("\n");
 
 	key += E24AA_MEMORY_OFFSET;
-	if(key > E24AA_MAX_MEMORY) return SYS_E_OVERFLOW;
+	if(key > E24AA_MAX_MEMORY) return E_OVERFLOW;
 	int8_t status;
 
 	status = i2cMemWrite16(&E24AA_I2C, devAddr, key, pTxData, len);
 	delay(10);
 
-	if(status == HAL_OK) return SYS_OK;
-	return SYS_E_COMM_FAIL;
+	if(status == HAL_OK) return OK;
+	return E_CONNECTION;
 }
 
 #endif

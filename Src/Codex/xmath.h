@@ -33,7 +33,7 @@
 #include <math.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <stddef.h>
+#include <string.h>
 #include "xmath_types.h"
 
 /* Clamp a f32 value between a min and max value */
@@ -59,16 +59,17 @@ static inline f32 radnf32(f32 radians){
 }
 
 /* Compare two floats for approximate equality with ulps threshold */
-static inline bool closeulpsf32(f32 a, f32 b, i32 ulps) {
+static inline bool closeulpsf32(float a, float b, int32_t ulps) {
     if ((a < 0.0f) != (b < 0.0f)) {
         if (a == b) {
             return true;
         }
         return false;
     }
-    i32 ia = *((i32 *)&a);
-    i32 ib = *((i32 *)&b);
-    return fabsf(ia - ib) <= ulps;
+    int32_t ia, ib;
+    memcpy(&ia, &a, sizeof(a));
+    memcpy(&ib, &b, sizeof(b));
+    return fabsf((float)(ia - ib)) <= (float)ulps;
 }
 
 static inline f32 deadbandf32(f32 val, f32 threshold){
@@ -99,6 +100,49 @@ static inline f32 meanf32(f32 pmean, f32 new, i32 i) {
 
 static inline f64 meanf64(f64 pmean, f64 new, i32 i) {
     return (pmean * (f64)i / (i + 1)) + (new * 1.0 / (i + 1));
+}
+
+/* Linear interpolation */
+static inline f32 lerpf32(f32 a, f32 b, f32 t) {
+    return a + (b - a) * clampf32(t, 0.0f, 1.0f);
+}
+
+/* Ease-In (Quadratic: starts slow, accelerates) */
+static inline f32 easeInQuad(f32 t) {
+    t = clampf32(t, 0.0f, 1.0f);
+    return t * t;
+}
+
+/* Ease-Out (Quadratic: starts fast, slows down) */
+static inline f32 easeOutQuad(f32 t) {
+    t = clampf32(t, 0.0f, 1.0f);
+    return 1.0f - (1.0f - t) * (1.0f - t);
+}
+
+/* Ease-In-Out (Quadratic: slow → fast → slow) */
+static inline f32 easeInOutQuad(f32 t) {
+    t = clampf32(t, 0.0f, 1.0f);
+    return (t < 0.5f) ? (2.0f * t * t) : (1.0f - powf(-2.0f * t + 2.0f, 2.0f) / 2.0f);
+}
+
+/* Ease-In (Cubic: stronger acceleration) */
+static inline f32 easeInCubic(f32 t) {
+    t = clampf32(t, 0.0f, 1.0f);
+    return t * t * t;
+}
+
+/* Ease-Out (Cubic: stronger deceleration) */
+static inline f32 easeOutCubic(f32 t) {
+    t = clampf32(t, 0.0f, 1.0f);
+    f32 u = (1.0f - t);
+    return 1.0f - u * u * u;
+}
+
+/* Ease-In-Out (Cubic: smooth S-curve) */
+static inline f32 easeInOutCubic(f32 t) {
+    t = clampf32(t, 0.0f, 1.0f);
+    return (t < 0.5f) ? (4.0f * t * t * t) 
+                      : (1.0f - powf(-2.0f * t + 2.0f, 3.0f) / 2.0f);
 }
 
 #endif

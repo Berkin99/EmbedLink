@@ -41,7 +41,6 @@ int8_t navigatorInitNEOM8N(void);
 int8_t navigatorTestNEOM8N(void);
 void   navigatorCalibrateNEOM8N(vec_t Correction);
 int8_t navigatorIsCalibratedNEOM8N(void);
-int8_t navigatorAcquireNEOM8N(navigation_t* plist, uint8_t n);
 int8_t navigatorIsReadyNEOM8N(void);
 void   navigatorWaitDataReadyNEOM8N(void);
 

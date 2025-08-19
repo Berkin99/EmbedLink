@@ -27,8 +27,9 @@
  *
  */
 
-#include <stdlib.h>
 #include "xevent.h"
+
+#include <stdlib.h>
 
 xeventHandle_t xeventNew(void){
     xeventHandle_t handle;

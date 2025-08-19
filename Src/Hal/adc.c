@@ -27,9 +27,10 @@
  *
  */
 
-#include "system.h"
-#include "sysconfig.h"
 #include "adc.h"
+
+#include "sysconfig.h"
+#include "system.h"
 
 #ifdef HAL_ADC_MODULE_ENABLED
 

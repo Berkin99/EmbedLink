@@ -41,7 +41,6 @@ int8_t navigatorInitZEDF9P(void);
 int8_t navigatorTestZEDF9P(void);
 void   navigatorCalibrateZEDF9P(vec_t Correction);
 int8_t navigatorIsCalibratedZEDF9P(void);
-int8_t navigatorAcquireZEDF9P(navigation_t* plist, uint8_t n);
 int8_t navigatorIsReadyZEDF9P(void);
 void   navigatorWaitDataReadyZEDF9P(void);
 

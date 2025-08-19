@@ -38,6 +38,5 @@
 int8_t estimatorInitCF (void);
 int8_t estimatorTestCF (void);
 int8_t estimatorIsReadyCF (void);
-const state_t* estimatorStateCF(void);
 
 #endif /* ESTIMATOR_CF_H_ */

@@ -49,7 +49,7 @@ struct nrx_s{
 #define NRX_TYPE_INT   (0x00<<2)
 #define NRX_TYPE_FLOAT (0x01<<2)
 
-#define NRX_SIGNED 	(0x00<<3)
+#define NRX_SIGNED 	  (0x00<<3)
 #define NRX_UNSIGNED 	(0x01<<3)
 
 #define NRX_UINT8  (NRX_1BYTE  | NRX_TYPE_INT | NRX_UNSIGNED)
@@ -60,6 +60,7 @@ struct nrx_s{
 #define NRX_INT32  (NRX_4BYTES | NRX_TYPE_INT | NRX_SIGNED)
 
 #define NRX_FLOAT  (NRX_4BYTES | NRX_TYPE_FLOAT | NRX_SIGNED)
+#define NRX_DOUBLE (NRX_8BYTES | NRX_TYPE_FLOAT | NRX_SIGNED)
 
 #define NRX_CORE	(1<<5)
 #define NRX_RONLY	(1<<6)

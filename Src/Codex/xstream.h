@@ -31,7 +31,8 @@
 #define XSTREAM_H_
 
 #include <stdint.h>
-#include <sysdefs.h>
+#include <stddef.h>
+#include "sysdefs.h"
 
 typedef struct{
     uint8_t (*read)(void);      /* Read function */

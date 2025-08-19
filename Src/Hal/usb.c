@@ -27,8 +27,10 @@
  *
  */
 
-#include "rtos.h"
+#include "usb.h"
+
 #include "system.h"
+#include "rtos.h"
 
 #ifdef __USBD_CDC_IF_H__
 

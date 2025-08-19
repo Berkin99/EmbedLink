@@ -31,7 +31,8 @@
 #define XLIST_H_
 
 #include <stdlib.h>
-#include <sysdefs.h>
+
+#include "sysdefs.h"
 
 /**
  * @brief Structure representing a generic dynamic list.

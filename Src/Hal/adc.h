@@ -31,7 +31,8 @@
 #define ADC_H_
 
 #include <stdint.h>
-#include <sysdefs.h>
+
+#include "sysdefs.h"
 #include "rtos.h"
 
 typedef struct{

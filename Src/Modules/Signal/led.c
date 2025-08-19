@@ -62,15 +62,15 @@ static led_t led[LED_COUNT] = {
 	#endif
 };
 
-void ledSet(uint8_t index, uint8_t value){
+void ledSet(led_e index, uint8_t value){
 	led[index].value = value;
 	pinWrite(led[index].pin, value);
 }
 
-uint8_t ledGet(uint8_t index){
+uint8_t ledGet(led_e index){
 	return led[index].value;
 }
 
-void ledToggle(uint8_t index){
+void ledToggle(led_e index){
 	ledSet(index, !(ledGet(index)));
 }

@@ -35,7 +35,6 @@
 #ifdef RF24_SPI
 #include "telemetry_rf24.h"
 #include "rf24.h"
-#include "event.h"
 #include "uart.h"
 #include "gpio.h"
 #include "spi.h"
@@ -66,7 +65,7 @@ static uint8_t 	rxBuffer[RF24_BUFFER_LEN];
 static rfData_t txBuffer;
 queueAllocateStatic(txQueue, 6, sizeof(rfData_t))
 
-taskAllocateStatic(RF24,TRX_TASK_STACK,TRX_TASK_PRI)
+taskAllocateStatic(RF24, TRX_TASK_STACK, TRX_TASK_PRI)
 void _telemetryTaskRF24(void* argv);
 
 int8_t telemetryInitRF24(void){
@@ -103,43 +102,42 @@ void _telemetryTaskRF24(void* argv){
 
 	while(1){
 
-		if (!isListening){RF24_StartListening(&radio); isListening = 1;}
-
+		if (!isListening){RF24_StartListening(&radio); isListening = 1;}	
 		if (RF24_Available(&radio)){
 			RF24_Read(&radio, rxBuffer, RF24_BUFFER_LEN);
 			newData = 1;
-			xSemaphoreGive(rxSemaphore);
+			semaphoreGive(rxSemaphore);
 		}
 
-		while (queueReceive(txQueue, &txBuffer, 0) == pdPASS){
+		while (queueReceive(txQueue, &txBuffer, 0) == pdTRUE){
 			if(isListening){RF24_StopListening(&radio);isListening = 0;}
 			RF24_Write(&radio, txBuffer.buffer, txBuffer.size);
 		}
 
-		taskDelayUntil(&lastWakeTime, 4);
+		taskDelayUntil(&lastWakeTime, 5);
 	}
 
 }
 
-int8_t telemetryReceiveRF24(uint8_t *pRxBuffer){
+int8_t telemetryReceiveRF24(uint8_t *pRxBuffer, uint16_t length){
 
 	if(!newData) return 0;
-	for(uint8_t i = 0; i < RF24_BUFFER_LEN; i++){
-		pRxBuffer[i] = rxBuffer[i];
-	}
+	if(length > RF24_BUFFER_LEN) length = RF24_BUFFER_LEN;
+	memcpy(pRxBuffer, rxBuffer, length);
+
 	newData = 0;
-	return RF24_BUFFER_LEN;
+	return length;
 }
 
-int8_t telemetryTransmitRF24(const uint8_t *pTxData, uint8_t Length){
+int8_t telemetryTransmitRF24(const uint8_t *pTxData, uint16_t length){
 	if(!isInit) return E_CONF_FAIL;
 	if(pTxData == NULL) return E_NULL_PTR;
-	if(Length > RF24_MAX_PAYLOAD_LENGHT) return E_OVERFLOW;
+	if(length > RF24_MAX_PAYLOAD_LENGHT) return E_OVERFLOW;
 
 	rfData_t temp;
-	temp.size = Length;
+	temp.size = length;
 
-	memcpy(temp.buffer, pTxData, Length);
+	memcpy(temp.buffer, pTxData, length);
 
 	if (queueSend(txQueue, &temp, 0) == pdPASS) return OK;
 
@@ -151,7 +149,7 @@ int8_t telemetryIsReadyRF24(void){
 }
 
 void telemetryWaitDataReadyRF24(void){
-	xSemaphoreTake(rxSemaphore,portMAX_DELAY);
+	semaphoreTake(rxSemaphore, RTOS_MAX_DELAY);
 }
 
 #endif

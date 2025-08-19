@@ -27,10 +27,11 @@
  *
  */
 
+#include "xqueue.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <xqueue.h>
 
 static void* xqueueResize(xqueue_t* q, size_t new_cap) {
     void* new_arr = malloc(new_cap * q->item_size);

@@ -50,6 +50,7 @@ RF24_Handle_t RF24_Init(void* intf, uint16_t ce, uint16_t cs){
         .cs = cs,
     };
 
+    pinWrite(ce, RF24_PIN_LOW);
     pinWrite(cs, RF24_PIN_HIGH); 
 
     return dev;
@@ -58,11 +59,12 @@ RF24_Handle_t RF24_Init(void* intf, uint16_t ce, uint16_t cs){
 void beginTransaction(RF24_Handle_t* dev){
     spiBeginTransaction(dev->intf);  /* Mutex */
     pinWrite(dev->cs, RF24_PIN_LOW); /* Chip Select */
-    delay(RF24_CS_DELAY_MS);
+    delayUs(RF24_CS_DELAY_US);
 }
 
 void endTransaction(RF24_Handle_t* dev){
     pinWrite(dev->cs, RF24_PIN_HIGH);
+    delayUs(RF24_CS_DELAY_US);
     spiEndTransaction(dev->intf);
 }
 

@@ -259,4 +259,3 @@ static void estimatedGravityDirection(float* gx, float* gy, float* gz)
   *gy = 2 * (qw * qx + qy * qz);
   *gz = qw * qw - qx * qx - qy * qy + qz * qz;
 }
-

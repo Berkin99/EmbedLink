@@ -95,7 +95,7 @@ void systemTask(void* argv){
 
     memoryInit();
     memoryTest();
-    memoryClear();
+    //memoryClear();
     //memoryDownload();
 
     sensorInit();
@@ -123,7 +123,7 @@ void systemTask(void* argv){
     
     estimatorInit();
     ncInit();
-    //rccomInit();
+//    rccomInit();
     uavcomInit();
     uavexeInit();
     
@@ -134,6 +134,7 @@ void systemTask(void* argv){
     while(1){
         //serialPrint("Position : %.2f, %.2f, %.2f\n", pos->x, pos->y, pos->z);
         delay(100);
+        ledSet(LED3, HIGH);
     }
 }
 

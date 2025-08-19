@@ -29,6 +29,8 @@
 
 #include <string.h>
 
+#include "xmath.h"
+#include "xmath3d.h"
 #include "navigation.h"
 #include "uavcom.h"
 #include "northcom.h"
@@ -49,13 +51,15 @@
 taskAllocateStatic(UAVCOM, CONTROL_TASK_STACK, CONTROL_TASK_PRI);
 
 /* Status */
-uavcomState_e uav_state = UAVCOM_STATE_IDLE;
-static uavcomState_e next_state = UAVCOM_STATE_IDLE;
+static volatile uavcomState_e uav_state = UAVCOM_STATE_IDLE;
+static volatile uavcomState_e next_state = UAVCOM_STATE_IDLE;
 
 /* Commands */
-static uavcomState_e target_state = UAVCOM_STATE_IDLE;
-static vec_t cpos;
-static vec_t crot;
+static volatile uavcomState_e target_state = UAVCOM_STATE_IDLE;
+
+static vec_t cpos; /* Command POS Buffer  */
+static vec_t crot; /* Command ROT Buffer  */
+static float ct;   /* Command Time Seconds */
 static vec_t home;
 
 void uavcomInit(void){
@@ -87,18 +91,20 @@ void uavcomUpdate(void){
 
 void uavcomParse(uint8_t* data){
     uint8_t cmd;
-    vec_t cmdv;
+    float   cmdx[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 
     cmd = data[0];
-    for (int i = 0; i < 3; i++) memcpy(&cmdv.axis[i], &data[(i * 4) + 1], 4);
-
+    for (int i = 0; i < 4; i++) memcpy(&cmdx[i], &data[(i * 4) + 1], 4);
+    
+    serialPrint("[%d], %.2f, %.2f, %.2f, %.2f\n", cmd, cmdx[0], cmdx[1], cmdx[2], cmdx[3]);
+    
     switch (cmd){
         case UAVCOM_CMD_ARM:     uavcomArm(); break;
         case UAVCOM_CMD_DISARM:  uavcomDisarm(); break;
-        case UAVCOM_CMD_TAKEOFF: uavcomTakeOff(cmdv.axis[0]); break;
+        case UAVCOM_CMD_TAKEOFF: uavcomTakeOff(cmdx[0], cmdx[1]); break;
         case UAVCOM_CMD_LAND:    uavcomLand(); break;
-        case UAVCOM_CMD_MOVE:    uavcomMove(cmdv); break;
-        case UAVCOM_CMD_YAW:     uavcomYaw(cmdv.axis[0]); break;
+        case UAVCOM_CMD_MOVE:    uavcomMove(vnew(cmdx[0], cmdx[1],cmdx[2]),  cmdx[3]); break;
+        case UAVCOM_CMD_YAW:     uavcomYaw(cmdx[0]); break;
         case UAVCOM_CMD_HOME:    uavcomHome(); break;
         case UAVCOM_CMD_KILL:    uavcomKill(); break;
         case UAVCOM_CMD_ORIGIN:  uavcomOrigin(&data[1]); break;
@@ -113,18 +119,20 @@ void uavcomDisarm(void){
     target_state = UAVCOM_STATE_IDLE; 
 }
 
-void uavcomMove(vec_t pos){
+void uavcomMove(vec_t pos, float t){
     target_state = UAVCOM_STATE_MOVING;
     cpos = pos;
+    ct = clampf32(t, 0.1f, 100.0f) * 1000.0f;
 }
 
 void uavcomYaw(float yaw){
     crot.z = yaw;
 }
 
-void uavcomTakeOff(float z){
+void uavcomTakeOff(float z, float t){
     target_state = UAVCOM_STATE_TAKEOFF;
     cpos.z = z;
+    ct = clampf32(t, 1.0f, 100.0f) * 1000.0f;
 }
 
 void uavcomLand(void){
@@ -194,26 +202,35 @@ void uavcomState_AUTO(void){
 
 void uavcomState_MOVING(void){
     uint8_t statecase = STATE_CASE(UAVCOM_STATE_MOVING);
-    static uint8_t  arrived;
-    static uint32_t arrive_t;
+    
+    static uint32_t mv_start;
+    static vec_t a_pos, b_pos; /* Interval */
+    static float mv_t;         /* Interval Time */
+    static vec_t mvpos;        /* Gamma */
 
+    if(!vequal(cpos, b_pos, 0.1f) && (statecase == STATE_DURING)) statecase = STATE_ENTER; /* Target updated */
+    
     switch (statecase){
         case STATE_ENTER:
             if(quadGetMode() != QUAD_MODE_AUTO){target_state = uav_state; return;}
             next_state = UAVCOM_STATE_MOVING;
             /* Entered */
-            arrived  = FALSE;
-            arrive_t = millis();
-            serialPrint("[>] UAVCOM MOVING %.2f, %.2f, %.2f\n", cpos.x, cpos.y, cpos.z);
-        break;
+            mv_start = millis();
+            a_pos = xkinematicsState()->position.v; /* Current */
+            b_pos = cpos;  /* Target  */
+            mv_t  = ct;
+            break;
+            serialPrint("[>] UAVCOM MOVING %.2f, %.2f, %.2f [%.2f]\n", b_pos.x, b_pos.y, b_pos.z, mv_t);
+        
         case STATE_DURING:
-            quadcmd_AUTO(cpos, crot.z);
-            arrived = vdist(cpos, xkinematicsState()->position.v) < UAV_ARRIVAL_DISTANCE;
-            if(arrived){
-                if(millis() - arrive_t > UAV_ARRIVAL_COUNTER_MS) target_state = UAVCOM_STATE_AUTO;
-            }
-            else arrive_t = millis();
-        break;
+            float elapsed = (float)(millis() - mv_start);
+            float t = elapsed / mv_t; 
+            mvpos = vlerp(a_pos, b_pos, t);
+            quadcmd_AUTO(mvpos, crot.z);
+            
+            if (t > 1.0) target_state = UAVCOM_STATE_AUTO;
+
+            break;
         case STATE_EXIT:
 
         break;
@@ -221,33 +238,41 @@ void uavcomState_MOVING(void){
 }
 
 void uavcomState_TAKEOFF(void){
-    uint8_t statecase = STATE_CASE(UAVCOM_STATE_TAKEOFF);
     static uint32_t to_start;
-    static float to_z, to_t, st_z;
+    static float a_z, b_z; /* Interval */
+    static float to_t;     /* Interval Time */
+    static vec_t tpos;     /* Gamma */
+
+    uint8_t statecase = STATE_CASE(UAVCOM_STATE_TAKEOFF);
+
     switch (statecase){
-        case STATE_ENTER:
-            if(uav_state != UAVCOM_STATE_READY) return;
-            if(quadSetMode(QUAD_MODE_AUTO) != OK) return;
+        case STATE_ENTER:{
+            if((uav_state != UAVCOM_STATE_READY)
+            || (quadSetMode(QUAD_MODE_AUTO) != OK)
+            ){
+                target_state = uav_state; return;
+            }
             next_state = UAVCOM_STATE_TAKEOFF;
             /* Entered */
             to_start = millis();
-            to_z = cpos.z;
-            st_z = xkinematicsState()->position.z;
-            cpos = xkinematicsState()->position.v;
-            home = xkinematicsState()->position.v;
-            to_t = to_z * 1300.0f;
-            serialPrint("[>] UAVCOM TAKEOFF %.2f\n", to_z);
-        break;
-        case STATE_DURING:
+            a_z  = xkinematicsState()->position.z;
+            b_z  = cpos.z;
+            to_t = ct;
 
-            float ivar = (float)(millis() - to_start) / to_t;
-            if (ivar > 1.0f) {
+            tpos = xkinematicsState()->position.v;
+            home = tpos;
+            quadcmd_AUTO(tpos, crot.z);
+            serialPrint("[>] UAVCOM TAKEOFF %.2f [%.2f]\n", b_z, to_t);
+        }break;
+        case STATE_DURING:
+            float elapsed = (float)(millis() - to_start);
+            float t = elapsed / to_t;
+            if (t > 1.0f) {
                 target_state = UAVCOM_STATE_AUTO;
                 break;
             }
-            cpos.z = ivar * to_z  + (1.0f - ivar) * st_z;
-            quadcmd_AUTO(cpos, crot.z);
-        
+            tpos.z = lerpf32(a_z, b_z, t);
+            quadcmd_AUTO(tpos, crot.z);
         break;
         case STATE_EXIT:
 
@@ -257,37 +282,54 @@ void uavcomState_TAKEOFF(void){
 
 void uavcomState_LAND(void){
     uint8_t statecase = STATE_CASE(UAVCOM_STATE_LAND);
-    
+
     static uint32_t ld_start;
-    static float ld_z, ld_t, st_z;
+    static float st_z;
+    static float phase1_dur, phase2_dur;
 
     switch (statecase){
-        case STATE_ENTER:
-            if(quadGetMode() != QUAD_MODE_AUTO){target_state = uav_state; return;}
-            next_state = UAVCOM_STATE_LAND;
-            ld_start = millis();
-            ld_z =   -3.0f;
-            st_z =   xkinematicsState()->position.z;
-            cpos =   xkinematicsState()->position.v;
-            ld_t = (st_z * 1300.0f) + 3000.0f;
-            serialPrint("[>] UAVCOM LAND\n");
+    case STATE_ENTER:
+        if (quadGetMode() != QUAD_MODE_AUTO){ target_state = uav_state; return; }
+        next_state = UAVCOM_STATE_LAND;
+        ld_start = millis();
+
+        st_z = xkinematicsState()->position.z;
+        cpos  = xkinematicsState()->position.v;
+
+        phase1_dur = (st_z * 1000.0f) + 1000.0f;
+        phase2_dur = 6000.0f;
+
+        serialPrint("[>] UAVCOM LAND\n");
         break;
-        case STATE_DURING:
-            float ivar = (float)(millis() - ld_start) / ld_t;
-            if(ivar > 1.0f){
-                target_state = UAVCOM_STATE_READY;
-                break;
-            }
-            cpos.z = ivar * ld_z  + (1.0f - ivar) * st_z;
-            quadcmd_AUTO(cpos, crot.z);
-        break;
-        case STATE_EXIT:
-        
+    case STATE_DURING: {
+        float elapsed = (float)(millis() - ld_start);
+
+        if (elapsed < phase1_dur){
+            /* Phase 1: Ease-out : Fast to slow */
+            float t = clampf32(elapsed / phase1_dur, 0.0f, 1.0f);
+            float e = easeOutQuad(t);
+            cpos.z = lerpf32(st_z, 0.5f, e);
+        }
+        else if (elapsed < phase1_dur + phase2_dur){
+            /* Phase 2: */
+            float t = clampf32((elapsed - phase1_dur) / phase2_dur, 0.0f, 1.0f);
+            cpos.z = lerpf32(0.5f, -1.0f, t);
+        }
+        else {
+            /* Land Complete */
+            cpos.z = -2.3f;
+            target_state = UAVCOM_STATE_READY;
+            break;
+        }
+
+        quadcmd_AUTO(cpos, crot.z);
+    } break;
+    case STATE_EXIT:
         break;
     }
 }
 
-// NRX_GROUP_START(uavcom)
-// NRX_ADD(NRX_UINT8, "state", &uav_state)
-// NRX_ADD(NRX_UINT8, "target", &target_state)
-// NRX_GROUP_STOP(uavcom)
+NRX_GROUP_START(uavcom)
+NRX_ADD(NRX_UINT8, state, &uav_state)
+NRX_ADD(NRX_UINT8, target, &target_state)
+NRX_GROUP_STOP(uavcom)

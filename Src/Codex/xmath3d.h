@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <math.h>
 #include "xmath_types.h"
+#include "xmath.h"
 
 typedef v3f32_t vec_t;
 
@@ -225,6 +226,10 @@ static inline vec_t vmean(vec_t pmean, vec_t new, f32 i) {
 
 static inline vec_t vsigma2(vec_t psigma, vec_t mean, vec_t new, f32 i) {
     return vadd(vscl(psigma, i / (i + 1)), vscl(vec2(vsub(new, mean)), 1 / (i + 1)));
+}
+
+static inline vec_t vlerp(vec_t a, vec_t b, float t) {
+    return vnew(lerpf32(a.x, b.x, t), lerpf32(a.y, b.y, t), lerpf32(a.z, b.z, t));
 }
 
 #endif

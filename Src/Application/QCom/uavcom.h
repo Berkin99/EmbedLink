@@ -49,7 +49,7 @@ typedef enum{
     UAVCOM_STATE_AUTO,
     UAVCOM_STATE_MOVING,
     UAVCOM_STATE_TAKEOFF,
-    UAVCOM_STATE_LAND,    
+    UAVCOM_STATE_LAND,
 }uavcomState_e;
 
 typedef enum{
@@ -64,8 +64,6 @@ typedef enum{
     UAVCOM_CMD_ORIGIN,
 }uavcomCmd_e;
 
-extern uavcomState_e uav_state;
-
 void uavcomInit(void);
 void uavcomTask(void* argv);
 void uavcomUpdate(void);
@@ -73,9 +71,9 @@ void uavcomParse(uint8_t* data);
 
 void uavcomArm(void);
 void uavcomDisarm(void);
-void uavcomTakeOff(float z);
+void uavcomTakeOff(float z, float t);
 void uavcomLand(void);
-void uavcomMove(vec_t pos);
+void uavcomMove(vec_t pos, float t);
 void uavcomYaw(float yaw);
 void uavcomHome(void);
 void uavcomKill(void);

@@ -36,7 +36,7 @@
 #include "nrx.h"
 
 /* Navigation PID */
-#define PID_NAV    {2.0f, 0.0f, 12.0f} // 1.4, 0.0, 4.0
+#define PID_NAV    {4.0f, 0.0f, 12.0f} // 4.0, 0.0, 12.0
 #define NAV_MAX    5.0f /* m/s */
 
 static float navmax = NAV_MAX;

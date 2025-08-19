@@ -131,6 +131,7 @@ void uavcomYaw(float yaw){
 
 void uavcomTakeOff(float z, float t){
     target_state = UAVCOM_STATE_TAKEOFF;
+    cpos = xkinematicsState()->position.v;
     cpos.z = z;
     ct = clampf32(t, 1.0f, 100.0f) * 1000.0f;
 }
@@ -142,6 +143,7 @@ void uavcomLand(void){
 void uavcomHome(void){
     target_state = UAVCOM_STATE_MOVING;
     cpos = home;
+    ct = 10;
 }
 
 void uavcomKill(void){ 
@@ -260,7 +262,7 @@ void uavcomState_TAKEOFF(void){
             to_t = ct;
 
             tpos = xkinematicsState()->position.v;
-            home = tpos;
+            home = cpos;
             quadcmd_AUTO(tpos, crot.z);
             serialPrint("[>] UAVCOM TAKEOFF %.2f [%.2f]\n", b_z, to_t);
         }break;
@@ -273,9 +275,6 @@ void uavcomState_TAKEOFF(void){
             }
             tpos.z = lerpf32(a_z, b_z, t);
             quadcmd_AUTO(tpos, crot.z);
-        break;
-        case STATE_EXIT:
-
         break;
     }
 }

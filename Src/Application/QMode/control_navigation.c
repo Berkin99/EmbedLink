@@ -37,7 +37,7 @@
 
 /* Navigation PID */
 #define PID_NAV    {4.0f, 0.0f, 12.0f} // 4.0, 0.0, 12.0
-#define NAV_MAX    5.0f /* m/s */
+#define NAV_MAX    7.5f /* m/s */
 
 static float navmax = NAV_MAX;
 static pid_t pidNav = PID_NAV;

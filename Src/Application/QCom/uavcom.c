@@ -143,7 +143,7 @@ void uavcomLand(void){
 void uavcomHome(void){
     target_state = UAVCOM_STATE_MOVING;
     cpos = home;
-    ct = 10;
+    ct = vdist(home, xkinematicsState()->position.v) * 0.5f * 1000.0f;
 }
 
 void uavcomKill(void){ 
@@ -295,7 +295,7 @@ void uavcomState_LAND(void){
         st_z = xkinematicsState()->position.z;
         cpos  = xkinematicsState()->position.v;
 
-        phase1_dur = (st_z * 1000.0f) + 1000.0f;
+        phase1_dur = (st_z * 1000.0f) / 1.5f;
         phase2_dur = 3000.0f;
 
         serialPrint("[>] UAVCOM LAND\n");

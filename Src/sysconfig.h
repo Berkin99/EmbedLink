@@ -60,7 +60,7 @@
 #define RF52_SPI               spi3
 #define RF52_CS                PD0
 #define RF52_IRQ               irq1
-#define RF52_CHANNEL           84
+#define RF52_CHANNEL           82
 #define BMI088_SPI             spi1
 #define BMI088_ACC_CS          PC4
 #define BMI088_GYR_CS          PC5
@@ -84,6 +84,7 @@
 // #define E32100_AUX
 // #define NEOM8N_UART            uart1
 #define ZEDF9P_UART            uart1
+#define RPI2W_UART             uart4
 
 /// PWM /////////////////////////////////////////////////////s
 #define PWM_TIMER_FREQ_MHZ     200

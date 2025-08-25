@@ -67,6 +67,11 @@
 #include "sensor_hmc5883l.h"
 #endif
 
+#ifdef RPI2W_UART
+#include "sensor_rpi2w.h"
+#endif
+
+
 #define SENS_ADD(SENSOR) {\
 	.Name = sensorName##SENSOR,\
 	.Init = &sensorInit##SENSOR,\
@@ -103,6 +108,10 @@ static const sensor_t sensorList[] = {
 	#ifdef HMC5883L_I2C
 	SENS_ADD(HMC5883L)
 	#endif
+	#ifdef RPI2W_UART
+	SENS_ADD(RPI2W)
+	#endif
+
 };
 
 static const uint8_t sensorLen = sizeof(sensorList)/sizeof(sensor_t);

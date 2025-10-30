@@ -27,97 +27,63 @@
  *
  */
 
-#include "system.h"
 #include "spi.h"
-#include "rtos.h"
+#include "system.h"
+#include "sysconfig.h"
+#include "gpio.h"
 
 #ifdef HAL_SPI_MODULE_ENABLED
 
-#define SPI_TIMEOUT (100)
+#define SPI_TIMEOUT (1000)
+
+struct spi_s {
+    SPI_HandleTypeDef *handle;
+};
 
 spi_t spi1;
 spi_t spi2;
 spi_t spi3;
 
-void spiInit(void){
-	#ifdef HSPI1
-	spi1.handle = &HSPI1;
-	spi1.mutex  = mutexCreate();
-	spi1.rxCplt = semaphoreCreate();
-	spi1.txCplt = semaphoreCreate();
-	#endif
-	#ifdef HSPI2
-	spi2.handle = &HSPI2;
-	spi2.mutex  = mutexCreate();
-	spi2.rxCplt = semaphoreCreate();
-	spi2.txCplt = semaphoreCreate();
-	#endif
-	#ifdef HSPI3
-	spi3.handle = &HSPI3;
-	spi3.mutex  = mutexCreate();
-	spi3.rxCplt = semaphoreCreate();
-	spi3.txCplt = semaphoreCreate();
-	#endif
+void spiInit(void)
+{
+#ifdef HSPI1
+    spi1.handle = &HSPI1;
+#endif
+#ifdef HSPI2
+    spi2.handle = &HSPI2;
+#endif
+#ifdef HSPI3
+    spi3.handle = &HSPI3;
+#endif
+#ifdef SPI_CS_HIGH
+    pin_t spis[] = SPI_CS_HIGH;
+    for (int i = 0; i < (sizeof(spis) / sizeof(pin_t)); i++) {
+        pinWrite(spis[i], HIGH);
+    }
+#endif
 }
 
 void spiBeginTransaction(spi_t* spi){
-	mutexTake(spi->mutex, RTOS_MAX_DELAY);
+    (void)spi;
 }
 
 void spiEndTransaction(spi_t* spi){
-	mutexGive(spi->mutex);
+    (void)spi;
 }
 
-int8_t spiReceive(spi_t* spi ,uint8_t* pRxData, uint16_t len){
-	int8_t status = HAL_SPI_Receive_IT(spi->handle, pRxData, len);
-	if(status != HAL_OK) return E_CONNECTION;
-	if(semaphoreTake(spi->rxCplt, SPI_TIMEOUT) != RTOS_OK) return E_TIMEOUT;
-	return OK;
+int8_t spiReceive(spi_t* spi, uint8_t* pRxData, uint16_t len){
+    if (HAL_SPI_Receive(spi->handle, pRxData, len, SPI_TIMEOUT) != HAL_OK) return E_CONNECTION;
+    return OK;
 }
 
-int8_t spiTransmit(spi_t* spi , const uint8_t* pTxData, uint16_t len){
-	int8_t status = HAL_SPI_Transmit_IT(spi->handle, pTxData, len);
-	if(status != HAL_OK) return E_CONNECTION;
-	if(semaphoreTake(spi->txCplt, SPI_TIMEOUT) != RTOS_OK) return E_TIMEOUT;
-	return OK;
+int8_t spiTransmit(spi_t* spi, const uint8_t* pTxData, uint16_t len){
+    if (HAL_SPI_Transmit(spi->handle, (uint8_t*)pTxData, len, SPI_TIMEOUT) != HAL_OK) return E_CONNECTION;
+    return OK;
 }
 
-int8_t spiTransmitReceive(spi_t* spi ,uint8_t* pRxData, const uint8_t* pTxData, uint16_t len){
-	int8_t status = HAL_SPI_TransmitReceive_IT(spi->handle, pTxData, pRxData, len);
-	if(status != HAL_OK) return E_CONNECTION;
-	if(semaphoreTake(spi->txCplt, SPI_TIMEOUT) != RTOS_OK) return E_TIMEOUT;
-	return OK;
-}
-
-spi_t* HAL_SPI_Parent(SPI_HandleTypeDef* hspi){
-	#ifdef HSPI1
-	if(hspi == &HSPI1) return &spi1;
-	#endif
-	#ifdef HSPI2
-	if(hspi == &HSPI2) return &spi2;
-	#endif
-	#ifdef HSPI3
-	if(hspi == &HSPI3) return &spi3;
-	#endif
-	return NULL;
-}
-
-void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef* hspi){
-	spi_t* parent = HAL_SPI_Parent(hspi);
-	if(parent == NULL) return;
-	semaphoreGiveISR(parent->rxCplt);
-}
-
-void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef* hspi){
-	spi_t* parent = HAL_SPI_Parent(hspi);
-	if(parent == NULL) return;
-	semaphoreGiveISR(parent->txCplt);
-}
-
-void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef* hspi){
-	spi_t* parent = HAL_SPI_Parent(hspi);
-	if(parent == NULL) return;
-	semaphoreGiveISR(parent->txCplt);
+int8_t spiTransmitReceive(spi_t* spi, uint8_t* pRxData, const uint8_t* pTxData, uint16_t len){
+    if (HAL_SPI_TransmitReceive(spi->handle, (uint8_t*)pTxData, pRxData, len, SPI_TIMEOUT) != HAL_OK) return E_CONNECTION;
+    return OK;
 }
 
 #endif

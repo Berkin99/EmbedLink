@@ -31,15 +31,9 @@
 #define UART_H_
 
 #include <stdarg.h>
-#include "rtos.h"
+#include <stdint.h>
 
-typedef struct uart_s{
-	void* handle;
-	uint16_t received;
-	mutex_t mutex;
-	semaphore_t rxCplt;
-	semaphore_t txCplt;
-}uart_t;
+typedef struct uart_s uart_t;
 
 extern uart_t uart1;
 extern uart_t uart2;
@@ -55,5 +49,6 @@ int8_t   uartWrite       (uart_t* uart, const uint8_t* pTxData, uint16_t len);
 int8_t   uartPrint       (uart_t* uart, const char* format, ...);
 
 void 	 serialPrint     (const char* format, ...);
+int32_t  serialScan      (const char *format, ...);
 
 #endif /* UART_H_ */

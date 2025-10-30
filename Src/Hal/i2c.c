@@ -27,131 +27,55 @@
  *
  */
 
-#include "systime.h"
+#include "usb.h"
 #include "system.h"
-#include "i2c.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdarg.h>
 
-#ifdef HAL_I2C_MODULE_ENABLED
+#ifdef HAL_PCD_MODULE_ENABLED
 
-#define I2C_TIMEOUT	(200)
+#define USB_TIMEOUT (1000)
 
-i2c_t i2c1;
-i2c_t i2c2;
-i2c_t i2c3;
+extern USBD_HandleTypeDef hUsbDeviceFS;
 
-void i2cInit(void){
-	#ifdef HI2C1
-	i2c1.handle = &HI2C1;
-	i2c1.mutex  = mutexCreate();
-	i2c1.cplt   = semaphoreCreate();
-	#endif
-	#ifdef HI2C2
-	i2c2.handle = &HI2C2;
-	i2c2.mutex  = mutexCreate();
-	i2c2.cplt   = semaphoreCreate();
-	#endif
-	#ifdef HI2C3
-	i2c1.handle = &HI2C3;
-	i2c1.mutex  = mutexCreate();
-	i2c1.cplt   = semaphoreCreate();
-	#endif
+void usbInit(void)
+{
 }
 
-int8_t i2cReceive(i2c_t* i2c, uint8_t devAddr, uint8_t* pRxData, uint16_t len){
-	if(mutexTake(i2c->mutex, I2C_TIMEOUT) != RTOS_OK) return E_TIMEOUT;
-	int8_t status = HAL_I2C_Master_Receive_IT(i2c->handle, devAddr << 1, pRxData, len);
-	int8_t rslt = OK;
-	if(status != HAL_OK) rslt = E_CONNECTION;
-	else if(semaphoreTake(i2c->cplt, I2C_TIMEOUT) != RTOS_OK)rslt = E_TIMEOUT;
-	mutexGive(i2c->mutex);
-	return rslt;
+int8_t usbReceive(uint8_t* pRxData, uint16_t len)
+{
+    if (CDC_Receive_FS(pRxData, &len) != USBD_OK)
+        return E_CONNECTION;
+    return OK;
 }
 
-int8_t i2cTransmit(i2c_t* i2c, uint8_t devAddr, uint8_t* pTxData, uint16_t len ){
-	if(mutexTake(i2c->mutex, I2C_TIMEOUT) != RTOS_OK) return E_TIMEOUT;
-	int8_t status = HAL_I2C_Master_Transmit_IT(i2c->handle, devAddr << 1, pTxData, len);
-	int8_t rslt = OK;
-	if(status != HAL_OK) rslt = E_CONNECTION;
-	else if(semaphoreTake(i2c->cplt, I2C_TIMEOUT) != RTOS_OK)rslt = E_TIMEOUT;
-	mutexGive(i2c->mutex);
-	return rslt;
+int8_t usbTransmit(uint8_t* pTxData, uint16_t len)
+{
+    if (CDC_Transmit_FS(pTxData, len) != USBD_OK)
+        return E_CONNECTION;
+    return OK;
 }
 
-int8_t i2cMemRead(i2c_t* i2c, uint8_t devAddr, uint8_t memAddr, uint8_t* pRxData, uint16_t len ){
-	if(mutexTake(i2c->mutex, I2C_TIMEOUT) != RTOS_OK) return E_TIMEOUT;
-	int8_t status = HAL_I2C_Mem_Read_IT(i2c->handle, devAddr << 1, memAddr, I2C_MEMADD_SIZE_8BIT, pRxData, len);
-	int8_t rslt = OK;
-	if(status != HAL_OK) rslt = E_CONNECTION;
-	else if(semaphoreTake(i2c->cplt, I2C_TIMEOUT) != RTOS_OK)rslt = E_TIMEOUT;
-	mutexGive(i2c->mutex);
-	return rslt;
+uint16_t usbAvailableData(void)
+{
+    extern uint16_t UserRxLengthFS;
+    return UserRxLengthFS;
 }
 
-int8_t i2cMemWrite(i2c_t* i2c, uint8_t devAddr, uint8_t memAddr, uint8_t* pTxData, uint16_t len ){
-	if(mutexTake(i2c->mutex, I2C_TIMEOUT) != RTOS_OK) return E_TIMEOUT;
-	int8_t status = HAL_I2C_Mem_Write_IT(i2c->handle, devAddr << 1, memAddr, I2C_MEMADD_SIZE_8BIT, pTxData, len);
-	int8_t rslt = OK;
-	if(status != HAL_OK) rslt = E_CONNECTION;
-	else if(semaphoreTake(i2c->cplt, I2C_TIMEOUT) != RTOS_OK)rslt = E_TIMEOUT;
-	mutexGive(i2c->mutex);
-	return rslt;
+void usbWaitDataReady(void)
+{
+    while (usbAvailableData() == 0);
 }
 
-int8_t i2cMemRead16(i2c_t* i2c, uint8_t devAddr, uint16_t  memAddr, uint8_t* pRxData, uint16_t len){
-	if(mutexTake(i2c->mutex, I2C_TIMEOUT) != RTOS_OK) return E_TIMEOUT;
-	int8_t status = HAL_I2C_Mem_Read_IT(i2c->handle, devAddr << 1, memAddr, I2C_MEMADD_SIZE_16BIT, pRxData, len);
-	int8_t rslt = OK;
-	if(status != HAL_OK) rslt = E_CONNECTION;
-	else if(semaphoreTake(i2c->cplt, I2C_TIMEOUT) != RTOS_OK)rslt = E_TIMEOUT;
-	mutexGive(i2c->mutex);
-	return rslt;
-}
-
-int8_t i2cMemWrite16(i2c_t* i2c, uint8_t devAddr, uint16_t  memAddr, uint8_t* pTxData, uint16_t len){
-	if(mutexTake(i2c->mutex, I2C_TIMEOUT) != RTOS_OK) return E_TIMEOUT;
-	int8_t status = HAL_I2C_Mem_Write_IT(i2c->handle, devAddr << 1, memAddr, I2C_MEMADD_SIZE_16BIT, pTxData, len);
-	int8_t rslt = OK;
-	if(status != HAL_OK) rslt = E_CONNECTION;
-	else if(semaphoreTake(i2c->cplt, I2C_TIMEOUT) != RTOS_OK)rslt = E_TIMEOUT;
-	mutexGive(i2c->mutex);
-	return rslt;
-}
-
-i2c_t* HAL_I2C_Parent(I2C_HandleTypeDef* hi2c){
-	#ifdef HI2C1
-	if(hi2c == &HI2C1) return &i2c1;
-	#endif
-	#ifdef HI2C2
-	if(hi2c == &HI2C2) return &i2c2;
-	#endif
-	#ifdef HI2C3
-	if(hi2c == &HI2C3) return &i2c3;
-	#endif
-	return NULL;
-}
-
-void HAL_I2C_MasterRxCpltCallback(I2C_HandleTypeDef* hi2c){
-	i2c_t* parent = HAL_I2C_Parent(hi2c);
-	if(parent == NULL) return;
-	semaphoreGiveISR(parent->cplt);
-}
-
-void HAL_I2C_MasterTxCpltCallback(I2C_HandleTypeDef* hi2c){
-	i2c_t* parent = HAL_I2C_Parent(hi2c);
-	if(parent == NULL) return;
-	semaphoreGiveISR(parent->cplt);
-}
-
-void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef* hi2c){
-	i2c_t* parent = HAL_I2C_Parent(hi2c);
-	if(parent == NULL) return;
-	semaphoreGiveISR(parent->cplt);
-}
-
-void HAL_I2C_MemTxCpltCallback(I2C_HandleTypeDef* hi2c){
-	i2c_t* parent = HAL_I2C_Parent(hi2c);
-	if(parent == NULL) return;
-	semaphoreGiveISR(parent->cplt);
+void usbPrint(char* format, ...)
+{
+    char buffer[128];
+    va_list args;
+    va_start(args, format);
+    int len = vsnprintf(buffer, sizeof(buffer), format, args);
+    va_end(args);
+    usbTransmit((uint8_t*)buffer, len);
 }
 
 #endif

@@ -81,7 +81,6 @@ void pinMode(pin_t pin, uint8_t mode){
     HAL_GPIO_Init(HAL_GPIO(pin), &GPIO_InitStruct);
 }
 
-
 void pinWrite (pin_t pin, uint8_t state){
 	HAL_GPIO_WritePin(HAL_GPIO(pin), HAL_PIN(pin), state);
 }

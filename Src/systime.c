@@ -27,40 +27,14 @@
  *
  */
 
-#include "system.h"
-#include "sysconfig.h"
 #include "systime.h"
-#include "rtos.h"
-
-#ifndef SYSTIME
-#error "/SYSTEM> SYSTIME Timer should be defined!"
-#endif
-
-#ifdef SYSTIME
+#include "sysconfig.h"
+#include "system.h"
 
 uint32_t millis(void){
-	// TODO: Change it for 2hour+ support 
-	return SYSTIME.Instance->CNT / 1000;
-}
-
-uint32_t micros(void){
-	return SYSTIME.Instance->CNT;
+	return HAL_GetTick();
 }
 
 void delay(uint32_t ms){
-#ifdef RTOS_H_
-	if(ms == 0) return;
-	taskDelay(ms);
-#else
-	uint32_t dt = millis() + ms;
-	while (millis() < dt);
-#endif
+	HAL_Delay(ms);
 }
-
-void delayUs(uint32_t us){
-	delay(us / 1000);
-	uint32_t dt = micros() + (us % 1000);
-	while (micros() < dt);
-}
-
-#endif

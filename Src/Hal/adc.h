@@ -31,13 +31,9 @@
 #define ADC_H_
 
 #include <stdint.h>
-#include <sysdefs.h>
-#include "rtos.h"
+#include "sysdefs.h"
 
-typedef struct{
-	void* handle;
-	semaphore_t cplt;
-}adc_t;
+typedef struct adc_s adc_t;
 
 extern adc_t adc1;
 

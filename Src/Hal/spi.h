@@ -31,14 +31,8 @@
 #define SPI_H_
 
 #include <stdint.h>
-#include "rtos.h"
 
-typedef struct spi_s{
-	void*       handle;
-	mutex_t     mutex;
-	semaphore_t rxCplt;
-	semaphore_t txCplt;
-}spi_t;
+typedef struct spi_s spi_t;
 
 extern spi_t spi1;
 extern spi_t spi2;

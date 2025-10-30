@@ -27,80 +27,63 @@
  *
  */
 
-#include "rtos.h"
+#include "usb.h"
 #include "system.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdarg.h>
 
 #ifdef __USBD_CDC_IF_H__
 
 #define USB_TIMEOUT (1000)
 
-static mutex_t usbMutex;
-static semaphore_t txCplt;
-static semaphore_t rxCplt;
-
 static uint8_t* pBuffer;
 static uint16_t length;
 
 void usbInit(void){
-	usbMutex = mutexCreate();
-	txCplt   = semaphoreCreate();
-	rxCplt   = semaphoreCreate();
+    pBuffer = NULL;
+    length = 0;
 }
 
 int8_t usbReceive(uint8_t* pRxData, uint16_t len){
-	semaphoreTake(rxCplt, RTOS_MAX_DELAY);
-	if(len > length) len = length;
-	memcpy(pRxData, pBuffer, len);
-	pBuffer += len;
-	length  -= len;
-	return OK;
+    while (length == 0);
+    if (len > length) len = length;
+    memcpy(pRxData, pBuffer, len);
+    length = 0;
+    return OK;
 }
 
 int8_t usbTransmit(uint8_t* pTxData, uint16_t len){
-	if (mutexTake(usbMutex, USB_TIMEOUT) != RTOS_TRUE) return E_NOT_FOUND;
-	CDC_Transmit_FS(pTxData, len);
-	semaphoreTake(txCplt, USB_TIMEOUT);
-	mutexGive(usbMutex);
-	return OK;
+    if (CDC_Transmit_FS(pTxData, len) != USBD_OK)
+        return E_CONNECTION;
+    uint32_t tick = HAL_GetTick();
+    while (CDC_Transmit_FS(NULL, 0) == USBD_BUSY) {
+        if (HAL_GetTick() - tick > USB_TIMEOUT)
+            return E_TIMEOUT;
+    }
+    return OK;
 }
 
 uint16_t usbAvailableData(void){
-	return length;
-}
-
-void usbPrint(char* format, ...){
-
-    va_list args;
-    char temp[128];
-    uint8_t length = 0;
-
-    va_start(args, format);
-    vsprintf(temp,format,args);
-    va_end(args);
-
-    for(uint8_t i = 0; i < 128; i++){
-    	if(temp[i] == 0x00){
-    		length = i;
-    		break;
-    	}
-    }
-
-    usbTransmit((uint8_t*)temp, length);
+    return length;
 }
 
 void usbWaitDataReady(void){
-	semaphoreTake(rxCplt, RTOS_MAX_DELAY);
-	semaphoreGive(rxCplt);
+    while (length == 0);
 }
 
-void CDC_TransmitCpltCallback(void){
-	semaphoreGiveISR(txCplt);
+void usbPrint(char* format, ...){
+    char temp[128];
+    va_list args;
+    va_start(args, format);
+    int len = vsnprintf(temp, sizeof(temp), format, args);
+    va_end(args);
+    usbTransmit((uint8_t*)temp, len);
 }
 
 void CDC_ReceiveCpltCallback(uint8_t* Buf, uint32_t* Len){
-	pBuffer = Buf;
-	length  = (uint16_t)(*Len);
-	semaphoreGiveISR(rxCplt);
+    pBuffer = Buf;
+    length = (uint16_t)(*Len);
 }
 
 #endif

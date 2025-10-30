@@ -31,13 +31,8 @@
 #define I2C_H_
 
 #include <stdint.h>
-#include "rtos.h"
 
-typedef struct i2c_s{
-	void*       handle;
-	mutex_t     mutex;
-	semaphore_t cplt;
-}i2c_t;
+typedef struct i2c_s i2c_t;
 
 extern i2c_t i2c1;
 extern i2c_t i2c2;

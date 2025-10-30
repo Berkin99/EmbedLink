@@ -27,47 +27,36 @@
  *
  */
 
-#include "rtos.h"
 #include "system.h"
 #include "systime.h"
 #include "sysconfig.h"
-#include "spi.h"
+
+#include "gpio.h"
 #include "i2c.h"
+#include "spi.h"
 #include "uart.h"
-#include "adc.h"
-#include "pwm.h"
-//#include "usb.h"
 
-static uint8_t sysInit = 0;
-
-taskAllocateStatic(SYSTEM_TASK, SYSTEM_TASK_STACK, SYSTEM_TASK_PRI);
-void systemTask(void* argv);
+static uint8_t sysInit;
 
 void systemLaunch(void){
-
     if(sysInit) return;
     sysInit = 1;
-//    spiInit();
-    i2cInit();
-    uartInit();
-//    pwmInit();
-//    adcInit();
-//    usbInit();
 
-    taskCreateStatic(SYSTEM_TASK, systemTask, NULL);
-    taskStartScheduler();
+    while(1){
 
-    /* Should not reach here */
-    systemErrorCall();
-    while(1);
+    }
 }
 
 void systemTask(void* argv){
-    serialPrint("[>] System Start\n");
+
+    i2cInit();
+    spiInit();
+    uartInit();
+
+    sysInit = 2;
 
     while(1){
-    	delay(1000);
-    	serialPrint("[>] Loop ...\n");
+
     }
 }
 

@@ -37,6 +37,7 @@
 #include "uart.h"
 
 static uint8_t sysInit;
+#define BL_FLASH_SIZE         (FLASH_SECTOR_SIZE)
 
 void systemLaunch(void){
     if(sysInit) return;
@@ -53,10 +54,16 @@ void systemTask(void* argv){
     spiInit();
     uartInit();
 
+
+    HAL_FLASH_Lock();
+    HAL_FLASH_Unlock();
+    
     sysInit = 2;
 
+    int i = 0;
     while(1){
-
+    	serialPrint("Hello %d\n", i++);
+    	delay(1000);
     }
 }
 

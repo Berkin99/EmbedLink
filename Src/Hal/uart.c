@@ -29,6 +29,7 @@
 
 #include "uart.h"
 #include "system.h"
+#include "sysconfig.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -78,8 +79,9 @@ int8_t uartRead(uart_t* uart, uint8_t* pRxData, uint16_t len){
     return OK;
 }
 
-int8_t uartReadToIdle(uart_t* uart, uint8_t* pRxData, uint16_t len, uint16_t *received_len){
-    if (HAL_UARTEx_ReceiveToIdle(uart->handle, pRxData, len, received_len, UART_TIMEOUT) != HAL_OK) return E_CONNECTION;
+int8_t uartReadToIdle(uart_t* uart, uint8_t* pRxData, uint16_t len){
+	uint16_t temp;
+    if (HAL_UARTEx_ReceiveToIdle(uart->handle, pRxData, len, &temp, UART_TIMEOUT) != HAL_OK) return E_CONNECTION;
     return OK;
 }
 

@@ -40,6 +40,7 @@ void systemTask(void* argv);
 static uint8_t sysInit;
 
 void systemLaunch(void){
+    /* Init Code */
     if(sysInit) return;
     sysInit = 1;
 
@@ -49,26 +50,19 @@ void systemLaunch(void){
     //flashInit();
     uartInit();
     
-    while (1){
-        systemTask(NULL);
-    }
-    
+    systemTask(NULL);    
 }
 
 void systemTask(void* argv){
-    int i = 0;
     while(1){
-        serialPrint("[>] %d\n", i++);
-        pinToggle(SYSLED1);
-        delay(1000);
+        /* Loop Code */
     }
 }
 
 void systemWaitReady(void){
-	while(sysInit != 2) delay(100);
+
 }
 
 void systemErrorCall(void){
-    serialPrint("[E] System Hard Fault Error!\n");
     while(1);
 }

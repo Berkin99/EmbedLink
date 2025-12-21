@@ -37,8 +37,8 @@
 
 /// SYSDEBUG ////////////////////////////////////////////////
 #define SERIAL_UART            uart2
-#define SYSLED1                LED1
-#define SYSLED2                LED2
+#define SYSLED1                PE10
+#define SYSLED2                PE11
 
 /////////////////////////////////////////////////////////////
 

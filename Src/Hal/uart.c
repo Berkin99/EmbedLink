@@ -27,20 +27,27 @@
  *
  */
 
-#include "uart.h"
-#include "system.h"
-#include "sysconfig.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
 
+#include "uart.h"
+#include "system.h"
+#include "sysconfig.h"
+
 #ifdef HAL_UART_MODULE_ENABLED
 
-#define UART_TIMEOUT (1000)
+#define UART_TIMEOUT     (1000)
+#define UART_RX_BUF_SIZE 256
+#define UART_TX_BUF_SIZE 256
 
 struct uart_s {
     UART_HandleTypeDef *handle;
+    uint8_t  rx_dma_buf[UART_RX_BUF_SIZE];
+    uint16_t rx_read_idx;
+    uint8_t  tx_dma_buf[UART_TX_BUF_SIZE];
+    volatile uint8_t tx_busy;
 };
 
 uart_t uart1;
@@ -48,46 +55,100 @@ uart_t uart2;
 uart_t uart3;
 uart_t uart4;
 
-void uartInit(void)
-{
+void uartInit(void){
 #ifdef HUART1
     uart1.handle = &HUART1;
+    uartBegin(&uart1);
 #endif
 #ifdef HUART2
     uart2.handle = &HUART2;
+    uartBegin(&uart2);
 #endif
 #ifdef HUART3
     uart3.handle = &HUART3;
+    uartBegin(&uart3);
 #endif
 #ifdef HUART4
     uart4.handle = &HUART4;
+    uartBegin(&uart4);
 #endif
 }
 
+int8_t uartBegin(uart_t* uart){
+    if (uart == NULL || uart->handle == NULL) return -1;
+    
+    uart->rx_read_idx = 0;
+    uart->tx_busy = 0;
+    
+    memset(uart->rx_dma_buf, 0, UART_RX_BUF_SIZE);
+    memset(uart->tx_dma_buf, 0, UART_TX_BUF_SIZE);
+    
+    if (HAL_UART_Receive_DMA(uart->handle, uart->rx_dma_buf, UART_RX_BUF_SIZE) != HAL_OK) return -1;
+    
+    return 0;
+}
+
 void uartSetBaudRate(uart_t* uart, uint32_t rate){
+    if (uart == NULL || uart->handle == NULL) return;
+    
     HAL_UART_DeInit(uart->handle);
     uart->handle->Init.BaudRate = rate;
     HAL_UART_Init(uart->handle);
+    
+    uartBegin(uart);
 }
 
 uint32_t uartGetBaudRate(uart_t* uart){
+    if (uart == NULL || uart->handle == NULL) return 0;
     return uart->handle->Init.BaudRate;
 }
 
-int8_t uartRead(uart_t* uart, uint8_t* pRxData, uint16_t len){
-    if (HAL_UART_Receive(uart->handle, pRxData, len, UART_TIMEOUT) != HAL_OK) return E_CONNECTION;
-    return OK;
+uint8_t uartAvailable(uart_t* uart){
+    if (uart == NULL || uart->handle == NULL || uart->handle->hdmarx == NULL) return 0;
+    
+    uint16_t dma_write_idx = UART_RX_BUF_SIZE - __HAL_DMA_GET_COUNTER(uart->handle->hdmarx);
+
+    if (dma_write_idx >= uart->rx_read_idx) return dma_write_idx - uart->rx_read_idx;
+    else return UART_RX_BUF_SIZE - uart->rx_read_idx + dma_write_idx;
+    
 }
 
-int8_t uartReadToIdle(uart_t* uart, uint8_t* pRxData, uint16_t len){
-	uint16_t temp;
-    if (HAL_UARTEx_ReceiveToIdle(uart->handle, pRxData, len, &temp, UART_TIMEOUT) != HAL_OK) return E_CONNECTION;
-    return OK;
+uint8_t uartPeek(uart_t* uart){
+    if (uart == NULL || uartAvailable(uart) == 0) return 0;
+    
+    return uart->rx_dma_buf[uart->rx_read_idx];
 }
 
-int8_t uartWrite(uart_t* uart, const uint8_t* pTxData, uint16_t len){
-    if (HAL_UART_Transmit(uart->handle, (uint8_t*)pTxData, len, UART_TIMEOUT) != HAL_OK) return E_CONNECTION;
-    return OK;
+uint8_t uartRead(uart_t* uart){
+    if (uart == NULL || uartAvailable(uart) == 0) return 0;
+
+    uint8_t b = uart->rx_dma_buf[uart->rx_read_idx++];
+
+    if (uart->rx_read_idx >= UART_RX_BUF_SIZE) {
+        uart->rx_read_idx = 0;
+    }
+
+    return b;
+}
+
+int8_t uartWrite(uart_t* uart, const uint8_t *data, uint16_t len){
+    if (uart == NULL || uart->handle == NULL || data == NULL || len == 0) return 0;
+
+    if (uart->tx_busy) return -1;
+
+    if (len > UART_TX_BUF_SIZE) len = UART_TX_BUF_SIZE;
+
+    // Copy data to DMA buffer
+    for (uint16_t i = 0; i < len; i++) {
+        uart->tx_dma_buf[i] = data[i];
+    }
+
+    if (HAL_UART_Transmit_DMA(uart->handle, uart->tx_dma_buf, len) != HAL_OK) {
+        return -1;
+    }
+    
+    uart->tx_busy = 1;
+    return 0;
 }
 
 int8_t uartPrint(uart_t* uart, const char* format, ...){
@@ -96,10 +157,61 @@ int8_t uartPrint(uart_t* uart, const char* format, ...){
     va_start(args, format);
     int len = vsnprintf(buffer, sizeof(buffer), format, args);
     va_end(args);
+    
     return uartWrite(uart, (uint8_t*)buffer, len);
 }
 
+int8_t uartReceive(uart_t* uart, uint8_t* pRxData, uint16_t len){
+    if (uart == NULL || uart->handle == NULL) return -1;
+    if (HAL_UART_Receive(uart->handle, pRxData, len, UART_TIMEOUT) != HAL_OK) return -1;
+    return 0;
+}
+
+int8_t uartReceiveToIdle(uart_t* uart, uint8_t* pRxData, uint16_t len){
+    if (uart == NULL || uart->handle == NULL) return -1;
+    uint16_t temp;
+    if (HAL_UARTEx_ReceiveToIdle(uart->handle, pRxData, len, &temp, UART_TIMEOUT) != HAL_OK) return -1;
+    return 0;
+}
+
+int8_t uartTransmit(uart_t* uart, const uint8_t* pTxData, uint16_t len){
+    if (uart == NULL || uart->handle == NULL) return -1;
+    if (HAL_UART_Transmit(uart->handle, (uint8_t*)pTxData, len, UART_TIMEOUT) != HAL_OK) return -1;
+    return 0;
+}
+
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
+#ifdef HUART1
+    if (huart == &HUART1) uart1.tx_busy = 0;
+#endif
+#ifdef HUART2
+    if (huart == &HUART2) uart2.tx_busy = 0;
+#endif
+#ifdef HUART3
+    if (huart == &HUART3) uart3.tx_busy = 0;
+#endif
+#ifdef HUART4
+    if (huart == &HUART4) uart4.tx_busy = 0;
+#endif
+}
+
 #ifdef SERIAL_UART
+
+uint8_t serialAvailable(void){
+    return uartAvailable(&SERIAL_UART);
+}
+
+uint8_t serialRead(void){
+    return uartRead(&SERIAL_UART);
+}
+
+uint8_t serialPeek(void){
+    return uartPeek(&SERIAL_UART);
+}
+
+int8_t serialWrite(const uint8_t *data, uint16_t len){
+    return uartWrite(&SERIAL_UART, data, len);
+}
 
 void serialPrint(const char* format, ...){
     char buffer[128];
@@ -164,6 +276,7 @@ int32_t serialScan(const char *format, ...){
     va_end(args);
     return result;
 }
+
 #endif
 
 #endif

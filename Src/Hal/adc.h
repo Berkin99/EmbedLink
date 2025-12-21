@@ -36,6 +36,7 @@
 typedef struct adc_s adc_t;
 
 extern adc_t adc1;
+extern adc_t adc2;
 
 void   adcInit(void);
 int8_t adcRead(adc_t* adc, uint32_t* pBuffer);

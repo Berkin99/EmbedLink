@@ -33,11 +33,11 @@
 #include <stdint.h>
 #include <stdarg.h>
 
-void usbInit(void);
-int8_t usbReceive (uint8_t* pRxData, uint16_t len);
-int8_t usbTransmit(uint8_t* pTxData, uint16_t len);
+void     usbInit(void);
+int8_t   usbReceive (uint8_t* pRxData, uint16_t len);
+int8_t   usbTransmit(uint8_t* pTxData, uint16_t len);
 uint16_t usbAvailableData(void);
-void usbWaitDataReady(void);
-void usbPrint(char* format, ...);
+void     usbWaitDataReady(void);
+void     usbPrint(char* format, ...);
 
 #endif /* USB_H_ */

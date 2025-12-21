@@ -36,34 +36,31 @@
 #include "spi.h"
 #include "uart.h"
 
+void systemTask(void* argv);
 static uint8_t sysInit;
-#define BL_FLASH_SIZE         (FLASH_SECTOR_SIZE)
 
 void systemLaunch(void){
     if(sysInit) return;
     sysInit = 1;
 
-    while(1){
-
+    // Initialize peripherals
+    //i2cInit();
+    //spiInit();
+    //flashInit();
+    uartInit();
+    
+    while (1){
+        systemTask(NULL);
     }
+    
 }
 
 void systemTask(void* argv){
-
-    i2cInit();
-    spiInit();
-    uartInit();
-
-
-    HAL_FLASH_Lock();
-    HAL_FLASH_Unlock();
-    
-    sysInit = 2;
-
     int i = 0;
     while(1){
-    	serialPrint("Hello %d\n", i++);
-    	delay(1000);
+        serialPrint("[>] %d\n", i++);
+        pinToggle(SYSLED1);
+        delay(1000);
     }
 }
 

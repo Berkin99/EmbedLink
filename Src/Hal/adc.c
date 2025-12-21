@@ -34,47 +34,36 @@
 
 #ifdef HAL_ADC_MODULE_ENABLED
 
-#define ADC_TIMEOUT	(1000)
+#define ADC_TIMEOUT (1000)
+
+struct adc_s {
+    ADC_HandleTypeDef *handle;
+};
 
 adc_t adc1;
+adc_t adc2;
 
 void adcInit(void){
-	#ifdef HADC1
-		adc1.handle = &HADC1;
-		adc1.cplt = semaphoreCreate();
-	#endif
-	#ifdef HADC2
-		adc2.handle = &HADC2;
-		adc2.cplt = semaphoreCreate();
-	#endif
+#ifdef HADC1
+    adc1.handle = &HADC1;
+#endif
+#ifdef HADC2
+    adc2.handle = &HADC2;
+#endif
 }
 
 int8_t adcRead(adc_t* adc, uint32_t* pBuffer){
+    if (HAL_ADC_Start(adc->handle) != HAL_OK) return E_ERROR;
 
-	uint8_t status = HAL_ADC_Start_IT(adc->handle);
-	if(status != HAL_OK) return E_ERROR;
+    if (HAL_ADC_PollForConversion(adc->handle, ADC_TIMEOUT) != HAL_OK) {
+        HAL_ADC_Stop(adc->handle);
+        return E_TIMEOUT;
+    }
 
-	if(semaphoreTake(adc->cplt, ADC_TIMEOUT) != RTOS_OK) return E_TIMEOUT;
+    *pBuffer = HAL_ADC_GetValue(adc->handle);
+    HAL_ADC_Stop(adc->handle);
 
-	*pBuffer = HAL_ADC_GetValue(adc->handle);
-	return HAL_OK;
-}
-
-adc_t* HAL_ADC_Parent(ADC_HandleTypeDef *hadc){
-	#ifdef HADC1
-		if(hadc == (&HADC1)) return &adc1;
-	#endif
-	#ifdef HADC2
-		if(hadc == &HADC2) return &adc2;
-	#endif
-	return NULL;
-}
-
-void HAL_ADC_ConvCpltCallback (ADC_HandleTypeDef *hadc){
-	adc_t* parent = HAL_ADC_Parent(hadc);
-	if(parent == NULL) return;
-	HAL_ADC_Stop_IT(hadc);
-	semaphoreGiveISR(parent->cplt);
+    return OK;
 }
 
 #endif

@@ -31,31 +31,31 @@
 #include "system.h"
 
 GPIO_TypeDef* ports[] = {
-	GPIOA,
-	GPIOB,
-	GPIOC,
-	GPIOD,
-	GPIOE,
-	GPIOF,
+    GPIOA,
+    GPIOB,
+    GPIOC,
+    GPIOD,
+    GPIOE,
+    GPIOF,
 };
 
 uint16_t pins[] = {
-	GPIO_PIN_0,
-	GPIO_PIN_1,
-	GPIO_PIN_2,
-	GPIO_PIN_3,
-	GPIO_PIN_4,
-	GPIO_PIN_5,
-	GPIO_PIN_6,
-	GPIO_PIN_7,
-	GPIO_PIN_8,
-	GPIO_PIN_9,
-	GPIO_PIN_10,
-	GPIO_PIN_11,
-	GPIO_PIN_12,
-	GPIO_PIN_13,
-	GPIO_PIN_14,
-	GPIO_PIN_15,
+    GPIO_PIN_0,
+    GPIO_PIN_1,
+    GPIO_PIN_2,
+    GPIO_PIN_3,
+    GPIO_PIN_4,
+    GPIO_PIN_5,
+    GPIO_PIN_6,
+    GPIO_PIN_7,
+    GPIO_PIN_8,
+    GPIO_PIN_9,
+    GPIO_PIN_10,
+    GPIO_PIN_11,
+    GPIO_PIN_12,
+    GPIO_PIN_13,
+    GPIO_PIN_14,
+    GPIO_PIN_15,
 };
 
 #define HAL_GPIO(pin) ports [(pin >> 8)]
@@ -82,13 +82,13 @@ void pinMode(pin_t pin, uint8_t mode){
 }
 
 void pinWrite (pin_t pin, uint8_t state){
-	HAL_GPIO_WritePin(HAL_GPIO(pin), HAL_PIN(pin), state);
+    HAL_GPIO_WritePin(HAL_GPIO(pin), HAL_PIN(pin), state);
 }
 
 void pinToggle(pin_t pin){
-	HAL_GPIO_TogglePin(HAL_GPIO(pin), HAL_PIN(pin));
+    HAL_GPIO_TogglePin(HAL_GPIO(pin), HAL_PIN(pin));
 }
 
 int8_t pinRead (pin_t pin){
-	return HAL_GPIO_ReadPin(HAL_GPIO(pin), HAL_PIN(pin));
+    return HAL_GPIO_ReadPin(HAL_GPIO(pin), HAL_PIN(pin));
 }
